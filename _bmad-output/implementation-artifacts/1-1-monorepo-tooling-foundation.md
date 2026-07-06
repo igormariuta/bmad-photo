@@ -4,7 +4,7 @@ baseline_commit: 138c1a7d9ffbe8f2766b3a11c97073321b1bbcf2
 
 # Story 1.1: Monorepo & Tooling Foundation
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -60,6 +60,17 @@ so that all subsequent feature work builds on a consistent, enforced foundation.
   - [x] `pnpm install` succeeds and produces a committed `pnpm-lock.yaml`
   - [x] `turbo build` and `turbo lint` actually execute in every package/app (each defines the script per Tasks 4–8) — a package silently missing the script makes the CI gate a no-op for that workspace member, which defeats AC #2
   - [x] `turbo test` runs clean locally; packages/apps with no `test` script yet are simply skipped by Turborepo — this one is not a failure, unlike `build`/`lint` above
+
+### Review Findings
+
+_Code review 2026-07-06 — commit `a9608f0`, 3-layer adversarial (Blind Hunter · Edge Case Hunter · Acceptance Auditor); all findings empirically verified. Result: 0 decision-needed, 1 patch (fixed), 4 deferred, 8 dismissed as noise._
+
+- [x] [Review][Patch] CI invoked bare `turbo` — not on the GitHub runner PATH, so every gate died with `turbo: command not found` and AC #2 never actually ran. **Fixed:** CI now calls `pnpm lint`/`pnpm test`/`pnpm build`. Verified: `turbo` confirmed absent from global PATH; `pnpm lint` → 5/5 turbo tasks pass [.github/workflows/ci.yml:25-32]
+- [x] [Review][Dismiss] Claimed "invalid pnpm key `allowBuilds:`" — **false positive.** Empirically, this pinned pnpm 11.10.0 uses `allowBuilds: {pkg: bool}` as its build-approval key: `allowBuilds: {esbuild: true}` makes `pnpm install --frozen-lockfile` exit 0, while the mainstream-documented `onlyBuiltDependencies: [esbuild]` exits 1 with `ERR_PNPM_IGNORED_BUILDS`. Original code was correct; left unchanged [pnpm-workspace.yaml:4]
+- [x] [Review][Defer] `turbo test` is a permanently-green no-op — no workspace defines a `test` script, so the CI Test gate verifies nothing [turbo.json:12] — deferred, accepted per Task 10 (real tests arrive in Story 1.2+)
+- [x] [Review][Defer] Lint coverage is incomplete — the shared flat config registers no `.astro` parser/plugin, so `eslint .` skips every `.astro` file [packages/eslint-config/index.js:5] — deferred, lint-rule expansion is Story 1.3's scope
+- [x] [Review][Defer] `apps/landing/tsconfig.json` sets `jsx: react-jsx` but landing has no React dependency — latent type-check failure once a real `.tsx` lands [apps/landing/tsconfig.json:4] — deferred, no tsx files exist yet
+- [x] [Review][Defer] CI triggers only on `pull_request`, never on push/merge to `main` — no post-merge signal if a green PR goes stale against main [.github/workflows/ci.yml:3] — deferred, matches AC #2 wording ("when a PR is opened")
 
 ## Dev Notes
 
