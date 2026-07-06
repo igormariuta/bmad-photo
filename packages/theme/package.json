@@ -1,0 +1,18 @@
+{
+  "name": "@bmad/theme",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "eslint .",
+    "build": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@bmad/eslint-config": "workspace:*",
+    "@bmad/tsconfig": "workspace:*",
+    "eslint": "10.6.0",
+    "typescript": "6.0.3"
+  }
+}

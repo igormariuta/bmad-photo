@@ -1,0 +1,8 @@
+{
+  "extends": "@bmad/tsconfig/base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "noEmit": true
+  },
+  "include": ["src", ".astro/types.d.ts"]
+}
