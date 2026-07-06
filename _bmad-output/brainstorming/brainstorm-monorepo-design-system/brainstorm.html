@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BRUTALIST MONO — MONOREPO / DESIGN SYSTEM SPEC SHEET</title>
+<style>
+  :root{
+    --ink:#0a0a0a;
+    --paper:#f4f2ec;
+    --accent:#ff3b00;
+    --line:#0a0a0a;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{background:var(--ink);}
+  body{
+    font-family:var(--mono);
+    background:var(--paper);
+    color:var(--ink);
+    line-height:1.5;
+    font-size:15px;
+    -webkit-font-smoothing:none;
+    font-smooth:never;
+    max-width:1100px;
+    margin:0 auto;
+    border-left:3px solid var(--line);
+    border-right:3px solid var(--line);
+    min-height:100vh;
+  }
+  ::selection{background:var(--accent);color:var(--paper);}
+
+  /* ---- MASTHEAD ---- */
+  .masthead{
+    border-bottom:3px solid var(--line);
+    background:var(--ink);
+    color:var(--paper);
+    padding:0;
+  }
+  .mh-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:stretch;
+    border-bottom:1px solid #3a3a3a;
+    font-size:11px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+  }
+  .mh-top > div{padding:8px 16px;}
+  .mh-top .r{border-left:1px solid #3a3a3a;color:var(--accent);}
+  .mh-title{
+    padding:28px 16px 8px 16px;
+    font-size:clamp(28px,6vw,58px);
+    line-height:0.98;
+    font-weight:700;
+    letter-spacing:-0.02em;
+    text-transform:uppercase;
+  }
+  .mh-title .accent{color:var(--accent);}
+  .mh-sub{
+    padding:0 16px 24px 16px;
+    font-size:13px;
+    letter-spacing:0.05em;
+    color:#c9c9c9;
+    max-width:760px;
+  }
+  .mh-meta{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    border-top:1px solid #3a3a3a;
+  }
+  .mh-meta div{
+    padding:12px 16px;
+    border-left:1px solid #3a3a3a;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+  }
+  .mh-meta div:first-child{border-left:none;}
+  .mh-meta .k{color:#7a7a7a;display:block;margin-bottom:4px;}
+  .mh-meta .v{color:var(--paper);font-size:14px;letter-spacing:0.06em;}
+
+  /* ---- SECTION SCAFFOLD ---- */
+  section{border-bottom:3px solid var(--line);}
+  .sec-head{
+    display:flex;
+    align-items:baseline;
+    gap:16px;
+    padding:14px 16px;
+    background:var(--ink);
+    color:var(--paper);
+    text-transform:uppercase;
+    letter-spacing:0.12em;
+  }
+  .sec-num{
+    color:var(--accent);
+    font-size:13px;
+    border:1px solid var(--accent);
+    padding:2px 8px;
+    white-space:nowrap;
+  }
+  .sec-title{font-size:clamp(16px,3vw,24px);font-weight:700;letter-spacing:0.04em;}
+  .sec-tag{margin-left:auto;font-size:10px;color:#8a8a8a;letter-spacing:0.2em;}
+  .sec-body{padding:20px 16px;}
+
+  h3{
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    font-size:13px;
+    margin:22px 0 10px 0;
+    padding-bottom:6px;
+    border-bottom:1px dashed var(--line);
+  }
+  h3:first-child{margin-top:0;}
+  p{margin:10px 0;}
+  strong{background:var(--ink);color:var(--paper);padding:0 4px;}
+  em{font-style:normal;background:var(--accent);color:var(--paper);padding:0 4px;}
+
+  /* attribution tags */
+  .by{
+    font-size:10px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    padding:1px 6px;
+    border:1px solid var(--line);
+    white-space:nowrap;
+    vertical-align:middle;
+  }
+  .by-user{background:var(--ink);color:var(--paper);}
+  .by-coach{background:transparent;color:var(--line);border-style:dashed;}
+
+  /* ---- LEDGER LIST ---- */
+  ul.ledger{list-style:none;}
+  ul.ledger li{
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    padding:9px 0;
+    border-top:1px solid var(--line);
+  }
+  ul.ledger li:last-child{border-bottom:1px solid var(--line);}
+  ul.ledger li .mark{
+    color:var(--accent);
+    font-weight:700;
+    flex:0 0 auto;
+  }
+  ul.ledger li .txt{flex:1;}
+
+  /* ---- MORPHOLOGICAL MATRIX ---- */
+  .matrix{
+    border:2px solid var(--line);
+    display:grid;
+    grid-template-columns:56px 200px 1fr;
+    font-size:13px;
+    overflow:hidden;
+  }
+  .matrix > div{
+    padding:10px 12px;
+    border-bottom:1px solid var(--line);
+    border-right:1px solid var(--line);
+  }
+  .matrix .mh{
+    background:var(--ink);color:var(--paper);
+    text-transform:uppercase;letter-spacing:0.14em;font-size:11px;
+  }
+  .matrix .ax{
+    background:var(--accent);color:var(--paper);
+    font-weight:700;text-align:center;
+  }
+  .matrix .lbl{text-transform:uppercase;letter-spacing:0.06em;font-size:12px;}
+  .matrix .val{border-right:none;}
+  .matrix .val .chip{
+    display:inline-block;background:var(--ink);color:var(--paper);
+    padding:1px 6px;margin-right:6px;font-size:11px;letter-spacing:0.04em;
+  }
+  .matrix > div:nth-last-child(-n+3){border-bottom:none;}
+
+  /* ---- TRIZ ---- */
+  .triz{
+    display:grid;
+    grid-template-columns:1fr 64px 1fr;
+    align-items:stretch;
+    gap:0;
+    border:2px solid var(--line);
+  }
+  .triz .pole{padding:18px 16px;}
+  .triz .pole h4{
+    text-transform:uppercase;letter-spacing:0.1em;font-size:12px;
+    margin-bottom:8px;color:var(--accent);
+  }
+  .triz .pole p{font-size:13px;margin:0;}
+  .triz .vs{
+    background:var(--ink);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;font-weight:700;
+    border-left:2px solid var(--line);border-right:2px solid var(--line);
+    writing-mode:horizontal-tb;
+  }
+  .triz .pole.left{border-right:none;}
+  .resolution{
+    border:2px solid var(--line);border-top:none;
+    background:var(--accent);color:var(--paper);
+    padding:16px;
+  }
+  .resolution .k{
+    font-size:11px;letter-spacing:0.2em;text-transform:uppercase;
+    display:block;margin-bottom:8px;opacity:0.85;
+  }
+  .resolution p{margin:0;font-size:14px;}
+  .axes{
+    display:grid;grid-template-columns:1fr 1fr;gap:0;
+    border:2px solid var(--line);border-top:none;
+  }
+  .axes div{padding:14px 16px;font-size:12px;}
+  .axes div:first-child{border-right:2px solid var(--line);}
+  .axes .lab{text-transform:uppercase;letter-spacing:0.14em;font-size:11px;color:var(--accent);display:block;margin-bottom:6px;}
+
+  /* ---- BACKCASTING CHAIN ---- */
+  .chain{border:2px solid var(--line);}
+  .step{
+    display:flex;align-items:stretch;
+    border-bottom:1px solid var(--line);
+  }
+  .step:last-child{border-bottom:none;}
+  .step .idx{
+    flex:0 0 60px;
+    background:var(--ink);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    font-size:24px;font-weight:700;
+    border-right:2px solid var(--line);
+  }
+  .step:nth-child(1) .idx{background:var(--accent);color:var(--paper);}
+  .step .body{padding:14px 16px;flex:1;}
+  .step .body .st-t{
+    text-transform:uppercase;letter-spacing:0.1em;font-weight:700;font-size:14px;
+  }
+  .step .body .st-d{font-size:12px;color:#333;margin-top:4px;}
+  .arrowcol{
+    text-align:center;color:var(--accent);font-size:20px;padding:2px 0;
+  }
+
+  /* ---- SYNTHESIS (climax) ---- */
+  .synthesis{
+    background:var(--ink);
+    color:var(--paper);
+    padding:0;
+  }
+  .synthesis .sec-head{border-bottom:1px solid #3a3a3a;}
+  .synth-body{padding:32px 20px;}
+  .spine{
+    font-size:clamp(20px,4.5vw,40px);
+    line-height:1.15;
+    letter-spacing:-0.01em;
+    text-transform:uppercase;
+    font-weight:700;
+    border-left:6px solid var(--accent);
+    padding-left:18px;
+    margin-bottom:28px;
+  }
+  .spine .hi{color:var(--accent);}
+  .synth-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:0;
+    border:1px solid #3a3a3a;
+  }
+  .synth-grid div{
+    padding:16px;border:1px solid #3a3a3a;
+    font-size:12px;color:#d0d0d0;
+  }
+  .synth-grid div .n{color:var(--accent);display:block;margin-bottom:6px;letter-spacing:0.16em;font-size:10px;text-transform:uppercase;}
+  .synth-grid div strong{background:var(--accent);color:var(--paper);}
+
+  /* ---- SKELETON TREE ---- */
+  .tree{
+    background:var(--ink);color:var(--paper);
+    padding:18px 16px;font-size:13px;line-height:1.75;
+    border:2px solid var(--line);
+    white-space:pre;
+    overflow-x:auto;
+  }
+  .tree .d{color:var(--accent);}
+  .tree .c{color:#7a7a7a;}
+
+  /* ---- INVENTORY ---- */
+  .inv{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0;border:2px solid var(--line);}
+  .inv .cat{border:1px solid var(--line);padding:0;}
+  .inv .cat .ct{
+    background:var(--ink);color:var(--paper);
+    padding:8px 12px;text-transform:uppercase;letter-spacing:0.1em;font-size:12px;font-weight:700;
+  }
+  .inv .cat ul{list-style:none;padding:8px 12px;}
+  .inv .cat ul li{
+    padding:3px 0;font-size:12px;display:flex;gap:8px;
+  }
+  .inv .cat ul li::before{content:"▪";color:var(--accent);}
+
+  /* ---- FOOTER ---- */
+  footer{
+    background:var(--ink);color:#7a7a7a;
+    padding:20px 16px;
+    font-size:10px;letter-spacing:0.16em;text-transform:uppercase;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
+  }
+  footer .accent{color:var(--accent);}
+
+  .note{
+    font-size:11px;letter-spacing:0.08em;color:#555;
+    border-left:3px solid var(--accent);padding:6px 12px;margin:14px 0;
+    text-transform:uppercase;
+  }
+
+  @media(max-width:720px){
+    .mh-meta{grid-template-columns:1fr 1fr;}
+    .matrix{grid-template-columns:44px 1fr;}
+    .matrix .val{grid-column:1 / -1;border-right:none;}
+    .triz{grid-template-columns:1fr;}
+    .triz .vs{border:2px solid var(--line);border-left:none;border-right:none;padding:8px;}
+    .triz .pole.left{border-right:none;border-bottom:2px solid var(--line);}
+    .axes{grid-template-columns:1fr;}
+    .axes div:first-child{border-right:none;border-bottom:2px solid var(--line);}
+    .synth-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== MASTHEAD ===================== -->
+<header class="masthead">
+  <div class="mh-top">
+    <div>BMAD / BRAINSTORM KEEPSAKE</div>
+    <div class="r">STATUS: COMPLETE</div>
+  </div>
+  <div class="mh-title">
+    MONO<span class="accent">/</span>REPO<br>DESIGN<span class="accent">·</span>SYSTEM<br><span class="accent">SPEC SHEET</span>
+  </div>
+  <div class="mh-sub">
+    A monorepo housing two products — an Astro SSG landing page for an iOS camera app and a
+    Vite React SPA EXIF photo gallery — plus a shared design-system component library.
+    Aesthetic verdict: <strong>BRUTALIST MONO</strong>. The constraint IS the style.
+  </div>
+  <div class="mh-meta">
+    <div><span class="k">Topic</span><span class="v">Monorepo + Shared DS</span></div>
+    <div><span class="k">Goal</span><span class="v">Technical Foundation</span></div>
+    <div><span class="k">Mode</span><span class="v">Creative Partner</span></div>
+    <div><span class="k">Date</span><span class="v">2026·06·30</span></div>
+  </div>
+</header>
+
+<!-- ===================== SETUP ===================== -->
+<section>
+  <div class="sec-head">
+    <span class="sec-num">00</span>
+    <span class="sec-title">Session Frame</span>
+    <span class="sec-tag">DECISION</span>
+  </div>
+  <div class="sec-body">
+    <p>Mode set to <strong>Creative Partner</strong>. Objective: sharpen the technical foundation
+    of the monorepo — sharing components, tooling, structure. Three techniques run in strict order:</p>
+    <ul class="ledger">
+      <li><span class="mark">01</span><span class="txt"><strong>MORPHOLOGICAL ANALYSIS</strong> — map every decision axis, pick a value on each.</span></li>
+      <li><span class="mark">02</span><span class="txt"><strong>TRIZ CONTRADICTION</strong> — resolve consistency vs reuse without compromise.</span></li>
+      <li><span class="mark">03</span><span class="txt"><strong>BACKCASTING</strong> — work backward from the finished system to the true first move.</span></li>
+    </ul>
+    <p class="note">Attribution across this record: <span class="by by-user">IDEA · USER</span> vs
+    <span class="by by-coach">IDEA · COACH</span>. The tally runs overwhelmingly to the user — this keepsake is their mirror.</p>
+  </div>
+</section>
+
+<!-- ===================== TECHNIQUE 1: MORPHOLOGICAL ===================== -->
+<section>
+  <div class="sec-head">
+    <span class="sec-num">01</span>
+    <span class="sec-title">Morphological Analysis</span>
+    <span class="sec-tag">THE DECISION MATRIX</span>
+  </div>
+  <div class="sec-body">
+    <p>Seven axes. One value locked on each. This is the technique made literal — a grid of choices,
+    resolved cell by cell.</p>
+
+    <div class="matrix">
+      <div class="mh">AXIS</div>
+      <div class="mh">DIMENSION</div>
+      <div class="mh val">RESOLVED VALUE</div>
+
+      <div class="ax">A</div>
+      <div class="lbl">Structure</div>
+      <div class="val"><span class="chip">FEATURE-BASED</span> across all projects</div>
+
+      <div class="ax">B</div>
+      <div class="lbl">Monorepo tooling</div>
+      <div class="val"><span class="chip">TURBO</span><span class="chip">PNPM</span><span class="chip">CHANGESETS</span> — confirmed over Nx</div>
+
+      <div class="ax">C</div>
+      <div class="lbl">Versioning</div>
+      <div class="val"><span class="chip">PUBLISHABLE + VERSIONED</span> lib &mdash; later reversed (see §03)</div>
+
+      <div class="ax">D</div>
+      <div class="lbl">Tokens</div>
+      <div class="val"><span class="chip">TAILWIND</span> with a custom theme</div>
+
+      <div class="ax">E</div>
+      <div class="lbl">Components</div>
+      <div class="val"><span class="chip">HEADLESS + STYLED</span> via Tailwind preset in the lib</div>
+
+      <div class="ax">F</div>
+      <div class="lbl">Composition</div>
+      <div class="val"><span class="chip">CLEAN MONOREPO</span> — 2 independent apps, shared lib via workspace (no MFE)</div>
+
+      <div class="ax">G</div>
+      <div class="lbl">Rendering</div>
+      <div class="val"><span class="chip">SSG LANDING</span><span class="chip">CSR GALLERY</span></div>
+    </div>
+
+    <h3>How the axes fell</h3>
+    <ul class="ledger">
+      <li><span class="mark">A</span><span class="txt">Feature-based structure everywhere. <span class="by by-user">IDEA · USER</span></span></li>
+      <li><span class="mark">F</span><span class="txt">Initial pull toward micro-frontend (common host + 2 apps, one route) — but wary of the MFE setup, dislikes all-SSR, wants pure React. <span class="by by-user">IDEA · USER</span></span></li>
+      <li><span class="mark">F</span><span class="txt">RESOLVED: drop MFE entirely. Two independent apps + shared lib through the workspace. <span class="by by-user">IDEA · USER</span></span></li>
+      <li><span class="mark">▶</span><span class="txt">Consequence: a heterogeneous monorepo — Next(SSG) landing + Vite-React(SPA) gallery; the lib MUST be framework-neutral, so E = headless+styled via Tailwind preset. <span class="by by-coach">IDEA · COACH</span></span></li>
+      <li><span class="mark">!</span><span class="txt">KEY CONSTRAINT: this is a pet project for testing BMAD architecture. Sharpen the tooling, but do not descend into deep rabbit holes → minimum friction. <span class="by by-user">IDEA · USER</span></span></li>
+      <li><span class="mark">C</span><span class="txt">Lib made publishable — versioned via changesets, optionally deployed as an npm package. B = Turbo+pnpm confirmed. <span class="by by-user">IDEA · USER</span></span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================== TECHNIQUE 2: TRIZ ===================== -->
+<section>
+  <div class="sec-head">
+    <span class="sec-num">02</span>
+    <span class="sec-title">TRIZ Contradiction</span>
+    <span class="sec-tag">RESOLVE, DON'T COMPROMISE</span>
+  </div>
+  <div class="sec-body">
+    <p>The core fear surfaced: <em>drift → two UI systems sharing only their colors.</em> The user wants
+    ONE whole system, not two UIs. TRIZ frames this as a contradiction to dissolve, not split the difference.</p>
+
+    <div class="triz">
+      <div class="pole left">
+        <h4>WANT: CONSISTENCY</h4>
+        <p>Shared brand colors, spacing rhythm, fonts &amp; sizes, header style, hover, loaders, labels,
+        modals, buttons, visual effects, some charts. One coherent look &amp; feel — even the home hero
+        drinks the same tokens.</p>
+      </div>
+      <div class="vs">×</div>
+      <div class="pole">
+        <h4>WANT: REUSE</h4>
+        <p>Landing = home slightly unique, privacy/about consistent. Gallery consumes MORE of the DS
+        (forms &amp; co). But landing-only visual flourishes are needed nowhere else — no sense hoisting
+        them into the lib.</p>
+      </div>
+    </div>
+
+    <div class="resolution">
+      <span class="k">TRIZ RESOLUTION — THE PLACEMENT RULE</span>
+      <p><strong>Tokens are universal and enforced</strong> → consistency by construction.
+      <strong>Lib-membership is PURELY a reuse decision</strong>: used in 2+ places → lib;
+      one-off → stays in the app, but still token-driven. <strong>Reuse is orthogonal to consistency.</strong></p>
+    </div>
+
+    <div class="axes">
+      <div>
+        <span class="lab">Vertical axis — TOKENS</span>
+        Law of the land. Every pixel of color, spacing, type, rhythm flows from the theme. Consistency
+        is not a review discipline; it is baked into construction.
+      </div>
+      <div>
+        <span class="lab">Horizontal axis — LIB MEMBERSHIP</span>
+        A pure reuse call. Membership answers "how many places?" — never "does it match?". One-off
+        components live in-app, still fed by the same tokens.
+      </div>
+    </div>
+
+    <h3>Threads that fed the resolution</h3>
+    <ul class="ledger">
+      <li><span class="mark">◆</span><span class="txt">The core fear — desync into two UI systems bonded only by color. <span class="by by-user">IDEA · USER</span></span></li>
+      <li><span class="mark">◆</span><span class="txt">Even the home hero lives inside one system; landing uniqueness = extra visual elements that still drink the same tokens but are needed nowhere else. <span class="by by-user">IDEA · USER</span></span></li>
+      <li><span class="mark">✦</span><span class="txt">The two-axis placement rule that dissolved the contradiction. <span class="by by-coach">IDEA · COACH</span></span></li>
+      <li><span class="mark">→</span><span class="txt">User preference set: all _bmad-output written in English henceforth; conversation stays Russian. <span class="by by-user">IDEA · USER</span></span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================== TECHNIQUE 3: BACKCASTING ===================== -->
+<section>
+  <div class="sec-head">
+    <span class="sec-num">03</span>
+    <span class="sec-title">Backcasting</span>
+    <span class="sec-tag">FROM FINISHED SYSTEM → FIRST MOVE</span>
+  </div>
+  <div class="sec-body">
+    <p>Standing at the finished system and walking backward exposed the true build order — and forced
+    a decisive reversal of Axis C.</p>
+
+    <div class="note">REVERSAL — AXIS C: for the pet-project stage, DROP lib versioning/publishing.
+    Simplify to direct workspace import (latest-internal only). <span class="by by-user">IDEA · USER</span></div>
+
+    <div class="chain">
+      <div class="step">
+        <div class="idx">1</div>
+        <div class="body">
+          <div class="st-t">THEME TOKENS — FIRST</div>
+          <div class="st-d">Colors / fonts / spacing / rhythm / style. Seeded from the user's existing drafted theme. The single source of truth.</div>
+        </div>
+      </div>
+      <div class="arrowcol">▼</div>
+      <div class="step">
+        <div class="idx">2</div>
+        <div class="body">
+          <div class="st-t">FIRST PRIMITIVES</div>
+          <div class="st-d">Button, Input, Header + nav. Built and verified in Storybook in isolation before any app touches them.</div>
+        </div>
+      </div>
+      <div class="arrowcol">▼</div>
+      <div class="step">
+        <div class="idx">3</div>
+        <div class="body">
+          <div class="st-t">BRING UP THE GALLERY</div>
+          <div class="st-d">The heavier DS consumer (forms &amp; co) comes online first — it exercises the library hardest.</div>
+        </div>
+      </div>
+      <div class="arrowcol">▼</div>
+      <div class="step">
+        <div class="idx">4</div>
+        <div class="body">
+          <div class="st-t">BRING UP THE LANDING — LAST</div>
+          <div class="st-d">Astro SSG, zero-JS islands, React islands consuming the shared ui. Fewest new needs, so it comes last.</div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Decisions crystallised while walking backward</h3>
+    <ul class="ledger">
+      <li><span class="mark">+</span><span class="txt">Add <strong>Storybook</strong> to the lib — view components and their states in isolation. Flow: build component+states → verify in Storybook → import into app → use. <span class="by by-user">IDEA · USER</span></span></li>
+      <li><span class="mark">⊘</span><span class="txt">Arbitrary-value ban KEPT — but only bracket/arbitrary values banned (<code>bg-[#hex]</code>, <code>mt-[13px]</code>); the full token-mapped Tailwind utility vocabulary stays usable. <span class="by by-user">IDEA · USER</span></span></li>
+      <li><span class="mark">?</span><span class="txt">Open question raised: Astro vs Next for the SSG landing? Next feels like a massive framework for a mostly-static marketing page. <span class="by by-user">IDEA · USER</span></span></li>
+      <li><span class="mark">✱</span><span class="txt">Design-system aesthetic named: <em>BRUTALIST MONO</em> — raw, high-contrast, monospace type, visible structure, hard edges, minimal ornament. <span class="by by-user">IDEA · USER</span></span></li>
+      <li><span class="mark">▶</span><span class="txt">Brutalist-mono REINFORCES the architecture: a tight rigid token scale fits brutalism, so no-arbitrary-value lint becomes the AESTHETIC, not just discipline; a single mono typeface simplifies the theme; minimal-JS aligns with Astro zero-JS islands. Aesthetic and architecture agree. <span class="by by-coach">IDEA · COACH</span></span></li>
+      <li><span class="mark">🔒</span><span class="txt">Landing framework LOCKED: <strong>ASTRO</strong> (SSG, zero-JS islands, React islands consuming shared ui) instead of Next — lighter, homogeneous Vite toolchain with the Vite gallery, fits Brutalist-mono minimal-JS. <span class="by by-user">IDEA · USER</span></span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================== SYNTHESIS (CLIMAX) ===================== -->
+<section class="synthesis">
+  <div class="sec-head">
+    <span class="sec-num" style="border-color:var(--paper);color:var(--paper);">★</span>
+    <span class="sec-title">Synthesis</span>
+    <span class="sec-tag" style="color:var(--accent);">THE SPINE</span>
+  </div>
+  <div class="synth-body">
+    <div class="spine">
+      One UI system.<br>
+      <span class="hi">Tokens are law.</span><br>
+      Lib-membership is<br>pure reuse.<br>
+      <span class="hi">Brutalism makes the<br>constraint the aesthetic.</span>
+    </div>
+
+    <p style="color:#d0d0d0;font-size:14px;">Every later choice collapses into this single spine. The whole
+    session was one idea, discovered from three angles:</p>
+
+    <div class="synth-grid">
+      <div>
+        <span class="n">Tokens = law</span>
+        A single UI system enforced by tokens; lib-membership is a pure reuse decision, <strong>orthogonal to consistency</strong>.
+      </div>
+      <div>
+        <span class="n">Lint = style</span>
+        Brutalist-mono makes the rigid token scale the aesthetic — <strong>no-arbitrary-value lint = style, not discipline</strong>.
+      </div>
+      <div>
+        <span class="n">Brutalism = Astro</span>
+        Minimal-JS brutalism justifies <strong>Astro zero-JS islands</strong>; a homogeneous Astro+Vite toolchain fits the low-friction pet-project goal.
+      </div>
+      <div>
+        <span class="n">Tokens = build order</span>
+        Theme-first build order flows straight from <strong>tokens-as-source-of-truth</strong>. Start at the theme, everything else follows.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SKELETON ===================== -->
+<section>
+  <div class="sec-head">
+    <span class="sec-num">→</span>
+    <span class="sec-title">Chosen Direction — Monorepo Skeleton</span>
+    <span class="sec-tag">pnpm + Turbo · workspace-internal</span>
+  </div>
+  <div class="sec-body">
+<div class="tree"><span class="d">monorepo/</span>
+├─ <span class="d">packages/</span>
+│  ├─ <span class="d">theme/</span>          <span class="c"># tokens: colors, type, geometry, spacing/rhythm — SOURCE OF TRUTH</span>
+│  ├─ <span class="d">ui/</span>             <span class="c"># framework-neutral headless+styled components + Storybook</span>
+│  ├─ <span class="d">eslint-config/</span>  <span class="c"># shared lint — incl. no-arbitrary-value rule (bracket ban)</span>
+│  └─ <span class="d">tsconfig/</span>       <span class="c"># shared TypeScript base configs</span>
+│
+└─ <span class="d">apps/</span>
+   ├─ <span class="d">landing/</span>        <span class="c"># ASTRO — SSG, zero-JS islands, React islands consume ui  (built LAST)</span>
+   └─ <span class="d">gallery/</span>        <span class="c"># VITE — React SPA, EXIF photo gallery/sorter  (brought up FIRST)</span>
+</div>
+    <p class="note">Workspace-internal import only — no publish for now (Axis C reversed). Feature-based
+    structure. Turbo + pnpm + changesets tooling. Storybook-driven component loop.</p>
+  </div>
+</section>
+
+<!-- ===================== INVENTORY ===================== -->
+<section>
+  <div class="sec-head">
+    <span class="sec-num">◻</span>
+    <span class="sec-title">Design-System Inventory</span>
+    <span class="sec-tag">FOUNDATIONS → PRIMITIVES</span>
+  </div>
+  <div class="sec-body">
+    <div class="inv">
+      <div class="cat">
+        <div class="ct">Foundations</div>
+        <ul>
+          <li>Colors</li>
+          <li>Typography (single mono face)</li>
+          <li>Geometry</li>
+          <li>Spacing + rhythm tokens</li>
+          <li>Letter-spacing</li>
+          <li>Line-height</li>
+        </ul>
+      </div>
+      <div class="cat">
+        <div class="ct">Buttons</div>
+        <ul>
+          <li>Variants: primary / outline / danger</li>
+          <li>States: default + disabled</li>
+          <li>Icon-only (no text)</li>
+          <li>Button-with-loader</li>
+        </ul>
+      </div>
+      <div class="cat">
+        <div class="ct">Forms</div>
+        <ul>
+          <li>Input</li>
+          <li>Textarea</li>
+          <li>Select</li>
+          <li>Switch</li>
+          <li>Checkbox</li>
+          <li>Radio</li>
+          <li>Labels + field errors</li>
+        </ul>
+      </div>
+      <div class="cat">
+        <div class="ct">Data</div>
+        <ul>
+          <li>Progress bar</li>
+          <li>EXIF categories</li>
+          <li>Charts (possibly)</li>
+        </ul>
+      </div>
+      <div class="cat">
+        <div class="ct">Nav / Layout</div>
+        <ul>
+          <li>Shared Header</li>
+          <li>Unified content width across platforms</li>
+        </ul>
+      </div>
+      <div class="cat">
+        <div class="ct">Overlays / Feedback</div>
+        <ul>
+          <li>Modals</li>
+          <li>Toasts: default + danger</li>
+          <li>Global spinner / loader</li>
+          <li>Shared 404 / error page look</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note">Session wraps here. Gallery/EXIF-specific components decided later as needs emerge.
+    Component detail + exact spacing scale deferred to UX (bmad-ux).</p>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer>
+  <div>BMAD · CREATIVE PARTNER · 2026·06·30</div>
+  <div>MORPHOLOGICAL <span class="accent">×</span> TRIZ <span class="accent">×</span> BACKCASTING</div>
+  <div class="accent">THE CONSTRAINT IS THE STYLE.</div>
+</footer>
+
+</body>
+</html>

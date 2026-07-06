@@ -1,0 +1,64 @@
+@layer components {
+  .mono-label {
+    @apply text-[11px] leading-[1.2] font-medium tracking-[0.12em] text-[var(--m-accent)];
+  }
+
+  .mono-cat {
+    @apply text-[11px] leading-[1.2] font-medium tracking-[0.12em] text-[var(--m-accent)] uppercase;
+  }
+
+  .mono-title {
+    @apply font-display text-[18px] leading-[1.18] font-semibold;
+  }
+
+  .mono-field-label {
+    @apply mb-2 block text-[11px] leading-[1.2] font-medium tracking-[0.12em] text-[var(--m-muted2)] uppercase;
+  }
+
+  /* Border color is applied per state by the caller (error vs dim/focus). */
+  .mono-input {
+    @apply w-full border-0 border-b-2 bg-transparent text-[var(--m-fg)] caret-[var(--m-accent)] transition-colors outline-none placeholder:text-[var(--m-muted2)];
+  }
+
+  /* Bakes the boxed-button type at source so call sites don't inherit the body font / unpinned line-height; weight + tracking stay at the call site. */
+  .mono-cta {
+    @apply font-display border-2 border-[var(--m-accent)] bg-[var(--m-accent)] text-[14px] leading-none text-[var(--m-bg)] uppercase transition-colors hover:bg-transparent hover:text-[var(--m-accent)] disabled:opacity-60;
+  }
+
+  .mono-btn-outline {
+    @apply font-display border-2 border-[var(--m-dim)] text-[14px] leading-none text-[var(--m-muted)] uppercase transition-colors hover:border-[var(--m-accent)] hover:text-[var(--m-accent)];
+  }
+
+  .mono-focus {
+    @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--m-accent)];
+  }
+
+  .mono-error {
+    @apply mt-2 text-[11px] leading-[1.2] tracking-[0.12em] text-[var(--m-error)];
+  }
+
+  .mono-icon-btn {
+    /* Pure border, NO fill — every icon button reads the same (no ad-hoc --m-card bg). */
+    @apply flex flex-none items-center justify-center border-2 border-[var(--m-dim)] text-[var(--m-muted)] transition-colors hover:border-[var(--m-accent)] hover:text-[var(--m-accent)];
+  }
+
+  .mono-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--m-dim) var(--m-bg);
+  }
+  .mono-scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  .mono-scrollbar::-webkit-scrollbar-track {
+    background: var(--m-bg);
+  }
+  .mono-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--m-dim);
+    border: 2px solid var(--m-bg);
+    border-radius: 0;
+  }
+  .mono-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--m-muted2);
+  }
+}

@@ -1,0 +1,173 @@
+<div class="stage">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen">
+      <div class="empty">
+        <div class="eyebrow">// EXIF GALLERY</div>
+        <h1 class="h1">See how you<br />actually shoot.</h1>
+        <p class="promise">Nothing uploads. Nothing&rsquo;s stored.</p>
+        <button class="btn-primary" type="button">Add photos</button>
+        <p class="sub">Reads EXIF entirely in your browser — focal length, ISO, shutter, time of day. Close the tab and it&rsquo;s gone.</p>
+      </div>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+  <div class="caption">EXIF Gallery — first-run empty state (mobile, phone-width frame)</div>
+</div>
+
+<style>
+/* Illustrates: DESIGN.md Components → empty-state, header-bar (deliberately absent);
+   EXPERIENCE.md IA → Gallery "Empty state" row; Component Patterns → Empty-state row;
+   State Patterns → "No photos yet"; Privacy & Data Handling → promise-before-picker rule;
+   Key Flow UJ-1 step 1. */
+
+* { box-sizing: border-box; }
+
+:root {
+  --m-bg: #f4f4f4;
+  --m-fg: #161616;
+  --m-accent: #4d7c0f;
+  --m-line: #161616;
+  --m-panel: #e4e4e4;
+  --m-card: #eaeaea;
+  --m-muted: #6b6b6b;
+  --m-muted2: #8c8c8c;
+  --m-dim: #d6d6d6;
+  --m-error: #b91c1c;
+
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #d8d8d8;
+  font-family: var(--font-mono);
+  color: var(--m-fg);
+}
+
+.stage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 40px 16px;
+}
+
+/* Device frame chrome — presentational only, not part of the design system spec */
+.phone {
+  position: relative;
+  width: 390px;
+  height: 844px;
+  max-width: 100%;
+  background: var(--m-bg);
+  border: 10px solid #0d0d0d;
+  border-radius: 44px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.35);
+}
+
+.notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 24px;
+  background: #0d0d0d;
+  border-radius: 0 0 16px 16px;
+  z-index: 5;
+}
+
+.home-indicator {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 4px;
+  background: #0d0d0d;
+  border-radius: 2px;
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  background: var(--m-bg);
+  display: flex;
+}
+
+/* ── Empty-state (real spec content starts here) ──────────────────────── */
+
+.empty {
+  margin: auto;
+  width: 100%;
+  padding: 0 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 24px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.12em;
+  color: var(--m-accent);
+}
+
+.h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  color: var(--m-fg);
+}
+
+.promise {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--m-fg);
+}
+
+.btn-primary {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  height: 36px;
+  padding: 0 24px;
+  background: var(--m-accent);
+  color: var(--m-bg);
+  border: 2px solid var(--m-accent);
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.sub {
+  margin: 4px 0 0;
+  max-width: 320px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--m-muted);
+}
+
+.caption {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: #6b6b6b;
+}
+</style>

@@ -1,0 +1,335 @@
+<div class="stage">
+  <div class="browser">
+    <div class="chrome">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <div class="url-bar">lazycam.app</div>
+    </div>
+    <div class="viewport">
+
+      <header class="header-bar">
+        <div class="wordmark">LAZY <span class="accent">CAM</span></div>
+        <button class="theme-toggle" type="button" aria-label="Toggle theme">&#9728;</button>
+      </header>
+
+      <section class="hero">
+        <div class="container">
+          <div class="eyebrow reveal">// LAZY CAM &mdash; iOS CAMERA APP</div>
+          <h1 class="hero-h1 hero-glitch">Clean, honest pixels.</h1>
+          <p class="hero-sub reveal reveal-delay">The stock iPhone look is harsh and over-processed. This is how you escape it &mdash; creative control on a clean base, not a fight against Apple's forced HDR.</p>
+        </div>
+      </section>
+
+      <section class="pillars">
+        <div class="container">
+          <div class="section-eyebrow">// THREE PILLARS</div>
+
+          <div class="pillar-grid">
+            <article class="pillar scroll-reveal" style="--stagger: 0">
+              <div class="pillar-index">01</div>
+              <h3 class="pillar-title">Kill forced HDR</h3>
+              <p class="pillar-body">iOS forces HDR into every frame the moment you tap the shutter. Lazy Cam starts from a clean base &mdash; no fighting the system after the fact.</p>
+            </article>
+
+            <article class="pillar scroll-reveal" style="--stagger: 1">
+              <div class="pillar-index">02</div>
+              <h3 class="pillar-title">Strip native processing</h3>
+              <p class="pillar-body">No aggressive sharpening, no synthetic smoothing pass on faces. What the sensor saw is what you get to work with.</p>
+            </article>
+
+            <article class="pillar scroll-reveal" style="--stagger: 2">
+              <div class="pillar-index">03</div>
+              <h3 class="pillar-title">Own preset system</h3>
+              <p class="pillar-body">Shadow-to-highlight tone curves and a per-color mixer. Even if iOS lets you disable HDR one day, presets are still the reason to stay.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <div class="fade-out" aria-hidden="true"></div>
+    </div>
+  </div>
+  <div class="caption">Landing &mdash; header + hero (GlitchText-settle headline) + start of three pillars (scroll-reveal, staggered). Desktop, browser-width frame, responsive site. Reload the mock to see the hero beat; scroll to see pillars reveal.</div>
+</div>
+
+<style>
+/* Illustrates: DESIGN.md Components → header-bar, hero (GlitchText treatment),
+   pillar-card (scroll-reveal); EXPERIENCE.md IA → Landing "Hero" + "Three pillars"
+   rows; Component Patterns → Hero, Pillar-card motion rows; Key Flow UJ-2 steps 1-2
+   (hero states the promise, first pillar "kill forced HDR" scrolled into view). */
+
+* { box-sizing: border-box; }
+
+:root {
+  --m-bg: #f4f4f4;
+  --m-fg: #161616;
+  --m-accent: #4d7c0f;
+  --m-line: #161616;
+  --m-panel: #e4e4e4;
+  --m-card: #eaeaea;
+  --m-muted: #6b6b6b;
+  --m-muted2: #8c8c8c;
+  --m-dim: #d6d6d6;
+  --m-error: #b91c1c;
+
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #d8d8d8;
+  font-family: var(--font-mono);
+  color: var(--m-fg);
+}
+
+.stage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 40px 16px;
+}
+
+/* Device frame chrome — presentational only, not part of the design system spec */
+.browser {
+  width: 100%;
+  max-width: 1320px;
+  background: var(--m-bg);
+  border: 1px solid #b8b8b8;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+  overflow: hidden;
+}
+
+.chrome {
+  height: 36px;
+  background: #e2e2e2;
+  border-bottom: 1px solid #c8c8c8;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 14px;
+}
+.dots { display: flex; gap: 6px; }
+.dots span { width: 10px; height: 10px; border-radius: 50%; background: #bdbdbd; display: inline-block; }
+.url-bar {
+  flex: 1;
+  max-width: 360px;
+  height: 22px;
+  background: #f2f2f2;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #777;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+}
+
+.viewport {
+  position: relative;
+  max-height: 900px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ── Header-bar ────────────────────────────────────────────────────── */
+
+.header-bar {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  background: var(--m-bg);
+  border-bottom: 2px solid var(--m-line);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--m-fg);
+}
+.wordmark .accent { color: var(--m-accent); }
+
+.theme-toggle {
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--m-dim);
+  border-radius: 0;
+  background: transparent;
+  color: var(--m-muted);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.theme-toggle:hover { border-color: var(--m-accent); color: var(--m-accent); }
+
+.container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+/* ── Hero ──────────────────────────────────────────────────────────── */
+
+.hero {
+  padding: 80px 0 64px;
+  border-bottom: 2px solid var(--m-dim);
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--m-accent);
+}
+
+.hero-h1 {
+  margin: 24px 0 0;
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  max-width: 720px;
+  color: var(--m-fg);
+}
+
+.hero-sub {
+  margin: 24px 0 0;
+  max-width: 560px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--m-muted);
+}
+
+/* ── Pillars ───────────────────────────────────────────────────────── */
+
+.pillars {
+  padding: 64px 0 80px;
+}
+
+.section-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--m-muted2);
+  text-transform: uppercase;
+}
+
+.pillar-grid {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+
+.pillar {
+  background: var(--m-card);
+  padding: 28px;
+  border: 2px solid var(--m-dim);
+}
+
+.pillar-index {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--m-accent);
+}
+
+.pillar-title {
+  margin: 16px 0 0;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: 0;
+  color: var(--m-fg);
+}
+
+.pillar-body {
+  margin: 16px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--m-muted);
+}
+
+.fade-out {
+  height: 48px;
+  background: linear-gradient(to bottom, rgba(244,244,244,0), rgba(244,244,244,0.95));
+  margin-top: -48px;
+  position: relative;
+  pointer-events: none;
+}
+
+.caption {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: #6b6b6b;
+}
+
+@media (max-width: 900px) {
+  .pillar-grid { grid-template-columns: 1fr; }
+  .header-bar, .container { padding-left: 24px; padding-right: 24px; }
+}
+
+/* ── Motion: one settle-in beat on the headline, staggered scroll-reveal on
+   pillars. CSS-only (no JS) — animation-timeline: view() drives the reveal
+   natively. Motion is decoration, never a gate: all content is present and
+   readable in the DOM without it (progressive enhancement). Reduced-motion
+   collapses everything to its final state instantly, same contract as the
+   inherited GlitchText/MatrixText primitives. */
+
+@keyframes heroGlitchSettle {
+  0%   { opacity: 0; transform: translateY(10px); text-shadow: none; }
+  8%   { opacity: 1; transform: translate(-2px, 0); text-shadow: 2px 0 var(--m-accent), -2px 0 var(--m-error); }
+  16%  { transform: translate(2px, 0); text-shadow: -2px 0 var(--m-accent), 2px 0 var(--m-error); }
+  24%  { transform: translate(0, 0); text-shadow: none; }
+  100% { opacity: 1; transform: translateY(0); text-shadow: none; }
+}
+.hero-glitch {
+  animation: heroGlitchSettle 900ms steps(1, end) both;
+}
+
+@keyframes revealUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.reveal {
+  animation: revealUp 500ms ease-out both;
+}
+.reveal-delay { animation-delay: 150ms; }
+
+@keyframes scrollRevealUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.scroll-reveal {
+  animation: scrollRevealUp 400ms ease-out both;
+  animation-delay: calc(var(--stagger, 0) * 90ms);
+  animation-timeline: view();
+  animation-range: entry 0% cover 25%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-glitch, .reveal, .scroll-reveal {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    text-shadow: none !important;
+  }
+}
+</style>

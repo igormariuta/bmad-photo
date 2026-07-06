@@ -1,0 +1,101 @@
+# Story 2.4: Insights Dashboard
+
+Status: ready-for-dev
+
+<!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
+
+## Story
+
+As the builder,
+I want to see an Insights dashboard of my shooting habits after ingesting photos,
+so that I learn something true about how I actually shoot.
+
+## Acceptance Criteria
+
+1. **Given** the first successful Ingest completes, **when** the Gallery renders, **then** the Header-bar (wordmark + theme-toggle, no nav links) appears, and Insights renders as the single view. [Source: planning-artifacts/epics.md#Story 2.4]
+2. **Given** the full readable set, **when** Insights renders, **then** it shows one histogram-bar row per FR-7 dimension — focal length/lens (combined), ISO, shutter, aperture, megapixel mix, selfie/rear, hour-of-day — always computed over the full readable set; **and** each field's percentage is computed only over photos with a readable value for that specific field. [Source: planning-artifacts/epics.md#Story 2.4; architecture/architecture-BMAD/ARCHITECTURE-SPINE.md#AD-4]
+3. **Given** the Ingested set changes, **when** a change occurs, **then** Insights recompute. [Source: planning-artifacts/epics.md#Story 2.4]
+4. **Given** N photos are unreadable, **when** N > 0, **then** an unreadable-count InfoBox is visible, phrased plainly (e.g. "42 unreadable — excluded from the numbers below."); when N = 0, it is absent (never "0 unreadable"). [Source: planning-artifacts/epics.md#Story 2.4]
+5. **Given** every Ingested photo is unreadable, **when** Insights renders, **then** it renders empty-of-data with a prominent unreadable count, treated as a valid informative outcome, not an error. [Source: planning-artifacts/epics.md#Story 2.4]
+
+## Dev Notes — read this first
+
+- **Depends on Story 2.2** (`useReadablePhotos()`/`useUnreadableCount()` selectors) and Story 2.3 (the progress screen this story's completion transition follows).
+- **Gap-fill: `Header-bar` is not built by any Epic 1 story** (checked: it's a "New" component per DESIGN.md, absent from both Story 1.4's and 1.5's inherited-component lists) — yet this story's AC #1 requires it, and Story 4.1 later says it's "reused from `packages/ui`." Build it here, in `packages/ui` (shared — Story 4.1 depends on it existing there), not Gallery-local. 64px tall (`--m-space-header-height`), `ThemeToggle` (Story 1.5) right, `--m-line` bottom rule, no nav links (there's nowhere else to point).
+- **Wordmark is a prop, not fixed content — confirmed by the real mockups (`mockups/gallery-browse.html`, `gallery-insights.html` vs. `mockups/landing-hero.html`).** Gallery's Header-bar renders `"EXIF "` in plain `--m-fg` + `"GALLERY"` in `--m-accent`; Landing's renders `"LAZY "` in plain + `"CAM"` in accent. Same component, different text — so `Header-bar` needs a prop carrying both the plain and accent-colored portions (e.g. `wordmark: string` + `wordmarkAccent: string`, rendered as `{wordmark} <span className="text-accent">{wordmarkAccent}</span>`), not a hardcoded string. This corrects an earlier draft of this story, which had no real source for the wordmark text and guessed it might be unbranded — the mockups settle it.
+- **Gap-fill: `Panel` doesn't exist as a real component anywhere yet either.** The reference's `Panel` (seen wrapping every demo section in `notlazy-design-guide.tsx`) actually comes from `notlazy-helpers.tsx` — a **demo-page-only layout helper**, not a ported product component. DESIGN.md's own prose reuses the same card+caption chrome concept for real product surfaces in two places: Histogram-bar here ("stacked... inside a Panel") and Pillar-card in Story 4.2 ("Panel-identical chrome"). Two consumers across two apps means FR-2's reuse rule applies — build a real `Panel` in `packages/ui` now: `caption: string`, `tone?: 'accent' | 'muted'` (default `'accent'`), `bordered?: boolean` (default **`false`**), children, `className?`; `--m-card` background, `--m-card-padding`, caption in 11px/0.12em `--m-accent`/`--m-muted2` depending on `tone`, and a 2px `--m-dim` border **only when `bordered` is set**. **This default-false border corrects an earlier draft of this story**, which baked the border in unconditionally reasoning from DESIGN.md's Pillar-card wording alone — the real Insights mockup (`mockups/gallery-insights.html`, `.hist-panel` class) shows the histogram panels with **no border at all**, just card background + padding, confirming Panel's default (used by this story) must stay borderless; Story 4.2's Pillar-card is the one that opts into `bordered`.
+- **Gap-fill: `Histogram-bar` (UX-DR4, "New") is this story's own responsibility to build — it's not in any Epic 1 component-library story.** Since Insights is its only consumer anywhere in this project, build it **Gallery-local** (`apps/gallery/src/features/insights/`), not in `packages/ui` — same single-consumer reasoning epics.md itself applies to `GlitchText` in Story 4.1 (FR-2's assumption). It extends `StatBar`'s block-cell visual language (Story 1.5) into a labelled row: bucket name (`data-label`) → filled cells (`--m-accent`) → dotted remainder (`--m-dim`) → right-aligned count/%. 20px tall, `rounded.DEFAULT` radius.
+- **App-shell now has three states to gate, not two** (Stories 2.1/2.3 built the first two): empty/no selection → Empty-state; parsing in progress → Progress indicator; parsing complete → Header-bar + Insights (this story). Finalize that three-way gate here.
+- **Bucketing logic per dimension — most dimensions need no arbitrary bucketing at all, only two genuinely need invented bucket boundaries:**
+  - **Focal length/lens (combined):** group by `lensLabel` directly (it already encodes focal length, e.g. `"24mm"`) — one row per distinct lens, no separate focal-length dimension needed
+  - **Aperture:** group by exact `apertureF` value — phone lenses have a small fixed set of physical apertures per lens, so exact-value grouping already produces meaningful buckets; no numeric range bucketing needed
+  - **Megapixel mix:** exactly 2 buckets (`12`, `48`) — trivial
+  - **Selfie/rear:** exactly 2 buckets (`front`, `rear`) — trivial
+  - **ISO:** the real Insights mockup (`mockups/gallery-insights.html`) shows the actual intended buckets — **4 ranges, not 7 single-stops**: `32–100`, `100–400`, `400–1600`, `1600+`. This corrects an earlier draft of this story, which invented 7 single-photographic-stop buckets (100/200/400/800/1600/3200/6400) with no source; use the mockup's 4-bucket scheme instead — it's concrete design evidence, not an inference.
+  - **Hour-of-day:** the same mockup also settles this — **6 buckets of 4 hours each** (`00–04`, `04–08`, `08–12`, `12–16`, `16–20`, `20–24`), sorted descending by share, not literal individual 0–23 hour rows. This corrects an earlier draft of this story, which reasoned from UX-DR4's "hour-of-day" wording alone (without checking the mockup) that literal per-hour buckets were intended — they aren't; the mockup is the authoritative source here over the more ambiguous prose naming.
+  - **`[ASSUMPTION]` Shutter speed:** no mockup shows this dimension — still unspecified upstream; use standard shutter-speed stops (1/1000s-or-faster, 1/500, 1/250, 1/125, 1/60, 1/30, 1/15-or-slower) as a reasonable default, flag if a different scheme is wanted
+  - **Every dimension's rows sort descending by count/share** — this is what makes "most-used focal length: 24mm (58%)" (PRD's own UJ-1 example) the first row a viewer sees, not an arbitrary or alphabetical order.
+- **The per-field percentage rule (AD-4) governs every dimension:** a photo missing that specific field (e.g. no `exposureCompEv`... note exposure comp is a Facet, not a histogram dimension, see below) is excluded from *that dimension's* denominator, not from the overall readable count. This is why ISO's percentages and aperture's percentages can each divide by a slightly different N if some readable photos are missing just one of those fields.
+- **Exposure compensation is a Facet (Story 3.3), never a histogram row here** — UX-DR4 explicitly excludes it from Insights; don't add an 8th dimension.
+- **AC #3 (recompute on change) needs no new mechanism** — `useReadablePhotos()`/`useUnreadableCount()` are already reactive Zustand selectors (Story 2.2); as long as Insights reads through them (not a one-time snapshot), React re-renders automatically when Story 2.5's "Add more" changes the store. Don't build a manual recompute trigger.
+- **AD-3 still applies:** `insights/` may import only `useReadablePhotos()`/`useUnreadableCount()` — never reach past them, even though `browse/` doesn't exist yet in this epic to accidentally import from.
+
+## Tasks / Subtasks
+
+- [ ] Task 1: Build `Header-bar` (AC: #1) — `packages/ui/src/HeaderBar/`
+  - [ ] Props: `wordmark: string`, `wordmarkAccent: string` (rendered `{wordmark} <span class="text-accent">{wordmarkAccent}</span>`, per the mockup evidence in Dev Notes — Gallery passes `wordmark="EXIF "` `wordmarkAccent="GALLERY"`, Landing (Story 4.1) passes `wordmark="LAZY "` `wordmarkAccent="CAM"`), `actions?: ReactNode`
+  - [ ] Fixed 64px (`--m-space-header-height`), wordmark left (display type) + `ThemeToggle` right, `--m-line` bottom rule, no nav links
+  - [ ] `actions` slot renders between the wordmark and `ThemeToggle`, defaulting to nothing — added specifically because Story 2.5 needs a persistent "Add more" trigger inside the Header-bar, but Landing's Story 4.1 usage must stay exactly wordmark+theme-toggle with nothing passed to this slot
+  - [ ] Storybook story (co-located, per Story 1.4/1.5's convention — this component was missed by those stories, add its story now), including one variant with `actions` populated
+
+- [ ] Task 2: Build `Histogram-bar` (AC: #2) — `apps/gallery/src/features/insights/HistogramBar.tsx`
+  - [ ] Props: `label: string` (bucket name), `value: number` (0–100 share), `count: number` (raw count for the right-aligned display), `cells?: number` (defaults reasonably, e.g. `48` matching `StatBar`'s reference resolution)
+  - [ ] Visual: extends `StatBar`'s cell language — filled `--m-accent` cells to `value`%, dotted `--m-dim` remainder, right-aligned count/% — 20px row height, `rounded.DEFAULT`
+- [ ] Task 3: Aggregation logic per FR-7 dimension (AC: #2)
+  - [ ] Implement the 7 dimensions exactly as scoped in Dev Notes (focal length/lens combined by `lensLabel`; ISO in the mockup's 4 fixed ranges; shutter bucketed per the stated stop series; aperture/megapixel/camera by exact value; hour-of-day in the mockup's 6 four-hour ranges), each computed over `useReadablePhotos()`'s current set
+  - [ ] Each dimension's denominator is the count of readable photos where *that dimension's* source field is defined — not the full readable count
+  - [ ] Sort each dimension's rows descending by count
+- [ ] Task 4: Insights view composition (AC: #1, #2, #3)
+  - [ ] Render inside a `Panel` per dimension (default `bordered={false}`, matching the real Insights mockup), one `HistogramBar` row per bucket, in the fixed dimension order given in AC #2
+  - [ ] Update `app-shell`'s gating to a 3-way switch (empty-state / progress / header+Insights) per Dev Notes
+- [ ] Task 5: Unreadable-count InfoBox (AC: #4)
+  - [ ] Render `packages/ui`'s `InfoBox` (Story 1.5) with the unreadable count, phrased plainly (e.g. *"42 unreadable — excluded from the numbers below."*) whenever `useUnreadableCount() > 0`
+  - [ ] Render nothing when the count is 0 — never show "0 unreadable"
+- [ ] Task 6: All-unreadable empty state (AC: #5)
+  - [ ] When `useReadablePhotos()` is empty but the Ingested set is non-empty (i.e. every photo is unreadable), render a distinct empty-of-data layout — the unreadable count is the prominent message here, not a secondary `InfoBox` note, and this is **not an error state** (no `ErrorMessage`, no error styling) — it's valid information about the user's actual photo set
+- [ ] Task 7: Verify (AC: #1–#5)
+  - [ ] Ingest a mixed batch (some readable, some not) — confirm all 7 dimensions render, sorted descending, with correct per-field denominators, and the unreadable `InfoBox` shows the right count
+  - [ ] Ingest an all-readable batch — confirm the `InfoBox` is entirely absent
+  - [ ] Ingest an all-unreadable batch — confirm the distinct empty-of-data layout renders instead of 7 empty histogram panels
+
+## Project Structure Notes
+
+```text
+packages/ui/src/HeaderBar/         # new — gap-fill, shared with Story 4.1
+apps/gallery/src/
+  features/insights/
+    HistogramBar.tsx                # new — Gallery-local (single consumer)
+    aggregations.ts                  # new — the 7-dimension bucketing logic
+  app-shell/                        # updated: 3-way gate (empty/progress/insights)
+```
+
+### References
+
+- [Source: planning-artifacts/epics.md#Story 2.4] — acceptance criteria origin
+- [Source: ux-designs/ux-BMAD/DESIGN.md#Components — histogram-bar] — visual spec, exact FR-7 dimension list including "hour-of-day" naming
+- [Source: architecture/architecture-BMAD/ARCHITECTURE-SPINE.md#AD-3] — `insights/` selector-only import boundary
+- [Source: architecture/architecture-BMAD/ARCHITECTURE-SPINE.md#AD-4] — per-field percentage denominator rule
+- [Source: planning-artifacts/prds/prd-BMAD/prd.md#FR-7, #UJ-1] — dimension list, "most-used focal length: 24mm (58%)" sort-order precedent
+- [Source: planning-artifacts/epics.md#Story 4.1] — Header-bar "reused from packages/ui" (confirms shared placement)
+- [Source: ux-designs/ux-BMAD/mockups/gallery-insights.html] — real reference markup/CSS: wordmark two-part text, borderless `.hist-panel`, exact ISO/hour-of-day bucket boundaries, unreadable-count copy pattern
+- [Source: ux-designs/ux-BMAD/mockups/gallery-browse.html, landing-hero.html] — cross-check confirming the wordmark differs per app (Gallery: "EXIF GALLERY"; Landing: "LAZY CAM")
+
+## Dev Agent Record
+
+### Agent Model Used
+
+### Debug Log References
+
+### Completion Notes List
+
+### File List
