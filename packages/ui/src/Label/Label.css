@@ -1,0 +1,15 @@
+@keyframes label-caret-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.label-caret {
+  display: inline-block;
+  animation: label-caret-blink 1s step-end infinite;
+}

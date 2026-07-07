@@ -1,0 +1,9 @@
+@import "@bmad/theme/index.css";
+@import "tailwindcss";
+@import "@bmad/theme/tailwind-preset";
+
+html,
+body {
+  background-color: var(--m-bg);
+  color: var(--m-fg);
+}
