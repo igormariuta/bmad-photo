@@ -4,7 +4,7 @@ baseline_commit: f4a25d188139ec55f1e993b474634264b9e1abf5
 
 # Story 1.5: Shared Component Library — Display, Feedback & Navigation Primitives
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
