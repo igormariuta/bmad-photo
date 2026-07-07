@@ -12,7 +12,7 @@
     "./tailwind-preset": "./src/tailwind-preset.css"
   },
   "scripts": {
-    "lint": "eslint .",
+    "lint": "eslint . && stylelint \"**/*.{css,astro}\" --allow-empty-input",
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
@@ -23,6 +23,10 @@
     "@bmad/eslint-config": "workspace:*",
     "@bmad/tsconfig": "workspace:*",
     "eslint": "10.6.0",
+    "postcss-html": "1.8.1",
+    "stylelint": "17.14.0",
+    "stylelint-config-html": "1.1.0",
+    "stylelint-declaration-strict-value": "1.11.1",
     "tailwindcss": "4.3.2",
     "typescript": "6.0.3"
   }

@@ -1,3 +1,3 @@
-import { baseConfig } from "@bmad/eslint-config";
+import { createConfig } from "@bmad/eslint-config";
 
-export default baseConfig;
+export default createConfig({ element: "theme" });

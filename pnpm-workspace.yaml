@@ -3,3 +3,6 @@ packages:
   - "packages/*"
 allowBuilds:
   esbuild: true
+minimumReleaseAgeExclude:
+  - '@boundaries/elements@3.0.1'
+  - eslint-plugin-boundaries@7.0.1
