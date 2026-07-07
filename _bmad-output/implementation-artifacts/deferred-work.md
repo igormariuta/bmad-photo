@@ -1,5 +1,10 @@
 # Deferred Work
 
+## Deferred from: code review of 2-1-empty-state-client-side-photo-ingest (2026-07-07)
+
+- **Non-image files aren't filtered before reaching `ingestFiles`/the store** [apps/gallery/src/features/ingest/EmptyState.tsx] — `accept="image/*"` isn't OS-enforced, so a non-image file can be selected and land in `rawFiles` unfiltered. This is Story 2.2's EXIF-worker job (AD-2 marks unreadable files via `error`/`readable:false`), not this story's.
+- **No path back from the transitional `Loading` placeholder to `EmptyState`** [apps/gallery/src/app-shell/App.tsx] — once a valid selection is made, there's no reset/cancel affordance. Intentional given this story's stub scope: Story 2.2/2.3 replace this branch entirely with the real worker pipeline/progress UI, so building a reset path now would be throwaway work.
+
 ## Deferred from: code review of 1-1-monorepo-tooling-foundation (2026-07-06)
 
 - **`turbo test` is a permanently-green no-op** [turbo.json] — no workspace defines a `test` script, so the CI Test gate matches zero tasks and passes without verifying anything. Accepted for now per Story 1.1 Task 10; wire a real Vitest task + at least one test once Story 1.2+ introduces testable code.
