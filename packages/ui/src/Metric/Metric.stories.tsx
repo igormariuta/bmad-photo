@@ -44,7 +44,7 @@ export const Accent: Story = {
 export const MetaRow: Story = {
   render: () => (
     <div className="flex flex-wrap items-center gap-2.5 text-caption text-muted">
-      <span>@lazy</span>
+      <span>@username</span>
       <Dot />
       <span>14 Jun</span>
       <Dot />

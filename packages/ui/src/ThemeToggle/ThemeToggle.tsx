@@ -4,14 +4,18 @@ import { ICON_BUTTON_CLASS_NAME } from "../Button/Button";
 
 export type Theme = "light" | "dark";
 
-const STORAGE_KEY = "theme";
+// Also hardcoded (this key + the localStorage/prefers-color-scheme fallback logic below) in the
+// two flash-prevention <script> tags — apps/gallery/index.html and
+// apps/landing/src/layouts/Layout.astro — since those must run inline, non-deferred, before
+// hydration, and can't import this module. Keep all three in sync by hand if this ever changes.
+export const THEME_STORAGE_KEY = "theme";
 
 function readInitialTheme(): Theme {
   if (typeof document === "undefined") return "light";
   // The blocking pre-paint script (see Dev Notes) may have already set `.dark` — trust it
   // first so this stays in sync with whatever's already rendered.
   if (document.documentElement.classList.contains("dark")) return "dark";
-  const stored = window.localStorage.getItem(STORAGE_KEY);
+  const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
   if (stored === "light" || stored === "dark") return stored;
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
@@ -34,7 +38,7 @@ export function ThemeToggle() {
     const next: Theme = theme === "dark" ? "light" : "dark";
     setTheme(next);
     applyTheme(next);
-    window.localStorage.setItem(STORAGE_KEY, next);
+    window.localStorage.setItem(THEME_STORAGE_KEY, next);
   }
 
   return (

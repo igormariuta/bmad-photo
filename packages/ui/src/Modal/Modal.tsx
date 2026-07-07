@@ -20,14 +20,23 @@ export function Modal({ isOpen, onOpenChange, labelledBy, children }: ModalProps
   const [mounted, setMounted] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
+  const wasOpenRef = useRef(false);
 
   useEffect(() => setMounted(true), []);
 
+  // Captured synchronously during render (not inside an effect) the instant `isOpen` flips
+  // true — this runs before commit, so it still sees the real invoker even if that invoker
+  // unmounts in the same batch that opens this Modal (e.g. a Menu item closing itself while
+  // opening a ConfirmModal). An effect would be too late: the DOM mutation that removes the
+  // invoker, and the browser's own focus-to-body shift that follows it, both happen during
+  // commit, before any effect (even useLayoutEffect) runs.
+  if (isOpen && !wasOpenRef.current) {
+    restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  }
+  wasOpenRef.current = isOpen;
+
   useEffect(() => {
     if (!isOpen) return;
-
-    restoreFocusRef.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
     const { body } = document;
     const prevOverflow = body.style.overflow;

@@ -62,6 +62,7 @@ export function Button({
   ...rest
 }: ButtonProps) {
   if (href !== undefined) {
+    const { style: styleOverride, ...anchorRest } = rest as AnchorHTMLAttributes<HTMLAnchorElement>;
     const className = [BUTTON_CLASS_NAME, VARIANT_CLASS_NAME[variant], fullWidth && "w-full"]
       .filter(Boolean)
       .join(" ");
@@ -69,15 +70,20 @@ export function Button({
       <a
         href={href}
         className={className}
-        style={BUTTON_STYLE}
-        {...(rest as AnchorHTMLAttributes<HTMLAnchorElement>)}
+        style={{ ...BUTTON_STYLE, ...styleOverride }}
+        {...anchorRest}
       >
         {children}
       </a>
     );
   }
 
-  const { type = "button", disabled, ...buttonRest } = rest as ButtonHTMLAttributes<HTMLButtonElement> & {
+  const {
+    type = "button",
+    disabled,
+    style: styleOverride,
+    ...buttonRest
+  } = rest as ButtonHTMLAttributes<HTMLButtonElement> & {
     type?: "button" | "submit";
   };
   const isDisabled = Boolean(disabled) || pending;
@@ -89,6 +95,7 @@ export function Button({
         aria-label={children as string}
         disabled={isDisabled}
         className={`${ICON_BUTTON_CLASS_NAME} size-9`}
+        style={styleOverride}
         {...buttonRest}
       >
         {pending ? <Spinner className="text-body" /> : <Icon className="size-4" />}
@@ -101,7 +108,13 @@ export function Button({
     .join(" ");
 
   return (
-    <button type={type} disabled={isDisabled} className={className} style={BUTTON_STYLE} {...buttonRest}>
+    <button
+      type={type}
+      disabled={isDisabled}
+      className={className}
+      style={{ ...BUTTON_STYLE, ...styleOverride }}
+      {...buttonRest}
+    >
       {pending && <Spinner className="text-body" />}
       {pending ? (pendingLabel ?? children) : children}
     </button>

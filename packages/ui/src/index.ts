@@ -50,6 +50,9 @@ export type { UnderlineTabsProps, UnderlineTabItem } from "./UnderlineTabs/Under
 export { Modal } from "./Modal/Modal";
 export type { ModalProps } from "./Modal/Modal";
 
+export { ModalHeader } from "./Modal/ModalHeader";
+export type { ModalHeaderProps } from "./Modal/ModalHeader";
+
 export { ConfirmModal } from "./ConfirmModal/ConfirmModal";
 export type { ConfirmModalProps } from "./ConfirmModal/ConfirmModal";
 
@@ -67,5 +70,5 @@ export type { InfoBoxProps, InfoBoxTone } from "./InfoBox/InfoBox";
 export { ErrorMessage } from "./ErrorMessage/ErrorMessage";
 export type { ErrorMessageProps } from "./ErrorMessage/ErrorMessage";
 
-export { ThemeToggle } from "./ThemeToggle/ThemeToggle";
+export { ThemeToggle, THEME_STORAGE_KEY } from "./ThemeToggle/ThemeToggle";
 export type { Theme } from "./ThemeToggle/ThemeToggle";

@@ -4,7 +4,7 @@ import { ErrorMessage } from "./ErrorMessage";
 const meta = {
   title: "Feedback/ErrorMessage",
   component: ErrorMessage,
-  args: { error: new Error("Cannot read 'energy' of undefined"), status: 500 },
+  args: { error: new Error("Cannot read properties of undefined (reading 'value')"), status: 500 },
 } satisfies Meta<typeof ErrorMessage>;
 
 export default meta;

@@ -15,7 +15,7 @@ export const Default: Story = {
     <Console title="stacktrace.log">
       <span className="text-error">Error</span>
       {": "}
-      <span className="text-fg">Cannot read &apos;energy&apos; of undefined</span>
+      <span className="text-fg">Cannot read properties of undefined (reading &apos;value&apos;)</span>
     </Console>
   ),
 };

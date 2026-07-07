@@ -33,6 +33,7 @@ export function Metric({ kind, value, accent = false }: MetricProps) {
       className={`inline-flex items-center gap-1 text-caption tabular-nums ${accent ? "text-accent" : "text-muted"}`}
     >
       <Icon
+        aria-hidden={kind === "rating" ? undefined : "true"}
         aria-label={kind === "rating" ? "Rating" : undefined}
         role={kind === "rating" ? "img" : undefined}
         className="size-3.5 shrink-0"

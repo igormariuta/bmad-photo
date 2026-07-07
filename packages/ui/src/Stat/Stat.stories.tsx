@@ -5,18 +5,18 @@ import { Stat } from "./Stat";
 const meta = {
   title: "Data Display/Stat",
   component: Stat,
-  args: { label: "KARMA", value: "1,240", signOf: 1240 },
+  args: { label: "SCORE", value: "1,240", signOf: 1240 },
 } satisfies Meta<typeof Stat>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Positive: Story = {
-  args: { label: "KARMA", value: "1,240", signOf: 1240, sub: "net rating", subIcon: StarIcon },
+  args: { label: "SCORE", value: "1,240", signOf: 1240, sub: "net rating", subIcon: StarIcon },
 };
 
 export const Negative: Story = {
-  args: { label: "KARMA", value: "-12", signOf: -12, sub: "net rating", subIcon: StarIcon },
+  args: { label: "SCORE", value: "-12", signOf: -12, sub: "net rating", subIcon: StarIcon },
 };
 
 export const Zero: Story = {

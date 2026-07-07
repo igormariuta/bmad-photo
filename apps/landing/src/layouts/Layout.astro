@@ -12,6 +12,12 @@ const { title } = Astro.props;
   <head>
     <meta charset="UTF-8" />
     <title>{title}</title>
+    <!--
+      Flash-of-wrong-theme prevention: must run inline, non-deferred, before first paint, so it
+      can't import packages/ui's THEME_STORAGE_KEY. Keep the "theme" key and fallback logic here
+      in sync by hand with packages/ui/src/ThemeToggle/ThemeToggle.tsx and the twin script in
+      apps/gallery/index.html.
+    -->
     <script is:inline>
       (function () {
         var stored = localStorage.getItem("theme");

@@ -20,10 +20,10 @@ export function ErrorMessage({ error, status }: ErrorMessageProps) {
           {statusLine}
         </div>
 
-        <h1 className="font-display text-h1 text-fg">A glitch in the Lazyverse</h1>
+        <h1 className="font-display text-h1 text-fg">Something went wrong</h1>
 
         <p className="mt-4 text-body text-muted">
-          Something broke. A sloth has been notified and hit snooze.
+          An unexpected error occurred. Our team has been notified.
         </p>
 
         <Console title="stacktrace.log" className="mt-6">
