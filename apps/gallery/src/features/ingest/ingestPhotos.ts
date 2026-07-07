@@ -1,4 +1,4 @@
-import { beginIngest, commitPhotos } from "../../store/ingestStore";
+import { beginIngest, commitPhotos, updateProgress } from "../../store/ingestStore";
 import type { Photo, WorkerMessage } from "../../worker/types";
 
 export function ingestPhotos(files: File[]): void {
@@ -10,6 +10,12 @@ export function ingestPhotos(files: File[]): void {
 
   worker.onmessage = (event: MessageEvent<WorkerMessage>) => {
     const message = event.data;
+
+    if (message.type === "progress") {
+      updateProgress(message.done, message.total);
+      return;
+    }
+
     if (message.type !== "complete") {
       return;
     }

@@ -42,6 +42,9 @@
 
 generated: 2026-07-06
 last_updated: 2026-07-07
+# 2-3 moved ready-for-dev → in-progress (2026-07-07): starting worker progress wiring + StatBar-based determinate progress screen
+# 2-3 moved in-progress → review (2026-07-07): ingestStore gained progress {done,total} slice + updateProgress mutator/useIngestProgress selector, ingestPhotos.ts consumes worker "progress" messages, new IngestProgress.tsx renders determinate StatBar (cells=48) in an aria-live="polite" region with no dismiss control, App.tsx swapped in place of Story 2.1's transitional Loading; turbo lint/build/test all pass; no browser-automation tooling available this session so UI checks were verified via static/code-level analysis rather than a live run
+# 2-3 moved review → done (2026-07-07): 3-layer adversarial code review (Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 2 patches applied (StatBar lowThreshold={0} to stop red/error styling during 0-10% of every batch, doc-comment overclaim fixed), 2 deferred (no post-complete screen transition — owned by Story 2.4, no worker.onerror — carried over from Story 2.2), 12 dismissed as noise
 # 2-2 moved review → done (2026-07-07): 3-layer adversarial code review (Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 3 patches applied (useShallow on useReadablePhotos, EmptyState input reset on success path, Number.isFinite guards on rational EXIF tags), 7 deferred (worker crash recovery, object-URL revocation, repeat-ingest race guard, cap re-check at ingest boundary, swallowed parse errors, semantic date validation, worker-level test coverage — all unreachable in current UI wiring or owned by Story 2.3/2.4/2.5), 6 dismissed as noise
 # 2-2 moved in-progress → review (2026-07-07): Web Worker EXIF pipeline (exif-worker.ts + normalize.ts) with fixed progress/error/complete contract, unit-tested megapixel-mode/camera-facing derivation (13 Vitest tests, first real suite in repo), main-thread thumbnailUrl assembly, useReadablePhotos/useUnreadableCount selectors; verified end-to-end via Playwright against synthetic EXIF fixtures, zero network egress, zero exifreader refs in main bundle
 # 2-2 moved ready-for-dev → in-progress (2026-07-07): starting worker-based EXIF extraction + normalize.ts + Vitest setup
@@ -74,7 +77,7 @@ development_status:
   epic-2: in-progress
   2-1-empty-state-client-side-photo-ingest: done
   2-2-in-browser-metadata-extraction-web-worker: done
-  2-3-ingest-progress-indicator: ready-for-dev
+  2-3-ingest-progress-indicator: done
   2-4-insights-dashboard: ready-for-dev
   2-5-repeat-ingest-add-more-append-dedupe-cumulative-cap: ready-for-dev
   epic-2-retrospective: optional

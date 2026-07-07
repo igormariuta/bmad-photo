@@ -2,9 +2,15 @@ import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import type { Photo } from "../worker/types";
 
+interface IngestProgress {
+  done: number;
+  total: number;
+}
+
 interface IngestState {
   photos: Photo[];
   fileCount: number;
+  progress: IngestProgress;
 }
 
 /**
@@ -16,10 +22,15 @@ interface IngestState {
 const useIngestStore = create<IngestState>(() => ({
   photos: [],
   fileCount: 0,
+  progress: { done: 0, total: 0 },
 }));
 
 export function beginIngest(fileCount: number): void {
-  useIngestStore.setState({ fileCount });
+  useIngestStore.setState({ fileCount, progress: { done: 0, total: fileCount } });
+}
+
+export function updateProgress(done: number, total: number): void {
+  useIngestStore.setState({ progress: { done, total } });
 }
 
 export function commitPhotos(photos: Photo[]): void {
@@ -28,6 +39,10 @@ export function commitPhotos(photos: Photo[]): void {
 
 export function useIngestedFileCount(): number {
   return useIngestStore((state) => state.fileCount);
+}
+
+export function useIngestProgress(): IngestProgress {
+  return useIngestStore(useShallow((state) => state.progress));
 }
 
 export function useReadablePhotos(): Photo[] {

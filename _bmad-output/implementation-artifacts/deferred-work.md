@@ -1,5 +1,10 @@
 # Deferred Work
 
+## Deferred from: code review of 2-3-ingest-progress-indicator (2026-07-07)
+
+- **No screen transition once Ingest completes** [apps/gallery/src/app-shell/App.tsx, apps/gallery/src/features/ingest/IngestProgress.tsx] — `App.tsx` gates solely on `fileCount > 0`, which stays true after `commitPhotos()` runs (it re-sets `fileCount` to the same value), so `IngestProgress` keeps rendering "Parsing N/N" indefinitely with nothing becoming interactive. This is explicitly Story 2.4's job per this story's own Dev Notes ("Story 2.4's Insights view becomes reachable at that point") and matches the identical indefinite-render behavior of Story 2.1's prior `Loading` placeholder — not a regression, but still an open gap until Story 2.4 lands.
+- **No `worker.onerror` handler / crash recovery in the ingest pipeline** [apps/gallery/src/features/ingest/ingestPhotos.ts] — carried over unaddressed from Story 2.2's code review ("belongs with Story 2.3's progress/error UX"). Story 2.3's Dev Notes ultimately routed `error`-message handling to Story 2.4's unreadable-count `InfoBox` instead, so the gap remains open; still low-probability given `parseFile`'s internal try/catch, but a worker-level throw outside that catch would still strand the UI with no `complete` ever arriving.
+
 ## Deferred from: code review of 2-2-in-browser-metadata-extraction-web-worker (2026-07-07)
 
 - **No `worker.onerror` handler in `ingestPhotos.ts`** [apps/gallery/src/features/ingest/ingestPhotos.ts] — an uncaught worker-level exception would leave `fileCount` flipped with no `complete` ever arriving, stranding the UI in Loading forever. Low-probability given current code has no unguarded throw path outside `parseFile`'s try/catch; belongs with Story 2.3's progress/error UX.
