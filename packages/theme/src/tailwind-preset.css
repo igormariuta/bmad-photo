@@ -1,3 +1,13 @@
+/*
+ * @bmad/ui ships its component source (not just compiled JS) to consuming
+ * apps, but each app's own Tailwind content scan only sees its own source
+ * tree — it never looks inside a workspace package resolved through
+ * node_modules. Without this, any utility class used only inside a shared
+ * component (and not coincidentally reused in the consuming app's own
+ * source) is silently absent from that app's generated CSS.
+ */
+@source "../../ui/src";
+
 @theme {
   --color-bg: var(--m-bg);
   --color-fg: var(--m-fg);

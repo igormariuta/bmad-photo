@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 
-const FRAMES = ["│", "/", "─", "\\"];
+// Plain ASCII, not Unicode box-drawing (│ ─): box-drawing glyphs are drawn to
+// tile seamlessly edge-to-edge for terminal borders, so they render with
+// near-zero right-side bearing and visually bleed into adjacent text.
+const FRAMES = ["|", "/", "-", "\\"];
 const FRAME_INTERVAL_MS = 100;
 
 export interface SpinnerProps {
