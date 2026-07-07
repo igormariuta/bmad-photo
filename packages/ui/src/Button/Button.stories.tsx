@@ -3,7 +3,7 @@ import { CheckIcon } from "@heroicons/react/24/solid";
 import { Button } from "./Button";
 
 const meta = {
-  title: "Button",
+  title: "Forms/Button",
   component: Button,
   args: { children: "Button" },
 } satisfies Meta<typeof Button>;

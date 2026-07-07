@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Textarea } from "./Textarea";
 
 const meta = {
-  title: "Textarea",
+  title: "Forms/Textarea",
   component: Textarea,
   args: { id: "textarea", label: "Textarea" },
 } satisfies Meta<typeof Textarea>;

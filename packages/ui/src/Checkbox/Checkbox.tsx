@@ -20,7 +20,7 @@ export function Checkbox({
   error,
   disabled = false,
 }: CheckboxProps) {
-  const borderClassName = error !== undefined ? "border-error" : "border-dim";
+  const borderClassName = error !== undefined ? "border-error" : checked ? "border-accent" : "border-dim";
 
   return (
     <div>
@@ -40,7 +40,7 @@ export function Checkbox({
         />
         <span
           aria-hidden="true"
-          className={`flex size-5 flex-none items-center justify-center border-2 transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent ${borderClassName} ${
+          className={`flex size-4.5 flex-none items-center justify-center border-2 transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent ${borderClassName} ${
             checked ? (error !== undefined ? "bg-error" : "bg-accent") : "bg-transparent"
           }`}
         >

@@ -33,13 +33,14 @@ type ButtonAsAnchorProps = ButtonOwnProps &
 export type ButtonProps = ButtonAsButtonProps | ButtonAsAnchorProps;
 
 const VARIANT_CLASS_NAME: Record<ButtonVariant, string> = {
-  primary: "border-accent bg-accent text-bg hover:bg-transparent hover:text-accent",
-  outline: "border-dim text-muted hover:border-accent hover:text-accent",
-  danger: "border-error bg-error text-bg hover:bg-transparent hover:text-error",
+  primary: "border-accent bg-accent text-bg font-bold hover:bg-transparent hover:text-accent",
+  outline: "border-dim text-muted font-semibold hover:border-accent hover:text-accent",
+  danger: "border-error bg-error text-bg font-bold hover:bg-transparent hover:text-error",
 };
 
 export const BUTTON_CLASS_NAME =
   "inline-flex h-control-height items-center justify-center gap-2 border-2 px-4 font-display text-body leading-none uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-60";
+const BUTTON_STYLE = { letterSpacing: "0.06em" };
 
 /**
  * The plain (non-form) icon-button pattern — reused as-is by the Theme-toggle
@@ -65,7 +66,12 @@ export function Button({
       .filter(Boolean)
       .join(" ");
     return (
-      <a href={href} className={className} {...(rest as AnchorHTMLAttributes<HTMLAnchorElement>)}>
+      <a
+        href={href}
+        className={className}
+        style={BUTTON_STYLE}
+        {...(rest as AnchorHTMLAttributes<HTMLAnchorElement>)}
+      >
         {children}
       </a>
     );
@@ -95,7 +101,7 @@ export function Button({
     .join(" ");
 
   return (
-    <button type={type} disabled={isDisabled} className={className} {...buttonRest}>
+    <button type={type} disabled={isDisabled} className={className} style={BUTTON_STYLE} {...buttonRest}>
       {pending && <Spinner className="text-body" />}
       {pending ? (pendingLabel ?? children) : children}
     </button>

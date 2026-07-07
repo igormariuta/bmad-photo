@@ -43,11 +43,11 @@ export function Switch({
       >
         <span
           aria-hidden="true"
-          className={`relative flex h-6 w-11 flex-none items-center border-2 transition-colors ${trackClassName}`}
+          className={`relative flex h-4.5 w-9 flex-none items-center border-2 transition-colors ${trackClassName}`}
         >
           <span
-            className={`absolute size-4 transition-all duration-150 ${
-              checked ? "left-5.5 bg-bg" : "left-0.5 bg-muted2"
+            className={`absolute size-2.5 transition-all duration-150 ${
+              checked ? "left-5 bg-bg" : "left-0.5 bg-muted2"
             }`}
           />
         </span>

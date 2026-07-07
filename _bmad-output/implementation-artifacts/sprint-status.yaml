@@ -42,6 +42,8 @@
 
 generated: 2026-07-06
 last_updated: 2026-07-07
+# 1-5 moved ready-for-dev → in-progress (2026-07-07): starting display/feedback/navigation primitives
+# 1-5 moved in-progress → review (2026-07-07): all 20 components (19 new + StatBar gap-fill) implemented + Storybook stories, Spinner/Loading verified from Story 1.4, theme-toggle flash-prevention scripts added to both apps, zero arbitrary-value violations
 project: BMAD
 # 1-4 moved in-progress → review (2026-07-07): all 9 components + Storybook implemented, zero arbitrary-value violations
 # 1-4 moved review → done after code review (2026-07-07): 8 patched (Submit/IconSubmitButton merged into Button, FieldError folded into Field, Switch gained required/error, Select multi-value guard + blur-to-close, data-label token, unused vite-plugin-react dep removed), 15 deferred, 6 dismissed
@@ -59,7 +61,7 @@ development_status:
   1-2-design-tokens-package: review
   1-3-token-usage-lint-enforcement: done
   1-4-shared-component-library-core-interactive-primitives: done
-  1-5-shared-component-library-display-feedback-navigation-primitives: ready-for-dev
+  1-5-shared-component-library-display-feedback-navigation-primitives: review
   epic-1-retrospective: optional
 
   epic-2: in-progress

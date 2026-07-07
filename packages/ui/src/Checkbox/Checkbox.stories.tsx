@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Checkbox } from "./Checkbox";
 
 const meta = {
-  title: "Checkbox",
+  title: "Forms/Checkbox",
   component: Checkbox,
   args: { id: "checkbox", label: "Checkbox", checked: false, onChange: () => {} },
 } satisfies Meta<typeof Checkbox>;

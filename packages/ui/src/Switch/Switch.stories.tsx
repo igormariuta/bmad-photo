@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Switch } from "./Switch";
 
 const meta = {
-  title: "Switch",
+  title: "Forms/Switch",
   component: Switch,
   args: { id: "switch", label: "Switch", checked: false, onChange: () => {} },
 } satisfies Meta<typeof Switch>;

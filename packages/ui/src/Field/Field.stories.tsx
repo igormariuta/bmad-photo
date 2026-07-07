@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Field } from "./Field";
 
 const meta = {
-  title: "Field",
+  title: "Forms/Field",
   component: Field,
   args: { id: "field", label: "Field" },
 } satisfies Meta<typeof Field>;

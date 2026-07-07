@@ -58,7 +58,7 @@ export function RadioGroup({
               />
               <span
                 aria-hidden="true"
-                className={`flex size-5 flex-none items-center justify-center border-2 transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent ${borderClassName}`}
+                className={`flex size-4.5 flex-none items-center justify-center border-2 transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent ${borderClassName}`}
               >
                 {isChecked && (
                   <span className={`size-2 ${error !== undefined ? "bg-error" : "bg-accent"}`} />

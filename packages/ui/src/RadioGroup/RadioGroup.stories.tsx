@@ -3,7 +3,7 @@ import { useState } from "react";
 import { RadioGroup } from "./RadioGroup";
 
 const meta = {
-  title: "RadioGroup",
+  title: "Forms/RadioGroup",
   component: RadioGroup,
   args: { name: "radio", label: "Radio", value: "", onChange: () => {}, options: [] },
 } satisfies Meta<typeof RadioGroup>;

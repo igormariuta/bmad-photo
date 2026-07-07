@@ -10,7 +10,7 @@ const CATEGORY_OPTIONS: SelectOption[] = [
 ];
 
 const meta = {
-  title: "Select",
+  title: "Forms/Select",
   component: Select,
   args: { id: "select", label: "Select", options: CATEGORY_OPTIONS, value: "", onChange: () => {} },
 } satisfies Meta<typeof Select>;
