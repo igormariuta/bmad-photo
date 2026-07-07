@@ -121,11 +121,11 @@ The Browse grid-cell EXIF badge is pinned to exactly three fields, in this order
 - **Prevents:** two builders disagreeing on whether a second Ingest action replaces or grows the set, whether the 100-photo cap applies per-action or per-session, and whether re-selecting the same file twice double-counts it in Insights.
 - **Rule:** a subsequent "Add more" Ingest action **appends** to the existing store; it never replaces it. The 100-photo cap is **cumulative for the session** (total store size, not per-action) — an Ingest action that would push the total over 100 is rejected with a message stating the limit, before any file reaches the worker (extends AD-2). Duplicate files across Ingest actions are deduped by `(fileName, size, lastModified)` — a duplicate is silently skipped, not re-added or double-counted. This resolves an assumption EXPERIENCE.md left open (its "Add more" control and the batch-exceeds-100 state); `EXPERIENCE.md` should be updated to reflect this rather than left as an open `[ASSUMPTION]`.
 
-### AD-8 — Photo data never crosses a network boundary; monitoring is page-view-only
+### AD-8 — Photo data never crosses a network boundary; no monitoring is configured
 
 - **Binds:** PRD §10 Privacy NFR ("no analytics that capture image content"), FR-5, FR-6
 - **Prevents:** an analytics/telemetry SDK — added later, for an unrelated reason — inadvertently reading `Photo` field values or file bytes; two epics wiring up monitoring inconsistently.
-- **Rule:** the Web Worker's `postMessage` channel (AD-2) is the only path photo bytes or derived `Photo` fields travel, and it never leaves the tab. Vercel Analytics + Speed Insights (matching the sister repo, see Stack) are the only monitoring on either app, configured page-view-only — no custom event may include a `Photo` field value or file content. No other analytics/telemetry SDK may be added without revisiting this AD.
+- **Rule:** the Web Worker's `postMessage` channel (AD-2) is the only path photo bytes or derived `Photo` fields travel, and it never leaves the tab. This is a test project with no deployment target, so no analytics/telemetry SDK is installed on either app. If one is added later, it must be page-view-only — no custom event may include a `Photo` field value or file content.
 
 ## Consistency Conventions
 
@@ -151,8 +151,6 @@ The Browse grid-cell EXIF badge is pinned to exactly three fields, in this order
 | ExifReader | 4.41.0 |
 | Vitest | 4.1.10 |
 | Storybook | 10.4.6 |
-| Hosting | Vercel (both apps; `main` → production, PR branches → Preview Deployments) |
-| Monitoring | Vercel Analytics + Speed Insights, page-view only (AD-8) |
 
 ## Structural Seed
 
@@ -215,6 +213,6 @@ flowchart LR
 
 - **Preset Facet + camera↔gallery Metadata bridge** — out of scope per PRD §6.2; no architecture commitment until Lazy Cam writes preset names to Metadata in a future phase.
 - **E2E / component test suite** — only the EXIF normalization layer (AD-6) is tested now; broader test coverage (component tests, E2E) is left for a future pass if the project's scope grows past its current "deliberately lightweight" stance (PRD §7).
-- **Turborepo remote caching / CI runner specifics** — Vercel hosting is decided (AD/Stack), but whether Turborepo remote cache is wired to Vercel or GitHub Actions cache is left to implementation.
+- **Turborepo remote caching / CI runner specifics** — no hosting target is configured for this test project; whether Turborepo remote cache is wired to GitHub Actions cache (or left unconfigured) is left to implementation.
 - **GPS/location, Preset Facet, Gallery export/saved views** — all explicitly out of MVP scope per PRD §5/§6.2; no architecture surface needed for them.
 - **Multi-worker / parallel parsing** — AD-2 fixes a single Web Worker as sufficient for ≤100 photos/batch; revisit only if the batch cap changes materially.

@@ -37,7 +37,7 @@ FR11: Built on the shared Design System, responsive — Landing visual primitive
 NFR1: Privacy (load-bearing, hard invariant) — client-side-only; no photo bytes or Metadata ever leave the device; no analytics that capture image content; verifiable via network inspection showing zero photo/Metadata egress.
 NFR2: Performance — Gallery Ingest + parse must not freeze the UI on a realistic batch (parse off the main thread); shows a progress state; Ingest is capped at 100 photos/batch (cumulative per session per Architecture AD-7).
 NFR3: Consistency — one UI system enforced by Design tokens + `no-arbitrary-value` lint; visual drift between Gallery and Landing is a defect, not a preference (SM-2).
-NFR4: Hosting/cost — both apps deploy as static assets (SSG for Landing / SPA build for Gallery); no server-side runtime; hosting cost and ops near-zero (Vercel).
+NFR4: WITHDRAWN 2026-07-07 — hosting/deployment is out of scope for this test project; no deployment target is configured. Both apps still build as static output (SSG for Landing / SPA build for Gallery) with no server-side runtime, by architecture choice, independent of hosting. NFR numbering kept stable; no story should be created for this NFR number.
 NFR5: Accessibility — baseline: legible contrast within the Brutalist-mono palette, keyboard-operable controls, semantic markup `[ASSUMPTION: pet-project baseline, not a formal WCAG AA commitment]`.
 NFR6: Browser support — modern evergreen browsers, mobile Safari included (mobile-first) `[ASSUMPTION]`.
 
@@ -50,9 +50,9 @@ NFR6: Browser support — modern evergreen browsers, mobile Safari included (mob
 - Design tokens have one source, no arbitrary values downstream (AD-5): `packages/theme` exports CSS custom properties (`--m-*`, light/dark) + a Tailwind preset; each app imports the CSS once at its root entry point.
 - Megapixel-mode and camera-facing derivation is isolated and unit-tested (AD-6): one normalization layer (`apps/gallery/src/worker/normalize.ts`), covered by Vitest.
 - Repeat Ingest ("Add more") appends and dedupes; the 100-photo cap is cumulative for the session, not per-action (AD-7); duplicates identified by `(fileName, size, lastModified)` are silently skipped.
-- Photo data never crosses a network boundary; monitoring is page-view-only (AD-8): Vercel Analytics + Speed Insights are the only monitoring on either app; no custom event may include a `Photo` field value or file content.
+- Photo data never crosses a network boundary (AD-8): the Web Worker's `postMessage` channel (AD-2) is the only path photo bytes or derived `Photo` fields travel, and it never leaves the tab. No deployment target is configured for this test project, so no analytics/monitoring SDK is installed on either app; if one is added later, it must be page-view-only and no custom event may include a `Photo` field value or file content.
 - Starter Template: **no scaffolding CLI/starter template specified** — Architecture provides a structural seed (repo layout) instead: `apps/{gallery,landing}` + `packages/{theme,ui,eslint-config,tsconfig}`, `turbo.json`, `pnpm-workspace.yaml`. This structural seed should drive Epic 1 Story 1 (monorepo foundation) directly, rather than a generated starter template.
-- Stack/versions to pin during setup: pnpm 11.10.0, Turborepo 2.10.3, React 19.2.7, Vite 8.1.3, Astro 7.0.6, TypeScript 6.0.3, Zustand 5.0.14, ExifReader 4.41.0 (not exifr — unmaintained since 2021), Vitest 4.1.10, Storybook 10.4.6; hosting on Vercel (main → production, PR branches → Preview Deployments).
+- Stack/versions to pin during setup: pnpm 11.10.0, Turborepo 2.10.3, React 19.2.7, Vite 8.1.3, Astro 7.0.6, TypeScript 6.0.3, Zustand 5.0.14, ExifReader 4.41.0 (not exifr — unmaintained since 2021), Vitest 4.1.10, Storybook 10.4.6; no hosting/deployment target for this test project.
 - CI gate (every PR): `turbo lint` (incl. `no-arbitrary-value` + AD-1/AD-3 import-boundary rules) + `turbo test` (Vitest, EXIF normalization layer) + `turbo build`.
 - Deferred / explicitly out of architecture scope: Preset Facet + camera↔gallery Metadata bridge; broader E2E/component test suite beyond the normalization layer; Turborepo remote-cache wiring specifics; GPS/location, Gallery export/saved views; multi-worker parallel parsing.
 
@@ -202,23 +202,6 @@ So that the full shared library is ready before feature epics consume it.
 **Given** Theme-toggle is implemented
 **When** it is toggled
 **Then** it persists its state to `localStorage` and respects `prefers-color-scheme` on first render, independent of any app wiring it into a header later
-
-### Story 1.6: Vercel Deployment Pipeline & Privacy-safe Monitoring
-
-As a developer,
-I want both apps deploying automatically with privacy-safe monitoring wired in from the start,
-So that later feature epics ship straight to a live preview without infra work blocking them.
-
-**Acceptance Criteria:**
-
-**Given** the monorepo scaffold (Story 1.1)
-**When** a PR is opened
-**Then** both `apps/gallery` and `apps/landing` deploy as static builds to a Vercel Preview Deployment
-**And** merges to `main` deploy both apps to production
-
-**Given** the Vercel deployments exist
-**When** Vercel Analytics + Speed Insights are configured on both apps
-**Then** monitoring is page-view-only, and no custom event may include a `Photo` field value or file content (AD-8)
 
 ## Epic 2: EXIF Gallery — Ingest & Insights
 

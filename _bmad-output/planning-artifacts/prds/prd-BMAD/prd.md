@@ -230,7 +230,6 @@ The Landing consumes the shared Design System and renders responsively.
 - **Privacy (load-bearing):** Client-side-only is a hard invariant. No photo bytes or Metadata leave the device; no analytics that capture image content. Verifiable via network inspection showing zero photo/Metadata egress.
 - **Performance:** Gallery Ingest + parse must not freeze the UI on a realistic batch; show progress and keep the main thread responsive.
 - **Consistency:** One UI system enforced by Design tokens + `no-arbitrary-value` lint; visual drift between apps is a defect, not a preference.
-- **Hosting/cost:** Both apps deploy as static assets (SSG / SPA build); no server-side runtime, so hosting cost and ops are near-zero.
 - **Accessibility:** Baseline — legible contrast within the Brutalist-mono palette, keyboard-operable controls, semantic markup. `[ASSUMPTION: pet-project baseline, not a formal WCAG AA commitment.]`
 - **Browser support:** Modern evergreen browsers, mobile Safari included (mobile-first). `[ASSUMPTION]`
 
@@ -242,6 +241,6 @@ The Landing consumes the shared Design System and renders responsively.
 
 ## 12. Platform
 
-- **Gallery:** Vite + React SPA, **mobile-first**, responsive up to desktop; client-side only; deployed as static assets.
+- **Gallery:** Vite + React SPA, **mobile-first**, responsive up to desktop; client-side only; builds to static output (no deployment target for this test project).
 - **Landing:** Astro SSG static site; responsive.
 - **Shared:** Both consume the Design System; monorepo via pnpm + Turborepo. No native surfaces in build scope (Lazy Cam is out of scope).
