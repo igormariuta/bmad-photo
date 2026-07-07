@@ -3,16 +3,27 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./index.css": "./src/index.css",
+    "./tailwind-preset": "./src/tailwind-preset.css"
+  },
   "scripts": {
     "lint": "eslint .",
     "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@fontsource/jetbrains-mono": "5.2.8",
+    "@fontsource/space-grotesk": "5.2.10"
   },
   "devDependencies": {
     "@bmad/eslint-config": "workspace:*",
     "@bmad/tsconfig": "workspace:*",
     "eslint": "10.6.0",
+    "tailwindcss": "4.3.2",
     "typescript": "6.0.3"
   }
 }

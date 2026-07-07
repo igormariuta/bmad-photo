@@ -1,0 +1,49 @@
+@import "@fontsource/space-grotesk/700.css";
+@import "@fontsource/space-grotesk/600.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+
+:root {
+  --m-font-display: "Space Grotesk", sans-serif;
+  --m-font-body: "JetBrains Mono", monospace;
+
+  --m-font-size-display: 40px;
+  --m-font-weight-display: 700;
+  --m-line-height-display: 1.04;
+  --m-letter-spacing-display: -0.02em;
+
+  --m-font-size-h1: 32px;
+  --m-font-weight-h1: 700;
+  --m-line-height-h1: 1.04;
+  --m-letter-spacing-h1: -0.02em;
+
+  --m-font-size-h3: 18px;
+  --m-font-weight-h3: 600;
+  --m-line-height-h3: 1.18;
+  --m-letter-spacing-h3: 0;
+
+  --m-font-size-prose: 14px;
+  --m-font-weight-prose: 400;
+  --m-line-height-prose: 1.85;
+  --m-letter-spacing-prose: 0;
+
+  --m-font-size-body: 14px;
+  --m-font-weight-body: 400;
+  --m-line-height-body: 1.6;
+  --m-letter-spacing-body: 0;
+
+  --m-font-size-caption: 12px;
+  --m-font-weight-caption: 400;
+  --m-line-height-caption: 1.4;
+  --m-letter-spacing-caption: 0;
+
+  --m-font-size-eyebrow: 11px;
+  --m-font-weight-eyebrow: 500;
+  --m-line-height-eyebrow: 1.2;
+  --m-letter-spacing-eyebrow: 0.12em;
+
+  --m-font-size-data-label: 11px;
+  --m-font-weight-data-label: 500;
+  --m-line-height-data-label: 1.2;
+  --m-letter-spacing-data-label: 0.12em;
+}

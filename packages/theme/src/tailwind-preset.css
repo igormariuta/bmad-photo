@@ -1,0 +1,76 @@
+@theme {
+  --color-bg: var(--m-bg);
+  --color-fg: var(--m-fg);
+  --color-accent: var(--m-accent);
+  --color-line: var(--m-line);
+  --color-panel: var(--m-panel);
+  --color-card: var(--m-card);
+  --color-muted: var(--m-muted);
+  --color-muted2: var(--m-muted2);
+  --color-dim: var(--m-dim);
+  --color-error: var(--m-error);
+
+  --font-display: var(--m-font-display);
+  --font-body: var(--m-font-body);
+
+  --text-display: var(--m-font-size-display);
+  --text-display--line-height: var(--m-line-height-display);
+  --text-display--letter-spacing: var(--m-letter-spacing-display);
+  --text-display--font-weight: var(--m-font-weight-display);
+
+  --text-h1: var(--m-font-size-h1);
+  --text-h1--line-height: var(--m-line-height-h1);
+  --text-h1--letter-spacing: var(--m-letter-spacing-h1);
+  --text-h1--font-weight: var(--m-font-weight-h1);
+
+  --text-h3: var(--m-font-size-h3);
+  --text-h3--line-height: var(--m-line-height-h3);
+  --text-h3--letter-spacing: var(--m-letter-spacing-h3);
+  --text-h3--font-weight: var(--m-font-weight-h3);
+
+  --text-prose: var(--m-font-size-prose);
+  --text-prose--line-height: var(--m-line-height-prose);
+  --text-prose--letter-spacing: var(--m-letter-spacing-prose);
+  --text-prose--font-weight: var(--m-font-weight-prose);
+
+  --text-body: var(--m-font-size-body);
+  --text-body--line-height: var(--m-line-height-body);
+  --text-body--letter-spacing: var(--m-letter-spacing-body);
+  --text-body--font-weight: var(--m-font-weight-body);
+
+  --text-caption: var(--m-font-size-caption);
+  --text-caption--line-height: var(--m-line-height-caption);
+  --text-caption--letter-spacing: var(--m-letter-spacing-caption);
+  --text-caption--font-weight: var(--m-font-weight-caption);
+
+  --text-eyebrow: var(--m-font-size-eyebrow);
+  --text-eyebrow--line-height: var(--m-line-height-eyebrow);
+  --text-eyebrow--letter-spacing: var(--m-letter-spacing-eyebrow);
+  --text-eyebrow--font-weight: var(--m-font-weight-eyebrow);
+
+  --text-data-label: var(--m-font-size-data-label);
+  --text-data-label--line-height: var(--m-line-height-data-label);
+  --text-data-label--letter-spacing: var(--m-letter-spacing-data-label);
+  --text-data-label--font-weight: var(--m-font-weight-data-label);
+
+  --spacing-1: var(--m-space-1);
+  --spacing-2: var(--m-space-2);
+  --spacing-3: var(--m-space-3);
+  --spacing-4: var(--m-space-4);
+  --spacing-5: var(--m-space-5);
+  --spacing-6: var(--m-space-6);
+  --spacing-7: var(--m-space-7);
+  --spacing-8: var(--m-space-8);
+  --spacing-10: var(--m-space-10);
+  --spacing-section-rhythm: var(--m-space-section-rhythm);
+  --spacing-item-gap: var(--m-space-item-gap);
+  --spacing-card-padding: var(--m-space-card-padding);
+  --spacing-control-height: var(--m-space-control-height);
+  --spacing-header-height: var(--m-space-header-height);
+  --spacing-gutter: var(--m-space-gutter);
+  --spacing-container-max: var(--m-space-container-max);
+  --spacing-article-max: var(--m-space-article-max);
+  --spacing-hero-padding: var(--m-space-hero-padding);
+
+  --radius: var(--m-radius-default);
+}
