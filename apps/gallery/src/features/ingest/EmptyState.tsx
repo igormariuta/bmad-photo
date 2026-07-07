@@ -1,15 +1,14 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import { Button, InfoBox } from "@bmad/ui";
-import { useIngestFiles } from "../../store/ingestStore";
+import { ingestPhotos } from "./ingestPhotos";
 
 const MAX_PHOTOS_PER_INGEST = 100;
 
 /**
  * First-run screen: no Ingested photos yet. No header/tabs/panel chrome
- * renders alongside this — app-shell gates on rawFiles.length === 0.
+ * renders alongside this — app-shell gates on fileCount === 0.
  */
 export function EmptyState() {
-  const ingestFiles = useIngestFiles();
   const [limitMessage, setLimitMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -23,9 +22,8 @@ export function EmptyState() {
       return;
     }
 
-    // Client-side count check, synchronous, before anything reaches the
-    // store — there's no worker yet in this story for the check to precede,
-    // but "validate before dispatch" carries forward once Story 2.2 adds one.
+    // Client-side count check, synchronous, before any file reaches the
+    // worker (AD-2): an over-cap batch must never be posted to it.
     if (files.length > MAX_PHOTOS_PER_INGEST) {
       setLimitMessage(`Pick ${MAX_PHOTOS_PER_INGEST} photos or fewer.`);
       event.target.value = "";
@@ -33,7 +31,9 @@ export function EmptyState() {
     }
 
     setLimitMessage(null);
-    ingestFiles(Array.from(files));
+    ingestPhotos(Array.from(files));
+    // Reset so re-selecting the exact same file(s) still fires a change event.
+    event.target.value = "";
   }
 
   return (

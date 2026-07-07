@@ -1,6 +1,10 @@
+---
+baseline_commit: 08539f7a867f8931faac56257a1f3702e08d52d9
+---
+
 # Story 2.2: In-browser Metadata Extraction (Web Worker)
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -60,32 +64,47 @@ This is the most technically dense story in Epic 2. Read AD-2 and AD-4 in `ARCHI
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Worker skeleton + message contract (AC: #1)
-  - [ ] Create `apps/gallery/src/worker/exif-worker.ts`, loaded via Vite's worker import syntax (`new Worker(new URL('./exif-worker.ts', import.meta.url), { type: 'module' })`) from wherever Story 2.1's `ingestFiles` action now lives
-  - [ ] Worker receives the `File[]` batch (structured-cloneable, so this just works via `postMessage`), posts one `progress` message per file **attempted** (`{ done, total }` — increment `done` for both successfully-parsed and errored files, so `done` reaches `total` even if some files fail; Story 2.3's progress bar depends on this), one `error` message per file that fails to parse (`{ fileName }`, without throwing/halting the loop), and exactly one `complete` message at the end
-  - [ ] `import ExifReader from 'exifreader'` (or the package's actual named export — check 4.41.0's own docs) **only** inside this worker file — never in a main-thread module, per AD-2
-- [ ] Task 2: EXIF field extraction (AC: #1, #3)
-  - [ ] Per file: read via `ExifReader.load(...)`; extract `FocalLength` (drives `lensLabel`), `LensModel` (drives camera-facing derivation only — not `lensLabel`, see Task 3), `ISOSpeedRatings`/`ISO`, `FNumber`, `ExposureTime`, `ExposureBiasValue`, `DateTimeOriginal`, `PixelXDimension`/`PixelYDimension` — confirm exact tag names against the installed library version
-  - [ ] If ExifReader throws or returns no usable EXIF block at all for a file: catch it, post an `error` message for that filename, and produce a `readable: false` entry for it in the eventual `photos` array (all optional fields `undefined`) — never let one bad file abort the batch
-- [ ] Task 3: `normalize.ts` — raw ExifReader output → `Photo` (AC: #2, #3)
-  - [ ] `apps/gallery/src/worker/normalize.ts` is the **one** place megapixel-mode and camera-facing derivation happens (AD-6) — no other file re-implements this logic
-  - [ ] Implement the megapixel-mode bucketing and camera-facing detection exactly as described in Dev Notes, each returning `undefined` (not a guess) when its source tag is missing
-  - [ ] Format `lensLabel` from `FocalLength` (nearest whole mm + `"mm"`)
-  - [ ] Assign each `Photo` a stable `id` (not derived from filename, per AD-4) — e.g. a per-session incrementing counter or `crypto.randomUUID()`
-- [ ] Task 4: Main-thread assembly — `thumbnailUrl` + store commit (AC: #1, #2)
-  - [ ] On receiving the worker's `complete` message (shape: `Omit<Photo, 'thumbnailUrl'> & { blob: Blob }` per entry, see Dev Notes), the main thread calls `URL.createObjectURL(blob)` for each entry to produce the final `thumbnailUrl`, then commits the resulting `Photo[]` to the store
-  - [ ] Replace Story 2.1's minimal `rawFiles` slot with the real canonical `Photo[]` store (`apps/gallery/src/store`) — the store itself remains not directly exported (AD-3)
-- [ ] Task 5: `useReadablePhotos()` / `useUnreadableCount()` selectors only (AC: #2)
-  - [ ] Add exactly these two selectors now — `useReadablePhotos()` (`photos.filter(p => p.readable)`) and `useUnreadableCount()` (`photos.filter(p => !p.readable).length`) — both needed by Story 2.4's Insights
-  - [ ] **Do not** build `useFacetFilters()`/`useFilteredPhotos()` yet — those belong to Story 3.3 (Browse doesn't exist until Epic 3); building them now would be speculative ahead of need (PRD's SM-C1 counter-metric)
-- [ ] Task 6: Vitest setup + AD-6 unit tests (AC: #2)
-  - [ ] Add a Vitest config to `apps/gallery` (first real test suite in the repo — Story 1.1 only pinned the version)
-  - [ ] Unit-test `normalize.ts`'s megapixel-mode and camera-facing derivation directly (no worker/browser APIs needed for these two pure functions) — cover: a `>=24MP`-dimension input buckets to 48, a `<24MP` input buckets to 12, missing dimension tags → `undefined`; a `LensModel` containing `"front"` → `"front"`, one without → `"rear"`, missing `LensModel` → `undefined`
-- [ ] Task 7: Verify (AC: #1, #2, #3, #4)
-  - [ ] Parse a batch including at least one file with no EXIF block at all — confirm it ends up `readable: false` in the final array and the batch still completes
-  - [ ] Confirm the main thread's own bundle never imports `exifreader` (grep the built main-thread chunk, or just visually confirm the import statement's file location)
-  - [ ] Network tab shows zero requests during the whole parse
-  - [ ] `turbo test` runs the new Vitest suite and passes
+- [x] Task 1: Worker skeleton + message contract (AC: #1)
+  - [x] Create `apps/gallery/src/worker/exif-worker.ts`, loaded via Vite's worker import syntax (`new Worker(new URL('./exif-worker.ts', import.meta.url), { type: 'module' })`) from wherever Story 2.1's `ingestFiles` action now lives
+  - [x] Worker receives the `File[]` batch (structured-cloneable, so this just works via `postMessage`), posts one `progress` message per file **attempted** (`{ done, total }` — increment `done` for both successfully-parsed and errored files, so `done` reaches `total` even if some files fail; Story 2.3's progress bar depends on this), one `error` message per file that fails to parse (`{ fileName }`, without throwing/halting the loop), and exactly one `complete` message at the end
+  - [x] `import ExifReader from 'exifreader'` (or the package's actual named export — check 4.41.0's own docs) **only** inside this worker file — never in a main-thread module, per AD-2
+- [x] Task 2: EXIF field extraction (AC: #1, #3)
+  - [x] Per file: read via `ExifReader.load(...)`; extract `FocalLength` (drives `lensLabel`), `LensModel` (drives camera-facing derivation only — not `lensLabel`, see Task 3), `ISOSpeedRatings`/`ISO`, `FNumber`, `ExposureTime`, `ExposureBiasValue`, `DateTimeOriginal`, `PixelXDimension`/`PixelYDimension` — confirm exact tag names against the installed library version
+  - [x] If ExifReader throws or returns no usable EXIF block at all for a file: catch it, post an `error` message for that filename, and produce a `readable: false` entry for it in the eventual `photos` array (all optional fields `undefined`) — never let one bad file abort the batch
+- [x] Task 3: `normalize.ts` — raw ExifReader output → `Photo` (AC: #2, #3)
+  - [x] `apps/gallery/src/worker/normalize.ts` is the **one** place megapixel-mode and camera-facing derivation happens (AD-6) — no other file re-implements this logic
+  - [x] Implement the megapixel-mode bucketing and camera-facing detection exactly as described in Dev Notes, each returning `undefined` (not a guess) when its source tag is missing
+  - [x] Format `lensLabel` from `FocalLength` (nearest whole mm + `"mm"`)
+  - [x] Assign each `Photo` a stable `id` (not derived from filename, per AD-4) — e.g. a per-session incrementing counter or `crypto.randomUUID()`
+- [x] Task 4: Main-thread assembly — `thumbnailUrl` + store commit (AC: #1, #2)
+  - [x] On receiving the worker's `complete` message (shape: `Omit<Photo, 'thumbnailUrl'> & { blob: Blob }` per entry, see Dev Notes), the main thread calls `URL.createObjectURL(blob)` for each entry to produce the final `thumbnailUrl`, then commits the resulting `Photo[]` to the store
+  - [x] Replace Story 2.1's minimal `rawFiles` slot with the real canonical `Photo[]` store (`apps/gallery/src/store`) — the store itself remains not directly exported (AD-3)
+- [x] Task 5: `useReadablePhotos()` / `useUnreadableCount()` selectors only (AC: #2)
+  - [x] Add exactly these two selectors now — `useReadablePhotos()` (`photos.filter(p => p.readable)`) and `useUnreadableCount()` (`photos.filter(p => !p.readable).length`) — both needed by Story 2.4's Insights
+  - [x] **Do not** build `useFacetFilters()`/`useFilteredPhotos()` yet — those belong to Story 3.3 (Browse doesn't exist until Epic 3); building them now would be speculative ahead of need (PRD's SM-C1 counter-metric)
+- [x] Task 6: Vitest setup + AD-6 unit tests (AC: #2)
+  - [x] Add a Vitest config to `apps/gallery` (first real test suite in the repo — Story 1.1 only pinned the version)
+  - [x] Unit-test `normalize.ts`'s megapixel-mode and camera-facing derivation directly (no worker/browser APIs needed for these two pure functions) — cover: a `>=24MP`-dimension input buckets to 48, a `<24MP` input buckets to 12, missing dimension tags → `undefined`; a `LensModel` containing `"front"` → `"front"`, one without → `"rear"`, missing `LensModel` → `undefined`
+- [x] Task 7: Verify (AC: #1, #2, #3, #4)
+  - [x] Parse a batch including at least one file with no EXIF block at all — confirm it ends up `readable: false` in the final array and the batch still completes
+  - [x] Confirm the main thread's own bundle never imports `exifreader` (grep the built main-thread chunk, or just visually confirm the import statement's file location)
+  - [x] Network tab shows zero requests during the whole parse
+  - [x] `turbo test` runs the new Vitest suite and passes
+
+### Review Findings
+
+- [x] [Review][Patch] `useReadablePhotos()`/`useUnreadableCount()` return a fresh `.filter()` array/value on every call — wrap in `useShallow` to avoid a React 18 "getSnapshot should be cached" risk once Story 2.4 consumes them [apps/gallery/src/store/ingestStore.ts]
+- [x] [Review][Patch] `EmptyState.tsx` resets `event.target.value` only on the over-cap rejection path, not after a successful ingest — re-selecting the identical file(s) afterward won't refire the `change` event [apps/gallery/src/features/ingest/EmptyState.tsx:31-34]
+- [x] [Review][Patch] Rational EXIF tags with a zero/malformed denominator can compute to `NaN`/`Infinity` and flow unguarded into `apertureF`/`shutterSpeedSec`/`exposureCompEv`/`focalLengthMm`/dimensions — add `Number.isFinite` guards in `exif-worker.ts`'s read helpers (or `normalize.ts`) so a corrupt-but-present tag can't mark a photo `readable: true` with garbage numeric fields [apps/gallery/src/worker/exif-worker.ts, apps/gallery/src/worker/normalize.ts]
+- [x] [Review][Defer] No `worker.onerror` handler in `ingestPhotos.ts` — an uncaught worker-level exception would leave `fileCount` flipped with no `complete` ever arriving, stranding the UI in Loading forever [apps/gallery/src/features/ingest/ingestPhotos.ts] — deferred, low-probability given current code has no unguarded throw path outside `parseFile`'s try/catch; belongs with Story 2.3's progress/error UX
+- [x] [Review][Defer] No `URL.revokeObjectURL` anywhere — `thumbnailUrl`s accumulate once a session re-ingests [apps/gallery/src/features/ingest/ingestPhotos.ts] — deferred, unreachable in this story (no repeat-ingest entry point exists yet); AD-4 ties revocation to a "full-session reset" trigger that Story 2.5 will introduce
+- [x] [Review][Defer] `ingestPhotos()` has no in-flight guard — concurrent invocations would race on `commitPhotos()`, last `complete` silently wins [apps/gallery/src/features/ingest/ingestPhotos.ts] — deferred, unreachable today (EmptyState unmounts after the first pick, no "Add more" entry point yet); Story 2.5 will reuse this function from a live repeat-ingest control and needs this guard
+- [x] [Review][Defer] The 100-photo cap is checked only in `EmptyState.tsx`, not re-checked inside `ingestPhotos()` itself [apps/gallery/src/features/ingest/EmptyState.tsx, apps/gallery/src/features/ingest/ingestPhotos.ts] — deferred, correct for this story's single call site (satisfies AD-2's "before any file reaches the worker"); Story 2.5's cumulative cap will need the check at the ingest-orchestration boundary
+- [x] [Review][Defer] `exif-worker.ts`'s `catch` silently discards ExifReader's actual thrown error with no logging, conflating "corrupt file" with "valid file, no EXIF" into the same `error` message [apps/gallery/src/worker/exif-worker.ts] — deferred, matches the spec's explicit instruction to treat both cases identically; losing diagnostic signal for genuine parse bugs is a real but minor hardening gap
+- [x] [Review][Defer] `parseCapturedAt`'s regex validates only digit-grouping shape, not semantic date correctness (e.g. month `13` would pass through unchanged) [apps/gallery/src/worker/normalize.ts] — deferred, out of this story's stated scope (format conversion only); worth a note for Story 2.4's hour-of-day bucketing
+- [x] [Review][Defer] No automated test exercises `exif-worker.ts` itself or the `progress`/`error`/`complete` message sequence — all 13 Vitest tests target only `normalize.ts`'s pure helpers [apps/gallery/src/worker/exif-worker.ts] — deferred, spec-compliant (Task 6 explicitly scoped unit tests to `normalize.ts` only); real coverage gap resting on one manual Playwright session, worth a future Vitest+jsdom worker test
+
+**Dismissed as noise (6):** File List claiming `pnpm-workspace.yaml`/`pnpm-lock.yaml` edits "not in the diff" and a Vitest config "not evidenced" were both artifacts of trimmed reviewer prompts — both files genuinely exist in the real diff (confirmed via `git status`/`turbo test`). `deriveCameraFacing` defaulting non-matching `LensModel` strings to `"rear"`, and `formatLensLabel` using only rounded focal length, both match the Dev Notes' literal spec'd behavior exactly. The `ingestStore.ts` "not directly exported" comment is accurate to AD-3's actual concern. Verification claims (Playwright/grep/`turbo test`) not being embedded as artifacts in the diff is inherent to how diffs work, not a code defect — independently confirmed live in this session.
 
 ## Project Structure Notes
 
@@ -112,8 +131,42 @@ apps/gallery/src/
 
 ### Agent Model Used
 
+Claude Sonnet 5 (claude-sonnet-5)
+
 ### Debug Log References
+
+- Verified the ExifReader 4.41.0 TS typings directly against the installed package (`node_modules/exifreader/exif-reader.d.ts`) to confirm exact tag names (`FocalLength`, `LensModel`, `ISOSpeedRatings`, `FNumber`, `ExposureTime`, `ExposureBiasValue`, `DateTimeOriginal`, `PixelXDimension`/`PixelYDimension`) and the `computed`/`value`/`description` field shapes before writing extraction code.
+- Generated three synthetic EXIF-tagged JPEG fixtures (front-camera/48MP, rear-camera/12MP, no-EXIF) with `piexifjs` + `jpeg-js` and fed them through the real built worker in a Playwright-driven headless Chromium session (`new Worker(new URL('/src/worker/exif-worker.ts', ...))`) to observe the actual `progress`/`error`/`complete` message sequence end-to-end, not just the unit tests.
+- Grepped the production `vite build` output (`dist/assets/index-*.js` vs. the separate `dist/assets/exif-worker-*.js` chunk) to confirm zero `exifreader`/`ExifReader` occurrences in the main-thread bundle.
 
 ### Completion Notes List
 
+- Implemented the worker pipeline exactly per the Dev Notes' AD-2/AD-4 reconciliation: the worker posts `Omit<Photo, 'thumbnailUrl'> & { blob: Blob }` per photo in its `complete` message; the main thread (`features/ingest/ingestPhotos.ts`) is the only place that calls `URL.createObjectURL`.
+- `apps/gallery/src/worker/normalize.ts` is a pure module (no ExifReader/browser API imports) exporting `deriveMegapixelMode`, `deriveCameraFacing`, `formatLensLabel`, `parseCapturedAt`, `hasUsableExifData`, `normalizeExifFields`, `createUnreadablePhoto` — all covered by Vitest (13 tests, first real test suite in the repo).
+- `readable: false` is decided by `hasUsableExifData` (true if any of the 9 extracted raw fields is defined) rather than only an ExifReader throw, since ExifReader does not throw for a well-formed image that simply carries no EXIF block — it returns an empty tag set.
+- Replaced Story 2.1's `rawFiles: File[]` store slot with `photos: Photo[]` + `fileCount: number`; kept `useIngestedFileCount()`'s name/semantics unchanged (still the App-shell Loading/EmptyState gate — `fileCount` flips synchronously via `beginIngest()` the moment files are picked, before the worker finishes, so the transitional `<Loading/>` placeholder from Story 2.1 still appears immediately with no UX regression). Added `useReadablePhotos()`/`useUnreadableCount()` exactly as specified; did not build `useFacetFilters()`/`useFilteredPhotos()`.
+- `EmptyState.tsx` now calls the new `ingestPhotos()` orchestrator (in `features/ingest/ingestPhotos.ts`) instead of a store hook — that module owns the `Worker` lifecycle (construct, post the `File[]` batch, listen for `complete`, create object URLs, commit to the store, terminate the worker).
+- Cast the worker's `self` to `Worker` (`const ctx = self as unknown as Worker`) rather than adding `"WebWorker"` to the app's `lib` array — TypeScript doesn't allow mixing the `"DOM"` and `"WebWorker"` libs in one program, and `Worker`/`DedicatedWorkerGlobalScope` share the same `postMessage`/`onmessage` shape, so this avoids a second tsconfig for one file.
+- Live verification (Playwright + headless Chromium, real build): a 3-file batch (2 real EXIF fixtures + 1 plain JPEG) produced the exact expected message sequence — `progress(1/3)`, `progress(2/3)`, `error("no-exif.jpg")`, `progress(3/3)`, `complete` with all 3 photos present (2 `readable: true` with correct derived `megapixelMode`/`camera`/`lensLabel`/ISO-8601 `capturedAt`, 1 `readable: false` with only `id`+`blob`); zero non-local network requests were observed throughout.
+- `pnpm turbo lint build test` all pass repo-wide (9 tasks, no regressions in other packages).
+- Flag for the architect (per Dev Notes): AD-2's own `WorkerMessage` TS snippet types `complete.photos` as `Photo[]`, which conflicts with AD-4's main-thread `thumbnailUrl` creation timing as literally written — implemented per the Dev Notes' resolution (`Omit<Photo, 'thumbnailUrl'> & { blob: Blob }`), consistent with AD-7's own precedent of correcting a companion doc when an AD resolves an open gap.
+
 ### File List
+
+- `apps/gallery/package.json` (added `exifreader` dependency, `vitest` devDependency, `test` script)
+- `apps/gallery/vitest.config.ts` (new)
+- `apps/gallery/src/worker/types.ts` (new — `Photo`, `WorkerPhoto`, `WorkerMessage`)
+- `apps/gallery/src/worker/normalize.ts` (new — pure derivation/normalization functions)
+- `apps/gallery/src/worker/normalize.test.ts` (new — 13 Vitest unit tests)
+- `apps/gallery/src/worker/exif-worker.ts` (new — Web Worker, owns all ExifReader usage)
+- `apps/gallery/src/worker/.gitkeep` (deleted — folder now has real content)
+- `apps/gallery/src/features/ingest/ingestPhotos.ts` (new — Worker lifecycle + main-thread `thumbnailUrl` assembly + store commit)
+- `apps/gallery/src/features/ingest/EmptyState.tsx` (modified — calls `ingestPhotos()` instead of the removed `useIngestFiles()` store hook)
+- `apps/gallery/src/store/ingestStore.ts` (modified — `rawFiles: File[]` slot replaced with canonical `photos: Photo[]` + `fileCount`; added `useReadablePhotos()`/`useUnreadableCount()` selectors and `beginIngest()`/`commitPhotos()` plain mutators)
+- `pnpm-workspace.yaml` (added `exifreader: false` to `allowBuilds` — its `build` script is a manual dev command, dist files ship pre-built)
+- `pnpm-lock.yaml` (dependency updates)
+
+## Change Log
+
+- 2026-07-07 — Implemented Story 2.2: real Web Worker EXIF pipeline (`exif-worker.ts` + `normalize.ts`) replacing Story 2.1's `rawFiles` stub, fixed `progress`/`error`/`complete` message contract (AD-2), `Photo` entity normalization with unit-tested megapixel-mode/camera-facing derivation (AD-6, 13 Vitest tests — first real test suite in the repo), main-thread `thumbnailUrl` assembly via `URL.createObjectURL` (AD-4), and `useReadablePhotos()`/`useUnreadableCount()` selectors (AD-3). Verified end-to-end in a real built worker via Playwright-driven headless Chromium against synthetic EXIF fixtures (front/rear camera, no-EXIF), confirming correct progress sequencing, unreadable-photo handling without batch abort, zero network egress, and zero `exifreader` references in the main-thread bundle. `turbo lint`/`build`/`test` all pass repo-wide.
+- 2026-07-07 — Addressed code review findings: 3-layer adversarial review (Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 3 patches applied (`useShallow` on `useReadablePhotos()`, `EmptyState.tsx` resets the file input on the success path too, `Number.isFinite` guards on rational EXIF tags to stop `NaN`/`Infinity` reaching `Photo` fields), 7 deferred (worker crash recovery, object-URL revocation, repeat-ingest race guard, cap re-check at the ingest boundary, swallowed parse errors, semantic date validation, worker-level test coverage — all either unreachable in this story's current UI wiring or explicitly owned by Story 2.3/2.4/2.5), 6 dismissed as noise (2 false positives from trimmed reviewer prompts, 3 exactly-per-spec behaviors, 1 inherent diff-review limitation). `turbo lint`/`build`/`test` re-verified clean after patches.

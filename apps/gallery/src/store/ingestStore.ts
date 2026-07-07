@@ -1,30 +1,39 @@
 import { create } from "zustand";
+import { useShallow } from "zustand/react/shallow";
+import type { Photo } from "../worker/types";
 
 interface IngestState {
-  rawFiles: File[];
-  ingestFiles: (files: File[]) => void;
+  photos: Photo[];
+  fileCount: number;
 }
 
 /**
- * First-Ingest-only shape: `ingestFiles` replaces `rawFiles` outright, no
- * append/dedupe (that's Story 2.5). Story 2.2 replaces this whole slot with
- * the real canonical `Photo[]` store plus the
- * useReadablePhotos/useUnreadableCount/useFacetFilters/useFilteredPhotos
- * selectors from AD-3 — don't build those selectors here, there's no `Photo`
- * data yet to select over.
- *
- * Not exported directly (AD-3 convention) — only the selector hooks below
- * reach outside this module.
+ * Not exported directly (AD-3 convention) — only the selector hooks and
+ * plain mutator functions below reach outside this module. The mutators are
+ * plain functions (not hooks) so non-component orchestration code (the
+ * worker message handler in features/ingest) can call them directly.
  */
-const useIngestStore = create<IngestState>((set) => ({
-  rawFiles: [],
-  ingestFiles: (files) => set({ rawFiles: files }),
+const useIngestStore = create<IngestState>(() => ({
+  photos: [],
+  fileCount: 0,
 }));
 
-export function useIngestedFileCount(): number {
-  return useIngestStore((state) => state.rawFiles.length);
+export function beginIngest(fileCount: number): void {
+  useIngestStore.setState({ fileCount });
 }
 
-export function useIngestFiles(): (files: File[]) => void {
-  return useIngestStore((state) => state.ingestFiles);
+export function commitPhotos(photos: Photo[]): void {
+  useIngestStore.setState({ photos, fileCount: photos.length });
+}
+
+export function useIngestedFileCount(): number {
+  return useIngestStore((state) => state.fileCount);
+}
+
+export function useReadablePhotos(): Photo[] {
+  return useIngestStore(useShallow((state) => state.photos.filter((photo) => photo.readable)));
+}
+
+export function useUnreadableCount(): number {
+  return useIngestStore((state) => state.photos.filter((photo) => !photo.readable).length);
 }

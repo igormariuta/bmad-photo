@@ -1,5 +1,15 @@
 # Deferred Work
 
+## Deferred from: code review of 2-2-in-browser-metadata-extraction-web-worker (2026-07-07)
+
+- **No `worker.onerror` handler in `ingestPhotos.ts`** [apps/gallery/src/features/ingest/ingestPhotos.ts] — an uncaught worker-level exception would leave `fileCount` flipped with no `complete` ever arriving, stranding the UI in Loading forever. Low-probability given current code has no unguarded throw path outside `parseFile`'s try/catch; belongs with Story 2.3's progress/error UX.
+- **No `URL.revokeObjectURL` anywhere** [apps/gallery/src/features/ingest/ingestPhotos.ts] — `thumbnailUrl`s would accumulate once a session re-ingests. Unreachable in this story (no repeat-ingest entry point exists yet); AD-4 ties revocation to a "full-session reset" trigger that Story 2.5 will introduce.
+- **`ingestPhotos()` has no in-flight guard** [apps/gallery/src/features/ingest/ingestPhotos.ts] — concurrent invocations would race on `commitPhotos()`, last `complete` silently wins. Unreachable today (EmptyState unmounts after the first pick, no "Add more" entry point yet); Story 2.5 will reuse this function from a live repeat-ingest control and needs this guard.
+- **The 100-photo cap is checked only in `EmptyState.tsx`, not re-checked inside `ingestPhotos()` itself** [apps/gallery/src/features/ingest/EmptyState.tsx, apps/gallery/src/features/ingest/ingestPhotos.ts] — correct for this story's single call site (satisfies AD-2's "before any file reaches the worker"); Story 2.5's cumulative cap will need the check at the ingest-orchestration boundary.
+- **`exif-worker.ts`'s `catch` silently discards ExifReader's actual thrown error with no logging** [apps/gallery/src/worker/exif-worker.ts] — conflates "corrupt file" with "valid file, no EXIF" into the same `error` message, matching the spec's explicit instruction to treat both cases identically; losing diagnostic signal for genuine parse bugs is a real but minor hardening gap.
+- **`parseCapturedAt`'s regex validates only digit-grouping shape, not semantic date correctness** [apps/gallery/src/worker/normalize.ts] — e.g. month `13` would pass through unchanged. Out of this story's stated scope (format conversion only); worth a note for Story 2.4's hour-of-day bucketing.
+- **No automated test exercises `exif-worker.ts` itself or the `progress`/`error`/`complete` message sequence** [apps/gallery/src/worker/exif-worker.ts] — all 13 Vitest tests target only `normalize.ts`'s pure helpers. Spec-compliant (Task 6 explicitly scoped unit tests to `normalize.ts` only); real coverage gap resting on one manual Playwright session, worth a future Vitest+jsdom worker test.
+
 ## Deferred from: code review of 2-1-empty-state-client-side-photo-ingest (2026-07-07)
 
 - **Non-image files aren't filtered before reaching `ingestFiles`/the store** [apps/gallery/src/features/ingest/EmptyState.tsx] — `accept="image/*"` isn't OS-enforced, so a non-image file can be selected and land in `rawFiles` unfiltered. This is Story 2.2's EXIF-worker job (AD-2 marks unreadable files via `error`/`readable:false`), not this story's.

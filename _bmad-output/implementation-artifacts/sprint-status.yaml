@@ -42,6 +42,9 @@
 
 generated: 2026-07-06
 last_updated: 2026-07-07
+# 2-2 moved review → done (2026-07-07): 3-layer adversarial code review (Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 3 patches applied (useShallow on useReadablePhotos, EmptyState input reset on success path, Number.isFinite guards on rational EXIF tags), 7 deferred (worker crash recovery, object-URL revocation, repeat-ingest race guard, cap re-check at ingest boundary, swallowed parse errors, semantic date validation, worker-level test coverage — all unreachable in current UI wiring or owned by Story 2.3/2.4/2.5), 6 dismissed as noise
+# 2-2 moved in-progress → review (2026-07-07): Web Worker EXIF pipeline (exif-worker.ts + normalize.ts) with fixed progress/error/complete contract, unit-tested megapixel-mode/camera-facing derivation (13 Vitest tests, first real suite in repo), main-thread thumbnailUrl assembly, useReadablePhotos/useUnreadableCount selectors; verified end-to-end via Playwright against synthetic EXIF fixtures, zero network egress, zero exifreader refs in main bundle
+# 2-2 moved ready-for-dev → in-progress (2026-07-07): starting worker-based EXIF extraction + normalize.ts + Vitest setup
 # 2-1 moved ready-for-dev → in-progress (2026-07-07): starting empty-state + client-side photo ingest
 # 2-1 moved in-progress → review (2026-07-07): empty-state screen, minimal Zustand ingest store, native picker + 100-cap check, transitional Loading placeholder gating; verified live in Playwright-driven Chromium (render match, over-cap rejection, valid-selection transition, zero network egress); zero arbitrary-value violations
 # 2-1 moved review → done (2026-07-07): 3-layer adversarial code review (Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 1 decision resolved (kept InfoBox danger tone), 2 patches applied (role="alert" on limit message, removed redundant H1 font-bold), 2 deferred (non-image file filtering → Story 2.2, no Loading→EmptyState reset path → intentional stub scope), 13 dismissed as noise
@@ -70,7 +73,7 @@ development_status:
 
   epic-2: in-progress
   2-1-empty-state-client-side-photo-ingest: done
-  2-2-in-browser-metadata-extraction-web-worker: ready-for-dev
+  2-2-in-browser-metadata-extraction-web-worker: done
   2-3-ingest-progress-indicator: ready-for-dev
   2-4-insights-dashboard: ready-for-dev
   2-5-repeat-ingest-add-more-append-dedupe-cumulative-cap: ready-for-dev
