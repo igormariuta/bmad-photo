@@ -171,6 +171,15 @@ export function useReadablePhotos(): Photo[] {
   return useIngestStore(useShallow((state) => state.photos.filter((photo) => photo.readable)));
 }
 
+/** Trivial pass-through (AD-3's import-boundary contract, populated ahead of
+ * need per SM-C1) — `browse/` reads through this rather than
+ * `useReadablePhotos()` directly, but there's no real Facet-filter logic or
+ * store slot yet. Story 3.3 replaces this body with real filtering without
+ * touching any `browse/` import site. */
+export function useFilteredPhotos(): Photo[] {
+  return useReadablePhotos();
+}
+
 export function useUnreadableCount(): number {
   return useIngestStore((state) => state.photos.filter((photo) => !photo.readable).length);
 }

@@ -42,6 +42,9 @@
 
 generated: 2026-07-06
 last_updated: 2026-07-08
+# 3-2 moved review → done (2026-07-08): 3-layer adversarial code review (Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 2 decisions resolved by user (mobile Facet-panel slide-up-sheet deferred to focus on desktop this iteration; aria-label fallback shortened to "Photo, captured —" reusing the badge's "—" placeholder convention), 2 patches applied (aria-label fallback wording + a Completion Notes precision fix about AC #4), 4 deferred (no component-level test for PhotoGridCell, empty Facets landmark until 3.3, blank-grid empty-state owned by 3.4, no onError on the thumbnail img), 9 dismissed as noise (incl. one verified false-positive date-formatting claim); turbo lint/build/test re-verified clean (43/43 tests)
+# 3-2 moved in-progress → review (2026-07-08): Photo-grid-cell (Gallery-local, button-semantic, exact AD-4 badge format), useFilteredPhotos() trivial alias, Browse.tsx two-region grid + reserved-sidebar layout (260px sidebar, 2/4-col responsive grid at a Gallery-scoped 900px lg breakpoint override), new sidebar-width theme token following container-max/article-max precedent; turbo lint/build/test all pass (7/7 tasks, 43 Vitest tests, 5 new); live-verified via headless Playwright against synthetic Pillow-generated EXIF fixtures (exact badge format, unreadable-photo exclusion, responsive column/sidebar behavior, zero console errors)
+# 3-2 moved ready-for-dev → in-progress (2026-07-08): starting Photo-grid-cell + grid/reserved-sidebar layout + useFilteredPhotos alias
 # 3-1 moved review → done (2026-07-08): accepted directly by user after live testing (no formal code-review workflow run this round) — live testing caught and fixed the two defects noted below, then approved
 # 3-1 moved in-progress → review (2026-07-08): UnderlineTabs mechanism under Header-bar with dual-mounted Insights/Browse panels, each in its own overflow-y-auto scroll region inside a h-screen flex shell (preserves Insights' scroll position across tab switches); AD-3 insights/browse import-boundary eslint rule (deferred from Story 1.3) added to packages/eslint-config, verified fails/passes in both directions then reverted; Browse.tsx placeholder panel added; turbo lint/build/test all pass (10/10 tasks, 38 existing Vitest tests untouched) — no browser-automation tooling available this session, so scroll-preservation was verified via code/CSS-level reasoning rather than a live Playwright run; live user testing then caught two real defects — dark mode not reaching the page background outside Header-bar (base html/body rule added to apps/gallery/app.css) and no top padding on the Tabs row (UnderlineTabs.tsx pb-3 → py-3) — both fixed and re-verified clean
 # 3-1 moved ready-for-dev → in-progress (2026-07-08): starting UnderlineTabs Insights/Browse split + AD-3 insights/browse import-boundary lint rule + Browse placeholder
@@ -93,7 +96,7 @@ development_status:
 
   epic-3: in-progress
   3-1-underlinetabs-insights-browse-split: done
-  3-2-photo-grid-browse-unfiltered-view: ready-for-dev
+  3-2-photo-grid-browse-unfiltered-view: done
   3-3-facet-panel-live-filtering: ready-for-dev
   3-4-empty-filtered-state: ready-for-dev
   3-5-photo-detail-modal: ready-for-dev

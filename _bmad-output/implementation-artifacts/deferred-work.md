@@ -1,5 +1,13 @@
 # Deferred Work
 
+## Deferred from: code review of 3-2-photo-grid-browse-unfiltered-view (2026-07-08)
+
+- **No component-level test renders `<PhotoGridCell>` itself** [apps/gallery/src/features/browse/PhotoGridCell.tsx] — button semantics, `onClick`→`onOpen` wiring, computed `aria-label`, and image rendering are all unverified by any committed test; only the two extracted pure helpers (`formatExifBadgeSegments`/`formatCellAriaLabel`) are unit-tested. Pre-existing gap — no React Testing Library/component-test infra exists anywhere in this repo yet.
+- **Empty `<aside aria-label="Facets">` landmark ships with zero content** [apps/gallery/src/features/browse/Browse.tsx] — an unexplained empty region for screen-reader landmark navigation. Explicitly directed by this story's own Dev Notes as an intentional placeholder for Story 3.3 to fill; worth a visually-hidden "Filters coming soon" note if 3.3 doesn't land soon.
+- **`useFilteredPhotos()` returning an empty array renders a blank grid with no empty-state messaging** [apps/gallery/src/features/browse/Browse.tsx] — owned by Story 3.4 ("Empty Filtered State").
+- **`thumbnailUrl` image load failure has no `onError` handler or accessible fallback** [apps/gallery/src/features/browse/PhotoGridCell.tsx] — no established error-handling pattern elsewhere in the app for this; low probability given freshly created local `URL.createObjectURL` blob URLs, but a revoked/broken URL would show a bare broken-image icon with no text fallback (the `alt=""` is intentionally decorative, relying on the badge below for information).
+- **Facet-panel mobile behavior is a plain stacked block, not DESIGN.md/UX-DR5/UX-DR16's "slide-up sheet"** [apps/gallery/src/features/browse/Browse.tsx] — DESIGN.md and UX-DR5/UX-DR16 specify a full-width slide-up sheet capped at ~70vh on mobile; this story ships a plain full-width stacked block below 900px instead. Resolved by user 2026-07-08: this iteration focuses on desktop only, mobile slide-up-sheet behavior is deprioritized and left for a later pass (likely alongside Story 3.3, once the Facet-panel has real content to present).
+
 ## Deferred from: code review of 2-5-repeat-ingest-add-more-append-dedupe-cumulative-cap (2026-07-08)
 
 - **Worker error handling still absent** [apps/gallery/src/features/ingest/ingestPhotos.ts] — restates the already-known missing `worker.onerror` gap carried over unaddressed from Stories 2.2/2.3/2.4; Add More now makes repeated ingest actions more common but doesn't introduce the gap itself.

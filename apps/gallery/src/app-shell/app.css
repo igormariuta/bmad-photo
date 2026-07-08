@@ -2,6 +2,14 @@
 @import "tailwindcss";
 @import "@bmad/theme/tailwind-preset";
 
+/* Browse's grid/Facet-panel breakpoint (Story 3.2 Dev Notes: the real
+ * mockup's single 900px breakpoint stands in for this project's `lg` tier)
+ * — scoped to Gallery only, not packages/theme, since apps/landing has no
+ * stake in this value. */
+@theme {
+  --breakpoint-lg: 900px;
+}
+
 /* Neither `packages/theme` nor `index.html` paints an actual background —
  * `.dark` only flips the `--m-*` custom properties. Without this, the page
  * outside components that explicitly set `bg-bg` (e.g. Header-bar) falls

@@ -81,6 +81,7 @@
   --spacing-container-max: var(--m-space-container-max);
   --spacing-article-max: var(--m-space-article-max);
   --spacing-hero-padding: var(--m-space-hero-padding);
+  --spacing-sidebar-width: var(--m-space-sidebar-width);
 
   --radius: var(--m-radius-default);
 }
