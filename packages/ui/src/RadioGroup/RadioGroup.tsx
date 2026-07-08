@@ -3,6 +3,10 @@ import { FieldError } from "../Field/FieldError";
 export interface RadioOption {
   value: string;
   label: string;
+  /** Disables just this option (e.g. no data matches it) while the rest of
+   * the group stays interactive — independent of the group-level
+   * `disabled` prop below. */
+  disabled?: boolean;
 }
 
 export interface RadioGroupProps {
@@ -35,6 +39,7 @@ export function RadioGroup({
       <div className="flex flex-col gap-4">
         {options.map((option) => {
           const isChecked = option.value === value;
+          const isOptionDisabled = disabled || option.disabled === true;
           const optionId = `${name}-${option.value}`;
           const borderClassName =
             error !== undefined ? "border-error" : isChecked ? "border-accent" : "border-dim";
@@ -42,7 +47,7 @@ export function RadioGroup({
             <label
               key={option.value}
               htmlFor={optionId}
-              className={`flex items-center gap-3 ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+              className={`flex items-center gap-3 ${isOptionDisabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
             >
               <input
                 id={optionId}
@@ -52,7 +57,7 @@ export function RadioGroup({
                 checked={isChecked}
                 onChange={() => onChange(option.value)}
                 required={required}
-                disabled={disabled}
+                disabled={isOptionDisabled}
                 aria-invalid={error !== undefined}
                 className="peer sr-only"
               />

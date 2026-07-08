@@ -20,21 +20,21 @@ export interface RangeFilter {
 }
 
 /**
- * One entry per Facet (Story 3.3 Dev Notes' 8-Facet list). `iso`/
- * `exposureComp`/`megapixelMode`/`years` are checkbox-style multi-select
- * value lists (UX redesign, 2026-07-08) — an empty array means
- * inactive/"All"; a non-empty array matches a photo whose field equals ANY
- * selected value. `years` replaced the earlier `dateFrom`/`dateTo` range
- * (user request: simplify the date Facet down to year selection).
- * `lens`/`aperture`/`shutter` are slider-driven `RangeFilter`s instead
- * (round-4 UX request: these read more naturally as a slider than a long
- * checkbox list) — `lens` matches against the integer parsed off
- * `lensLabel`'s `"{n}mm"` shape, not `focalLengthMm` directly, so it can
- * never land on a value more precise than what's actually displayed.
+ * One entry per Facet (Story 3.3 Dev Notes' 8-Facet list). `exposureComp`/
+ * `megapixelMode`/`years` are checkbox-style multi-select value lists (UX
+ * redesign, 2026-07-08) — an empty array means inactive/"All"; a non-empty
+ * array matches a photo whose field equals ANY selected value. `years`
+ * replaced the earlier `dateFrom`/`dateTo` range (user request: simplify
+ * the date Facet down to year selection). `lens`/`aperture`/`shutter`/`iso`
+ * are slider-driven `RangeFilter`s instead (round-4/5 UX requests: these
+ * read more naturally as a slider than a long checkbox list) — `lens`
+ * matches against the integer parsed off `lensLabel`'s `"{n}mm"` shape, not
+ * `focalLengthMm` directly, so it can never land on a value more precise
+ * than what's actually displayed.
  */
 export interface FacetFiltersState {
   lens: RangeFilter;
-  iso: number[];
+  iso: RangeFilter;
   aperture: RangeFilter;
   exposureComp: number[];
   megapixelMode: (12 | 48)[];
@@ -45,7 +45,7 @@ export interface FacetFiltersState {
 
 export const DEFAULT_FACET_FILTERS: FacetFiltersState = {
   lens: {},
-  iso: [],
+  iso: {},
   aperture: {},
   exposureComp: [],
   megapixelMode: [],
@@ -239,6 +239,12 @@ export interface FacetValueOptions {
   exposureComp: number[];
   megapixelMode: (12 | 48)[];
   years: number[];
+  /** Whether any readable photo has this camera value — Camera's own
+   * options are fixed (All/Front/Rear, not data-derived like every other
+   * Facet), so this drives disabling an option with zero matches instead
+   * (round-5 UX request) rather than omitting/adding options dynamically. */
+  hasCameraFront: boolean;
+  hasCameraRear: boolean;
 }
 
 function distinctSortedNumbers(values: number[]): number[] {
@@ -267,6 +273,8 @@ export function computeFacetValueOptions(photos: readonly Photo[]): FacetValueOp
   const exposureComp: number[] = [];
   const megapixelSet = new Set<12 | 48>();
   const years: number[] = [];
+  let hasCameraFront = false;
+  let hasCameraRear = false;
 
   for (const photo of photos) {
     if (!photo.readable) {
@@ -293,6 +301,11 @@ export function computeFacetValueOptions(photos: readonly Photo[]): FacetValueOp
     if (photo.capturedAt !== undefined) {
       years.push(Number.parseInt(photo.capturedAt.slice(0, 4), 10));
     }
+    if (photo.camera === "front") {
+      hasCameraFront = true;
+    } else if (photo.camera === "rear") {
+      hasCameraRear = true;
+    }
   }
 
   return {
@@ -303,6 +316,8 @@ export function computeFacetValueOptions(photos: readonly Photo[]): FacetValueOp
     exposureComp: distinctSortedNumbers(exposureComp),
     megapixelMode: Array.from(megapixelSet).sort((a, b) => a - b),
     years: distinctSortedNumbers(years),
+    hasCameraFront,
+    hasCameraRear,
   };
 }
 
@@ -385,7 +400,7 @@ export function matchesFacetFilters(photo: Photo, filters: FacetFiltersState): b
   if (!matchesYear(photo.capturedAt, filters.years)) {
     return false;
   }
-  if (!matchesDiscrete(photo.iso, filters.iso)) {
+  if (!matchesRange(photo.iso, filters.iso)) {
     return false;
   }
   if (!matchesRange(photo.apertureF, filters.aperture)) {

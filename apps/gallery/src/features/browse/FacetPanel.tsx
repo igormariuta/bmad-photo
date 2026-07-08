@@ -99,9 +99,47 @@ interface SliderFacetProps {
   onChange: (min: number, max: number) => void;
 }
 
+type SliderMode = "single" | "range";
+
 /**
- * Slider-driven Facet (lens/aperture/shutter, round-4 UX request) — the
- * slider always operates on *indices* into the batch's sorted distinct
+ * Compact icon segmented control (round-5 UX request — text like "Pick
+ * range" didn't fit next to longer labels, e.g. "Lens / focal length").
+ * Two always-visible glyph buttons rather than one state-flipping button,
+ * so which mode is active is unambiguous without reading text: "•" (one
+ * exact value) and "↔" (a range).
+ */
+function SliderModeToggle({ mode, onChange }: { mode: SliderMode; onChange: (mode: SliderMode) => void }) {
+  return (
+    <div className="flex flex-none items-center gap-1" role="group" aria-label="Selection mode">
+      <button
+        type="button"
+        aria-label="Pick one value"
+        aria-pressed={mode === "single"}
+        onClick={() => onChange("single")}
+        className={`flex size-5 flex-none items-center justify-center border-2 text-caption leading-none ${
+          mode === "single" ? "border-accent text-accent" : "border-dim text-muted2 hover:text-fg"
+        }`}
+      >
+        •
+      </button>
+      <button
+        type="button"
+        aria-label="Pick a range"
+        aria-pressed={mode === "range"}
+        onClick={() => onChange("range")}
+        className={`flex size-5 flex-none items-center justify-center border-2 text-caption leading-none ${
+          mode === "range" ? "border-accent text-accent" : "border-dim text-muted2 hover:text-fg"
+        }`}
+      >
+        ↔
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Slider-driven Facet (lens/aperture/shutter/ISO, round-4/5 UX requests) —
+ * the slider always operates on *indices* into the batch's sorted distinct
  * values, never a continuous numeric domain, so it can only land on a
  * value that actually occurs. A toggle switches between "pick one exact
  * value" (single thumb, `min === max`) and "pick a range" (two thumbs) —
@@ -109,7 +147,7 @@ interface SliderFacetProps {
  * treats `min === max` as an exact match with no store-level change needed.
  */
 function SliderFacet({ label, values, filter, formatValue, onChange }: SliderFacetProps) {
-  const [mode, setMode] = useState<"single" | "range">(
+  const [mode, setMode] = useState<SliderMode>(
     filter.min !== undefined && filter.min === filter.max ? "single" : "range",
   );
 
@@ -130,12 +168,10 @@ function SliderFacet({ label, values, filter, formatValue, onChange }: SliderFac
   const minValue = values[minIndex] ?? firstValue;
   const maxValue = values[maxIndex] ?? lastValue;
 
-  function handleModeToggle() {
-    if (mode === "range") {
-      setMode("single");
+  function handleModeChange(nextMode: SliderMode) {
+    setMode(nextMode);
+    if (nextMode === "single") {
       onChange(minValue, minValue);
-    } else {
-      setMode("range");
     }
   }
 
@@ -143,13 +179,7 @@ function SliderFacet({ label, values, filter, formatValue, onChange }: SliderFac
     <div>
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="text-data-label text-muted2 uppercase">{label}</span>
-        <button
-          type="button"
-          onClick={handleModeToggle}
-          className="text-caption text-muted2 uppercase hover:text-accent"
-        >
-          {mode === "range" ? "Pick one" : "Pick range"}
-        </button>
+        <SliderModeToggle mode={mode} onChange={handleModeChange} />
       </div>
       {mode === "single" ? (
         <SingleSlider
@@ -184,8 +214,8 @@ function SliderFacet({ label, values, filter, formatValue, onChange }: SliderFac
  * slide-up-sheet requirement from AC #1/#4 is deferred (see
  * deferred-work.md). The 8 Facets (Dev Notes' field mapping), each always
  * showing its real control; every control commits directly to the store on
- * change (AC #4, no Apply step). Camera listed first (user request,
- * round 4) — the rest keep their existing relative order.
+ * change (AC #4, no Apply step). Order (round-5 user request): Camera,
+ * Year, Lens, Aperture, Shutter, ISO, Exposure comp, Megapixel mode.
  */
 export function FacetPanel() {
   const filters = useFacetFilters();
@@ -205,30 +235,12 @@ export function FacetPanel() {
           }
           options={[
             { value: "all", label: "All" },
-            { value: "front", label: "Front (selfie)" },
-            { value: "rear", label: "Rear" },
+            // Disabled rather than omitted when the batch has no matching
+            // photos (round-5 UX request) — no point offering a choice
+            // that can only ever produce zero results.
+            { value: "front", label: "Front (selfie)", disabled: !options.hasCameraFront },
+            { value: "rear", label: "Rear", disabled: !options.hasCameraRear },
           ]}
-        />
-      </FacetField>
-
-      <FacetField>
-        <SliderFacet
-          label="Lens / focal length"
-          values={options.lens}
-          filter={filters.lens}
-          formatValue={formatLens}
-          onChange={(min, max) => setFacetFilter("lens", { min, max })}
-        />
-      </FacetField>
-
-      <FacetField>
-        <CheckboxFacetGroup
-          facetKey="iso"
-          label="ISO"
-          options={options.iso}
-          selected={filters.iso}
-          formatLabel={(value) => String(value)}
-          onToggle={(value) => setFacetFilter("iso", toggleInArray(filters.iso, value))}
         />
       </FacetField>
 
@@ -240,6 +252,16 @@ export function FacetPanel() {
           selected={filters.years}
           formatLabel={(value) => String(value)}
           onToggle={(value) => setFacetFilter("years", toggleInArray(filters.years, value))}
+        />
+      </FacetField>
+
+      <FacetField>
+        <SliderFacet
+          label="Lens / focal length"
+          values={options.lens}
+          filter={filters.lens}
+          formatValue={formatLens}
+          onChange={(min, max) => setFacetFilter("lens", { min, max })}
         />
       </FacetField>
 
@@ -260,6 +282,16 @@ export function FacetPanel() {
           filter={filters.shutter}
           formatValue={formatShutterSpeed}
           onChange={(min, max) => setFacetFilter("shutter", { min, max })}
+        />
+      </FacetField>
+
+      <FacetField>
+        <SliderFacet
+          label="ISO"
+          values={options.iso}
+          filter={filters.iso}
+          formatValue={(value) => String(value)}
+          onChange={(min, max) => setFacetFilter("iso", { min, max })}
         />
       </FacetField>
 

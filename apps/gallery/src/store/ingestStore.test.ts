@@ -184,19 +184,20 @@ describe("matchesFacetFilters", () => {
     expect(matchesFacetFilters(photo({ camera: "rear" }), cam)).toBe(false);
   });
 
-  it("discrete Facet (iso/exposureComp): matches any selected value, excludes undefined field only when active", () => {
-    const iso = filters({ iso: [100, 400] });
-    expect(matchesFacetFilters(photo({ iso: 100 }), iso)).toBe(true);
-    expect(matchesFacetFilters(photo({ iso: 400 }), iso)).toBe(true);
-    expect(matchesFacetFilters(photo({ iso: 200 }), iso)).toBe(false);
-    expect(matchesFacetFilters(photo({}), iso)).toBe(false);
-
+  it("discrete Facet (exposureComp): matches any selected value, excludes undefined field only when active", () => {
     const exposureComp = filters({ exposureComp: [0.3, -0.3] });
     expect(matchesFacetFilters(photo({ exposureCompEv: 0.3 }), exposureComp)).toBe(true);
     expect(matchesFacetFilters(photo({ exposureCompEv: 0 }), exposureComp)).toBe(false);
   });
 
-  it("range Facet (aperture/shutter): min/max-based, respects open-ended bounds", () => {
+  it("range Facet (iso/aperture/shutter): min/max-based, respects open-ended bounds", () => {
+    const iso = filters({ iso: { min: 100, max: 400 } });
+    expect(matchesFacetFilters(photo({ iso: 100 }), iso)).toBe(true);
+    expect(matchesFacetFilters(photo({ iso: 200 }), iso)).toBe(true);
+    expect(matchesFacetFilters(photo({ iso: 400 }), iso)).toBe(true);
+    expect(matchesFacetFilters(photo({ iso: 800 }), iso)).toBe(false);
+    expect(matchesFacetFilters(photo({}), iso)).toBe(false);
+
     const aperture = filters({ aperture: { min: 1.8, max: 1.8 } });
     expect(matchesFacetFilters(photo({ apertureF: 1.8 }), aperture)).toBe(true);
     expect(matchesFacetFilters(photo({ apertureF: 2.8 }), aperture)).toBe(false);
@@ -219,7 +220,7 @@ describe("matchesFacetFilters", () => {
   });
 
   it("AND-combines multiple active Facets — a photo must satisfy every one", () => {
-    const f = filters({ lens: { min: 24, max: 24 }, iso: [200] });
+    const f = filters({ lens: { min: 24, max: 24 }, iso: { min: 200, max: 200 } });
     expect(matchesFacetFilters(photo({ lensLabel: "24mm", iso: 200 }), f)).toBe(true);
     expect(matchesFacetFilters(photo({ lensLabel: "48mm", iso: 200 }), f)).toBe(false);
     expect(matchesFacetFilters(photo({ lensLabel: "24mm", iso: 800 }), f)).toBe(false);
@@ -236,7 +237,15 @@ describe("computeFacetValueOptions", () => {
       exposureComp: [],
       megapixelMode: [],
       years: [],
+      hasCameraFront: false,
+      hasCameraRear: false,
     });
+  });
+
+  it("reports whether any readable photo has each camera value", () => {
+    expect(computeFacetValueOptions([photo({ camera: "rear" })]).hasCameraFront).toBe(false);
+    expect(computeFacetValueOptions([photo({ camera: "rear" })]).hasCameraRear).toBe(true);
+    expect(computeFacetValueOptions([photo({ camera: "front" })]).hasCameraFront).toBe(true);
   });
 
   it("returns distinct, sorted values across the readable set only", () => {
