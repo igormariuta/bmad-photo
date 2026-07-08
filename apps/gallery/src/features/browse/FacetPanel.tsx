@@ -214,42 +214,45 @@ function SliderFacet({ label, values, filter, formatValue, onChange }: SliderFac
 
 interface CameraFacetProps {
   value: "front" | "rear" | undefined;
-  hasFront: boolean;
-  hasRear: boolean;
   onChange: (value: "front" | "rear" | undefined) => void;
 }
 
+const CAMERA_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "front", label: "Front" },
+  { value: "rear", label: "Rear" },
+] as const;
+
 /**
- * Compact horizontal Camera selector (round-6/7 UX requests) — one row, a
+ * Compact horizontal Camera selector (round-6/7/8 UX requests) — one row, a
  * small label below each option, spread with `justify-between` across the
  * sidebar's full width (round 7) rather than clustered with a fixed gap —
  * takes minimal *vertical* space even when shown. Gallery-local rather than
  * a `packages/ui` `RadioGroup` variant, since this row-with-label-below
- * layout is specific to this one Facet. The caller hides this component
- * entirely when the batch has no camera data at all — see `FacetPanel`.
+ * layout is specific to this one Facet.
+ *
+ * The caller (`FacetPanel`) only renders this component at all when the
+ * batch has *both* front and rear camera photos (round 8) — with only one
+ * of the two present, "All" and that one value would filter to the exact
+ * same set, so Front/Rear would never be a real choice; no per-option
+ * `disabled` state is needed here since that case never reaches this
+ * component.
  */
-function CameraFacet({ value, hasFront, hasRear, onChange }: CameraFacetProps) {
+function CameraFacet({ value, onChange }: CameraFacetProps) {
   const current = value ?? "all";
-  const options: Array<{ value: "all" | "front" | "rear"; label: string; disabled: boolean }> = [
-    { value: "all", label: "All", disabled: false },
-    { value: "front", label: "Front", disabled: !hasFront },
-    { value: "rear", label: "Rear", disabled: !hasRear },
-  ];
 
   return (
     <fieldset>
       <legend className="mb-2 text-data-label text-muted2 uppercase">Camera</legend>
       <div className="flex justify-between">
-        {options.map((option) => {
+        {CAMERA_OPTIONS.map((option) => {
           const isChecked = option.value === current;
           const optionId = `facet-camera-${option.value}`;
           return (
             <label
               key={option.value}
               htmlFor={optionId}
-              className={`flex flex-col items-center gap-1.5 ${
-                option.disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
-              }`}
+              className="flex cursor-pointer flex-col items-center gap-1.5"
             >
               <input
                 id={optionId}
@@ -257,7 +260,6 @@ function CameraFacet({ value, hasFront, hasRear, onChange }: CameraFacetProps) {
                 name="facet-camera"
                 value={option.value}
                 checked={isChecked}
-                disabled={option.disabled}
                 onChange={() => onChange(option.value === "all" ? undefined : option.value)}
                 className="peer sr-only"
               />
@@ -287,25 +289,22 @@ function CameraFacet({ value, hasFront, hasRear, onChange }: CameraFacetProps) {
  * "an extra thing that adds extra spacing") — the parent's `gap-6` alone
  * separates them. Order (round-5 user request): Camera, Year, Lens,
  * Aperture, Shutter, ISO, Exposure comp, Megapixel mode. Camera itself is
- * hidden entirely (round-6) when the batch has camera data for neither
- * front nor rear — not worth the space if there's nothing to filter.
+ * hidden entirely unless the batch has *both* front and rear camera photos
+ * (round 8, tightened from round 6's "neither" check) — with only one of
+ * the two present, "All" and that value already filter to the same set,
+ * so there's no real choice to offer.
  */
 export function FacetPanel() {
   const filters = useFacetFilters();
   const options = useFacetValueOptions();
-  const hasCameraData = options.hasCameraFront || options.hasCameraRear;
+  const hasCameraChoice = options.hasCameraFront && options.hasCameraRear;
 
   return (
     <div className="flex flex-col gap-6">
       <p className="text-eyebrow text-accent uppercase">// FACETS</p>
 
-      {hasCameraData && (
-        <CameraFacet
-          value={filters.camera}
-          hasFront={options.hasCameraFront}
-          hasRear={options.hasCameraRear}
-          onChange={(value) => setFacetFilter("camera", value)}
-        />
+      {hasCameraChoice && (
+        <CameraFacet value={filters.camera} onChange={(value) => setFacetFilter("camera", value)} />
       )}
 
       <SliderFacet
