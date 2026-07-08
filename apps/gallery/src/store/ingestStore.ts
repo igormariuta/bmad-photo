@@ -20,15 +20,15 @@ export interface RangeFilter {
 }
 
 /**
- * One entry per Facet (Story 3.3 Dev Notes' 8-Facet list). `exposureComp`/
- * `megapixelMode`/`years` are checkbox-style multi-select value lists (UX
- * redesign, 2026-07-08) — an empty array means inactive/"All"; a non-empty
- * array matches a photo whose field equals ANY selected value. `years`
- * replaced the earlier `dateFrom`/`dateTo` range (user request: simplify
- * the date Facet down to year selection). `lens`/`aperture`/`shutter`/`iso`
- * are slider-driven `RangeFilter`s instead (round-4/5 UX requests: these
- * read more naturally as a slider than a long checkbox list) — `lens`
- * matches against the integer parsed off `lensLabel`'s `"{n}mm"` shape, not
+ * One entry per Facet (Story 3.3 Dev Notes' 8-Facet list). `megapixelMode`
+ * is a checkbox-style multi-select value list (UX redesign, 2026-07-08) —
+ * an empty array means inactive/"All"; a non-empty array matches a photo
+ * whose field equals ANY selected value. `years` replaced the earlier
+ * `dateFrom`/`dateTo` range (user request: simplify the date Facet down to
+ * year selection). `lens`/`aperture`/`shutter`/`iso`/`exposureComp` are
+ * slider-driven `RangeFilter`s instead (round-4/5/18 UX requests: these read
+ * more naturally as a slider than a long checkbox list) — `lens` matches
+ * against the integer parsed off `lensLabel`'s `"{n}mm"` shape, not
  * `focalLengthMm` directly, so it can never land on a value more precise
  * than what's actually displayed.
  */
@@ -36,7 +36,7 @@ export interface FacetFiltersState {
   lens: RangeFilter;
   iso: RangeFilter;
   aperture: RangeFilter;
-  exposureComp: number[];
+  exposureComp: RangeFilter;
   megapixelMode: (12 | 48)[];
   camera?: "front" | "rear";
   years: RangeFilter;
@@ -47,7 +47,7 @@ export const DEFAULT_FACET_FILTERS: FacetFiltersState = {
   lens: {},
   iso: {},
   aperture: {},
-  exposureComp: [],
+  exposureComp: {},
   megapixelMode: [],
   years: {},
   shutter: {},
@@ -425,7 +425,7 @@ export function matchesFacetFilters(photo: Photo, filters: FacetFiltersState): b
   if (!matchesRange(photo.shutterSpeedSec, filters.shutter)) {
     return false;
   }
-  if (!matchesDiscrete(photo.exposureCompEv, filters.exposureComp)) {
+  if (!matchesRange(photo.exposureCompEv, filters.exposureComp)) {
     return false;
   }
   return true;
@@ -477,7 +477,7 @@ export function hasActiveFacetFilters(filters: FacetFiltersState): boolean {
     isRangeActive(filters.aperture) ||
     isRangeActive(filters.shutter) ||
     isRangeActive(filters.years) ||
-    filters.exposureComp.length > 0 ||
+    isRangeActive(filters.exposureComp) ||
     filters.megapixelMode.length > 0 ||
     filters.camera !== undefined
   );

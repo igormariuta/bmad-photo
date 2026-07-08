@@ -201,10 +201,11 @@ describe("matchesFacetFilters", () => {
     expect(matchesFacetFilters(photo({ camera: "rear" }), cam)).toBe(false);
   });
 
-  it("discrete Facet (exposureComp): matches any selected value, excludes undefined field only when active", () => {
-    const exposureComp = filters({ exposureComp: [0.3, -0.3] });
-    expect(matchesFacetFilters(photo({ exposureCompEv: 0.3 }), exposureComp)).toBe(true);
-    expect(matchesFacetFilters(photo({ exposureCompEv: 0 }), exposureComp)).toBe(false);
+  it("range Facet (exposureComp): min/max-based, exact single-value pick when min === max", () => {
+    const f = filters({ exposureComp: { min: 0.3, max: 0.3 } });
+    expect(matchesFacetFilters(photo({ exposureCompEv: 0.3 }), f)).toBe(true);
+    expect(matchesFacetFilters(photo({ exposureCompEv: 0 }), f)).toBe(false);
+    expect(matchesFacetFilters(photo({}), f)).toBe(false);
   });
 
   it("range Facet (iso/aperture/shutter): min/max-based, respects open-ended bounds", () => {
@@ -259,6 +260,7 @@ describe("hasActiveFacetFilters", () => {
     expect(hasActiveFacetFilters(filters({ iso: { min: 100 } }))).toBe(true);
     expect(hasActiveFacetFilters(filters({ aperture: { max: 2.8 } }))).toBe(true);
     expect(hasActiveFacetFilters(filters({ years: { min: 2020 } }))).toBe(true);
+    expect(hasActiveFacetFilters(filters({ exposureComp: { min: 0.3 } }))).toBe(true);
   });
 
   it("is true for a bound of exactly 0 — a falsy value that is still meaningfully 'set'", () => {
@@ -267,7 +269,6 @@ describe("hasActiveFacetFilters", () => {
 
   it("is true when a checkbox-style Facet has a non-empty selection", () => {
     expect(hasActiveFacetFilters(filters({ megapixelMode: [48] }))).toBe(true);
-    expect(hasActiveFacetFilters(filters({ exposureComp: [0.3] }))).toBe(true);
   });
 
   it("is true when camera is set", () => {

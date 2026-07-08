@@ -301,7 +301,7 @@ export function FacetPanel() {
 
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-eyebrow text-accent uppercase">// FACETS</p>
+      <p className="text-eyebrow text-accent uppercase">// FILTERS</p>
 
       {hasCameraChoice && (
         <CameraFacet value={filters.camera} onChange={(value) => setFacetFilter("camera", value)} />
@@ -347,13 +347,12 @@ export function FacetPanel() {
         onChange={(min, max) => setFacetFilter("iso", { min, max })}
       />
 
-      <CheckboxFacetGroup
-        facetKey="exposure-comp"
+      <SliderFacet
         label="Exposure comp (EV)"
-        options={options.exposureComp}
-        selected={filters.exposureComp}
-        formatLabel={formatExposureComp}
-        onToggle={(value) => setFacetFilter("exposureComp", toggleInArray(filters.exposureComp, value))}
+        values={options.exposureComp}
+        filter={filters.exposureComp}
+        formatValue={formatExposureComp}
+        onChange={(min, max) => setFacetFilter("exposureComp", { min, max })}
       />
 
       <CheckboxFacetGroup

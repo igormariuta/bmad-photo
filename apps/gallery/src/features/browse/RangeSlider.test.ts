@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clamp, percentFor, valueFromRatio } from "./RangeSlider";
+import { clamp, percentFor, stepPercents, valueFromRatio } from "./RangeSlider";
 
 describe("clamp", () => {
   it("passes through values already inside the range", () => {
@@ -46,5 +46,19 @@ describe("valueFromRatio", () => {
   it("clamps an out-of-range ratio", () => {
     expect(valueFromRatio(-0.5, 0, 100, 1)).toBe(0);
     expect(valueFromRatio(1.5, 0, 100, 1)).toBe(100);
+  });
+});
+
+describe("stepPercents", () => {
+  it("returns one percent per step, evenly spaced 0-100", () => {
+    expect(stepPercents(0, 4, 1)).toEqual([0, 25, 50, 75, 100]);
+  });
+
+  it("returns a single 0 for a degenerate (min === max) domain", () => {
+    expect(stepPercents(0, 0, 1)).toEqual([0]);
+  });
+
+  it("returns a single 0 for a non-positive step", () => {
+    expect(stepPercents(0, 4, 0)).toEqual([0]);
   });
 });

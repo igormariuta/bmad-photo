@@ -32,6 +32,40 @@ export function valueFromRatio(ratio: number, min: number, max: number, step: nu
   return clamp(Math.round(raw / step) * step, min, max);
 }
 
+/** Pure — the percent position of every snappable step along [min, max], for
+ * rendering a muted tick mark at each one (round-18, 2026-07-08, user
+ * request: mark the discrete values a slider can actually land on, without
+ * needing to spell out every number). */
+export function stepPercents(min: number, max: number, step: number): number[] {
+  if (step <= 0 || max <= min) {
+    return [0];
+  }
+  const count = Math.round((max - min) / step) + 1;
+  return Array.from({ length: count }, (_, i) => percentFor(min + i * step, min, max));
+}
+
+/** Small marks at each step position, cut into the track in the color of the surface the
+ * slider actually sits on — `bg-panel` (the Facets sidebar's own background), not `bg-bg` (the
+ * page background) — round-21 used `bg-bg` and it happened to look right in dark mode (where
+ * `--m-panel`/`--m-bg` are close in value) but read as a visibly lighter/whiter mark in light
+ * mode, where the two differ (round-22, 2026-07-08, user report with side-by-side light/dark
+ * screenshots). `pointer-events-none` so they never intercept drag/click, `aria-hidden` since
+ * the slider's own `aria-valuemin/max/now` already convey the range to assistive tech. */
+function StepTicks({ min, max, step }: { min: number; max: number; step: number }) {
+  return (
+    <>
+      {stepPercents(min, max, step).map((percent, i) => (
+        <div
+          key={i}
+          aria-hidden="true"
+          className="pointer-events-none absolute size-1 -translate-x-1/2 bg-panel"
+          style={{ left: `${percent}%` }}
+        />
+      ))}
+    </>
+  );
+}
+
 /**
  * Gallery-local dual-thumb range slider (user request, 2026-07-08) — a
  * quicker interaction than typing two exact numbers for ISO/aperture/
@@ -128,6 +162,7 @@ export function RangeSlider({ min, max, step = 1, valueMin, valueMax, onChange }
             style={{ marginLeft: `${minPercent}%`, width: `${maxPercent - minPercent}%` }}
           />
         </div>
+        <StepTicks min={min} max={max} step={step} />
         <div
           role="slider"
           tabIndex={0}
@@ -237,6 +272,7 @@ export function SingleSlider({ min, max, step = 1, value, onChange }: SingleSlid
         <div className="h-0.5 w-full bg-dim">
           <div className="h-full bg-accent" style={{ width: `${percent}%` }} />
         </div>
+        <StepTicks min={min} max={max} step={step} />
         <div
           role="slider"
           tabIndex={0}

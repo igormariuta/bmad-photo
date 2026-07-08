@@ -248,6 +248,43 @@ The user pointed out (a third time) that Camera was still showing up with Front 
 
 Live-verified via a fresh headless Playwright run: a batch with only rear-camera photos (no front at all) now renders zero `<legend>CAMERA</legend>` elements — Year becomes the first Facet in the sidebar, matching the round-6-hidden-Camera screenshot the user originally asked for; a batch with both front- and rear-camera photos present still renders Camera normally. `turbo lint/build/test` — 10/10 tasks, 71 Vitest tests. Zero console errors.
 
+### UX designer fix-up round 9 (2026-07-08, user requests during Story 3.5's dev session — real Facet-panel UX gaps, retroactively moved here)
+
+Two related requests, made during a later Story 3.5 dev-story session but squarely about this story's own Facet-panel, moved here once the scope mismatch was noticed.
+
+- **Exposure comp (EV) was still the one Facet left as a checkbox list** ("[screenshot] думаю тоже стоит перенести на слайдер" — this should move to a slider too) — converted to the same slider pattern as lens/aperture/shutter/ISO (rounds 4/5 above): `FacetFiltersState.exposureComp` changed from `number[]` (checkbox multi-select) to `RangeFilter` (min/max, `min === max` for an exact pick), `matchesFacetFilters`/`hasActiveFacetFilters` switched from `matchesDiscrete`/`.length > 0` to the same `matchesRange`/`isRangeActive` every other slider-driven Facet already uses, `FacetPanel.tsx` renders it via `SliderFacet` instead of `CheckboxFacetGroup`.
+- **"а еще на слайдере поставь мьютед точки как стэпы значений, можно не писать числа значений, но хотя бы стэпы чтоб были обозначены"** (put muted dots as step markers on the slider, numbers not required, but the steps should be marked) — added a new `stepPercents` helper (pure, unit-tested) plus a shared `StepTicks` sub-component in `RangeSlider.tsx`, rendering a small tick at every snappable step's position (`pointer-events-none`/`aria-hidden`, so dragging/clicking and screen-reader behavior are unaffected) — applies to both `RangeSlider` and `SingleSlider`, so every slider-driven Facet (Year, Lens, Aperture, Shutter, ISO, and now Exposure comp) shows exactly where its real data values sit along the track.
+
+Live-verified via Playwright screenshot of the full Facets sidebar — confirmed Exposure comp now renders as a slider reading "−0.3 – +0.7" (matching the other Facets' style), and every slider shows small tick marks at each of its real data steps. `turbo lint/build/test` clean (110/110 tests, 3 new for `stepPercents`).
+
+### UX designer fix-up round 10 (2026-07-08, user correction — retroactively moved here)
+
+The round-9 step-dot ticks used `bg-muted2`, which read as too bright/visible ("не мьютед цветом лучше, а каким то более темным, как бэкграунд сайта наверное" — not muted color, better something darker, like the site's background probably). Changed `StepTicks` color from `bg-muted2` to `bg-bg` — each tick now reads as a subtle dark notch cut into the accent-green fill/dim track, rather than a visible dot sitting on top of it.
+
+Live-verified via Playwright screenshot in both light and dark theme — confirmed the ticks now show as small background-colored notches, clearly more subtle than the prior muted-gray dots. `turbo lint/build/test` clean (110/110 tests).
+
+### File List — round 9/10 additions/corrections
+
+- `apps/gallery/src/features/browse/FacetPanel.tsx` (modified — Exposure comp now renders via `SliderFacet` instead of `CheckboxFacetGroup`)
+- `apps/gallery/src/store/ingestStore.ts` (modified — `FacetFiltersState.exposureComp` changed from `number[]` to `RangeFilter`; `matchesFacetFilters`/`hasActiveFacetFilters` switched to `matchesRange`/`isRangeActive` for it)
+- `apps/gallery/src/store/ingestStore.test.ts` (modified — `exposureComp` test cases updated from checkbox-array to `RangeFilter` shape)
+- `apps/gallery/src/features/browse/RangeSlider.tsx` (modified — added `stepPercents` (pure, unit-tested) + a shared `StepTicks` sub-component, rendering a tick mark at every snappable step in both `RangeSlider` and `SingleSlider`; round 10 — tick color changed from `bg-muted2` to `bg-bg`)
+- `apps/gallery/src/features/browse/RangeSlider.test.ts` (modified — new tests for `stepPercents`)
+
+### UX designer fix-up round 11 (2026-07-08, user request)
+
+The sidebar's own eyebrow read `"// FACETS"` — a technical/library term, not what the panel actually does for the user. Changed to `"// FILTERS"`, matching the sidebar's real function (each control filters the photo grid) and the plainer, more direct tone of this app's other eyebrows (`// BROWSE`, `// INSIGHTS`, `// EXIF`).
+
+`turbo lint/build/test` clean; live-verified via Playwright screenshot.
+
+### File List — round 11 additions/corrections
+
+- `apps/gallery/src/features/browse/FacetPanel.tsx` (modified — sidebar eyebrow `"// FACETS"` → `"// FILTERS"`)
+
+### File List — round 12 additions/corrections
+
+- `apps/gallery/src/features/browse/RangeSlider.tsx` (modified — `StepTicks` color changed from `bg-bg` to `bg-panel`, matching the surface the slider actually sits on)
+
 ## Change Log
 
 - 2026-07-08: Implemented Story 3.3 — `RangeControl`, `FacetPanel` (8 Facets behind collapse triggers), `facetFilters` store slot + AND-combined `matchesFacetFilters`, `useLensOptions`. Mobile deferred (desktop only this iteration). Found and fixed a real pre-existing `Select` click-selection bug. `turbo lint/build/test` all pass (10/10 tasks, 57 Vitest tests, 27 new).
@@ -259,3 +296,7 @@ Live-verified via a fresh headless Playwright run: a batch with only rear-camera
 - 2026-07-08: UX designer fix-up round 6 (separate commit, Sally, user follow-up) — range mode locked out entirely for any Facet with ≤1 distinct value (no more degenerate "50mm – 50mm"); the icon toggle reduced to one button with a muted-fill style (was two bordered icons); Camera now hides entirely (not just disables its options) when the batch has zero camera data at all; Year converted to a slider, joining lens/aperture/shutter/ISO; new Gallery-local `CameraFacet` lays out as one compact row with small labels underneath when shown, replacing `packages/ui`'s `RadioGroup` for this one Facet. `turbo lint/build/test` re-verified clean (10/10 tasks, 71 Vitest tests); live-verified via a fresh headless Playwright run.
 - 2026-07-08: UX designer fix-up round 7 (separate commit, Sally, real bug + follow-up) — fixed a real bug: a range Facet dragged to a collapsed `min === max` state kept showing the range icon with two invisibly-stacked thumbs instead of switching to single mode, because mode was tracked as separate `useState` that could desync from the filter; fixed by deleting that state and deriving the displayed mode directly from `filter` every render. Camera's row now spans the sidebar's full width (`justify-between`). Divider lines between Facet sections removed entirely (the `FacetField` wrapper deleted). `turbo lint/build/test` re-verified clean (10/10 tasks, 71 Vitest tests); live-verified via a fresh headless Playwright run that reproduced and confirmed the fix for the original bug.
 - 2026-07-08: UX designer fix-up round 8 (separate commit, Sally, user re-raised round 6's request) — Camera now hides whenever the batch doesn't have *both* front and rear camera photos, not just when it has neither; with only one camera type present, "All" and that type already filter to the same set, so Camera offered no real choice. `CameraFacet` simplified back to a plain 3-option row since the disabled-option case can no longer occur. `turbo lint/build/test` re-verified clean (10/10 tasks, 71 Vitest tests); live-verified via a fresh headless Playwright run.
+- 2026-07-08: UX designer fix-up round 9 (user requests, originally logged during a later Story 3.5 dev session, retroactively moved here) — Exposure comp (EV) converted from a checkbox list to the same `RangeFilter` slider pattern as lens/aperture/shutter/ISO. Also added muted step-dot tick marks (new `stepPercents` helper + shared `StepTicks`) to every slider, showing exactly where the batch's real data values sit along the track without needing numeric labels. `turbo lint/build/test` clean (110/110 tests, 3 new); live-verified via screenshot — Exposure comp now reads as a slider, every slider shows its step dots.
+- 2026-07-08: UX designer fix-up round 10 (user correction, retroactively moved here) — the step-dot ticks' `bg-muted2` color read as too bright; changed to `bg-bg` so each tick shows as a subtle dark notch matching the page background instead of a visible dot. `turbo lint/build/test` clean (110/110 tests); live-verified via screenshot in both themes.
+- 2026-07-08: UX designer fix-up round 11 (user request) — sidebar eyebrow `"// FACETS"` changed to `"// FILTERS"`, a plainer term matching what the panel actually does. `turbo lint/build/test` clean; live-verified via screenshot.
+- 2026-07-08: UX designer fix-up round 12 (user report, side-by-side light/dark screenshots) — round 10's step-dot ticks used `bg-bg` (the page background), which happened to look right in dark mode (where `--m-panel`/`--m-bg` are close in value) but read as a visibly lighter/whiter mark in light mode, where the Facets sidebar's own `bg-panel` differs noticeably from the page background it sits on. Changed `StepTicks` to `bg-panel` — the color of the surface the slider actually sits on, in either theme. `turbo lint/build/test` clean (113/113 tests); live-verified via screenshot in both themes.
