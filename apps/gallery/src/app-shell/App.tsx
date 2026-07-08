@@ -35,17 +35,25 @@ export function App() {
   }
 
   return (
-    <div className="flex h-screen flex-col">
-      <HeaderBar wordmark="EXIF " wordmarkAccent="GALLERY" actions={<AddMoreControl />} />
+    <div className="flex min-h-screen flex-col">
+      {/* Sticky, not just top-of-flow — stays reachable (Add photos, theme
+       * toggle) while the page below it scrolls (UX fix, 2026-07-08).
+       * HeaderBar itself takes no className/style prop, so wrapped instead
+       * of touching the shared component just for this app's layout need. */}
+      <div className="sticky top-0" style={{ zIndex: "var(--m-z-header)" }}>
+        <HeaderBar wordmark="EXIF " wordmarkAccent="GALLERY" actions={<AddMoreControl />} />
+      </div>
       {ingestComplete ? (
-        // Single page-level scroll region (UX fix, 2026-07-08 — previously
-        // the sidebar and each tab panel each had their own independent
-        // overflow-y-auto, producing two/three visible scrollbars at once).
+        // Real document-level scroll (UX fix, 2026-07-08) — previously an
+        // inner div had its own overflow-y-auto, so the scrollbar sat at
+        // the centered content column's edge instead of the viewport's.
+        // No overflow/height constraint here; the page grows naturally and
+        // the browser's own scrollbar renders at the true viewport edge.
         // Trade-off: switching tabs no longer preserves each tab's own
         // scroll position independently (Story 3.1's original AC #2) since
-        // there's one shared scroll position now — accepted deliberately,
-        // same as the AD-3/AC #5 reversal above.
-        <div className="mx-auto flex min-h-0 w-full max-w-container-max flex-1 flex-col gap-10 overflow-y-auto px-gutter py-8 lg:flex-row">
+        // there's one shared page scroll position now — accepted
+        // deliberately, same as the AD-3/AC #5 reversal above.
+        <div className="mx-auto flex w-full max-w-container-max flex-1 flex-col gap-10 px-gutter py-8 lg:flex-row">
           {/* Facet-panel is global (dev-story fix-up, 2026-07-08) — one
            * persistent instance to the left of both tabs, filtering
            * Browse's grid and Insights' aggregate numbers alike. Desktop

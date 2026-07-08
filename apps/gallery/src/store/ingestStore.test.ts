@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  computeBounds,
+  computeFacetValueOptions,
   dedupeAndCapCheck,
   DEFAULT_FACET_FILTERS,
   fileSignature,
   matchesFacetFilters,
   mergeCommit,
+  toggleInArray,
   MAX_PHOTOS_PER_INGEST,
   type FacetFiltersState,
 } from "./ingestStore";
@@ -129,27 +130,44 @@ describe("mergeCommit", () => {
   });
 });
 
+describe("toggleInArray", () => {
+  it("adds a value not yet present", () => {
+    expect(toggleInArray([1, 2], 3)).toEqual([1, 2, 3]);
+  });
+
+  it("removes a value already present", () => {
+    expect(toggleInArray([1, 2, 3], 2)).toEqual([1, 3]);
+  });
+
+  it("doesn't mutate the array passed in", () => {
+    const original = [1, 2];
+    toggleInArray(original, 3);
+    expect(original).toEqual([1, 2]);
+  });
+});
+
 describe("matchesFacetFilters", () => {
   function filters(overrides: Partial<FacetFiltersState>): FacetFiltersState {
     return { ...DEFAULT_FACET_FILTERS, ...overrides };
   }
 
-  it("matches everything against the default (all-unbounded) filters", () => {
+  it("matches everything against the default (all-empty) filters", () => {
     expect(matchesFacetFilters(photo({}), DEFAULT_FACET_FILTERS)).toBe(true);
     expect(matchesFacetFilters(photo({ iso: 200, lensLabel: "24mm" }), DEFAULT_FACET_FILTERS)).toBe(
       true,
     );
   });
 
-  it("discrete Facet (lens): matches on exact equality, excludes a photo with an undefined field", () => {
-    const f = filters({ lens: "24mm" });
+  it("discrete Facet (lens): matches when the value is in the selected list, excludes a photo with an undefined field", () => {
+    const f = filters({ lens: ["24mm", "48mm"] });
     expect(matchesFacetFilters(photo({ lensLabel: "24mm" }), f)).toBe(true);
-    expect(matchesFacetFilters(photo({ lensLabel: "48mm" }), f)).toBe(false);
+    expect(matchesFacetFilters(photo({ lensLabel: "48mm" }), f)).toBe(true);
+    expect(matchesFacetFilters(photo({ lensLabel: "85mm" }), f)).toBe(false);
     expect(matchesFacetFilters(photo({}), f)).toBe(false);
   });
 
   it("discrete Facet (megapixelMode/camera): active filter excludes undefined field, inactive filter is unaffected", () => {
-    const mp = filters({ megapixelMode: 48 });
+    const mp = filters({ megapixelMode: [48] });
     expect(matchesFacetFilters(photo({ megapixelMode: 48 }), mp)).toBe(true);
     expect(matchesFacetFilters(photo({ megapixelMode: 12 }), mp)).toBe(false);
     expect(matchesFacetFilters(photo({}), mp)).toBe(false);
@@ -160,55 +178,79 @@ describe("matchesFacetFilters", () => {
     expect(matchesFacetFilters(photo({ camera: "rear" }), cam)).toBe(false);
   });
 
-  it("range Facet (iso): respects open-ended min/max bounds, excludes undefined field only when active", () => {
-    const minOnly = filters({ iso: { min: 400 } });
-    expect(matchesFacetFilters(photo({ iso: 400 }), minOnly)).toBe(true);
-    expect(matchesFacetFilters(photo({ iso: 399 }), minOnly)).toBe(false);
+  it("discrete Facet (iso/aperture/exposureComp): matches any selected value, excludes undefined field only when active", () => {
+    const iso = filters({ iso: [100, 400] });
+    expect(matchesFacetFilters(photo({ iso: 100 }), iso)).toBe(true);
+    expect(matchesFacetFilters(photo({ iso: 400 }), iso)).toBe(true);
+    expect(matchesFacetFilters(photo({ iso: 200 }), iso)).toBe(false);
+    expect(matchesFacetFilters(photo({}), iso)).toBe(false);
+
+    const aperture = filters({ aperture: [1.8] });
+    expect(matchesFacetFilters(photo({ apertureF: 1.8 }), aperture)).toBe(true);
+    expect(matchesFacetFilters(photo({ apertureF: 2.8 }), aperture)).toBe(false);
+
+    const exposureComp = filters({ exposureComp: [0.3, -0.3] });
+    expect(matchesFacetFilters(photo({ exposureCompEv: 0.3 }), exposureComp)).toBe(true);
+    expect(matchesFacetFilters(photo({ exposureCompEv: 0 }), exposureComp)).toBe(false);
+  });
+
+  it("range Facet (shutter): the one Facet still min/max-based, respects open-ended bounds", () => {
+    const minOnly = filters({ shutter: { min: 0.01 } });
+    expect(matchesFacetFilters(photo({ shutterSpeedSec: 0.02 }), minOnly)).toBe(true);
+    expect(matchesFacetFilters(photo({ shutterSpeedSec: 0.005 }), minOnly)).toBe(false);
     expect(matchesFacetFilters(photo({}), minOnly)).toBe(false);
 
-    const maxOnly = filters({ iso: { max: 400 } });
-    expect(matchesFacetFilters(photo({ iso: 401 }), maxOnly)).toBe(false);
-
-    const bounded = filters({ iso: { min: 100, max: 400 } });
-    expect(matchesFacetFilters(photo({ iso: 100 }), bounded)).toBe(true);
-    expect(matchesFacetFilters(photo({ iso: 400 }), bounded)).toBe(true);
-    expect(matchesFacetFilters(photo({ iso: 401 }), bounded)).toBe(false);
+    const bounded = filters({ shutter: { min: 0.01, max: 0.1 } });
+    expect(matchesFacetFilters(photo({ shutterSpeedSec: 0.05 }), bounded)).toBe(true);
+    expect(matchesFacetFilters(photo({ shutterSpeedSec: 0.2 }), bounded)).toBe(false);
   });
 
-  it("range Facet (aperture/shutter/exposureComp): each applies independently", () => {
-    const f = filters({ aperture: { max: 2 }, shutter: { min: 0.01 } });
-    expect(matchesFacetFilters(photo({ apertureF: 1.8, shutterSpeedSec: 0.02 }), f)).toBe(true);
-    expect(matchesFacetFilters(photo({ apertureF: 2.8, shutterSpeedSec: 0.02 }), f)).toBe(false);
-    expect(matchesFacetFilters(photo({ apertureF: 1.8, shutterSpeedSec: 0.005 }), f)).toBe(false);
-  });
-
-  it("date Facet: compares the YYYY-MM-DD prefix of capturedAt lexicographically", () => {
-    const f = filters({ dateFrom: "2026-06-14", dateTo: "2026-06-21" });
+  it("year Facet: matches the year parsed off capturedAt's YYYY prefix", () => {
+    const f = filters({ years: [2026] });
     expect(matchesFacetFilters(photo({ capturedAt: "2026-06-14T10:00:00" }), f)).toBe(true);
-    expect(matchesFacetFilters(photo({ capturedAt: "2026-06-21T23:59:59" }), f)).toBe(true);
-    expect(matchesFacetFilters(photo({ capturedAt: "2026-06-13T23:59:59" }), f)).toBe(false);
-    expect(matchesFacetFilters(photo({ capturedAt: "2026-06-22T00:00:00" }), f)).toBe(false);
+    expect(matchesFacetFilters(photo({ capturedAt: "2025-12-31T23:59:59" }), f)).toBe(false);
     expect(matchesFacetFilters(photo({}), f)).toBe(false);
   });
 
   it("AND-combines multiple active Facets — a photo must satisfy every one", () => {
-    const f = filters({ lens: "24mm", iso: { max: 400 } });
+    const f = filters({ lens: ["24mm"], iso: [200] });
     expect(matchesFacetFilters(photo({ lensLabel: "24mm", iso: 200 }), f)).toBe(true);
     expect(matchesFacetFilters(photo({ lensLabel: "48mm", iso: 200 }), f)).toBe(false);
     expect(matchesFacetFilters(photo({ lensLabel: "24mm", iso: 800 }), f)).toBe(false);
   });
 });
 
-describe("computeBounds", () => {
-  it("returns the fallback [0, 1] for an empty set", () => {
-    expect(computeBounds([])).toEqual([0, 1]);
+describe("computeFacetValueOptions", () => {
+  it("returns empty lists for an empty set", () => {
+    expect(computeFacetValueOptions([])).toEqual({
+      lens: [],
+      iso: [],
+      aperture: [],
+      shutter: [],
+      exposureComp: [],
+      megapixelMode: [],
+      years: [],
+    });
   });
 
-  it("returns [min, max] for a normal set", () => {
-    expect(computeBounds([200, 800, 400])).toEqual([200, 800]);
+  it("returns distinct, sorted values across the readable set only", () => {
+    const photos = [
+      photo({ lensLabel: "48mm", iso: 800, apertureF: 2.8, capturedAt: "2026-06-14T10:00:00" }),
+      photo({ lensLabel: "24mm", iso: 200, apertureF: 1.8, capturedAt: "2025-01-01T00:00:00" }),
+      photo({ lensLabel: "24mm", iso: 200, apertureF: 1.8, capturedAt: "2025-01-01T00:00:00" }), // exact dup
+      photo({ readable: false, lensLabel: "85mm", iso: 3200 }), // unreadable — excluded
+    ];
+    const options = computeFacetValueOptions(photos);
+    expect(options.lens).toEqual(["24mm", "48mm"]);
+    expect(options.iso).toEqual([200, 800]);
+    expect(options.aperture).toEqual([1.8, 2.8]);
+    expect(options.years).toEqual([2025, 2026]);
   });
 
-  it("widens a degenerate single-value set by 1 so the slider has a draggable range", () => {
-    expect(computeBounds([400, 400, 400])).toEqual([400, 401]);
+  it("skips undefined fields per-dimension independently", () => {
+    const photos = [photo({ iso: 200 }), photo({ apertureF: 1.8 })];
+    const options = computeFacetValueOptions(photos);
+    expect(options.iso).toEqual([200]);
+    expect(options.aperture).toEqual([1.8]);
   });
 });

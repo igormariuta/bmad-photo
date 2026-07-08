@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import type { Photo } from "../worker/types";
@@ -8,35 +9,54 @@ interface IngestProgress {
 }
 
 /** A range Facet's bounds — either side `undefined` means unbounded on that
- * side; both `undefined` means the Facet is inactive/default ("All"). */
+ * side; both `undefined` means the Facet is inactive/default ("All"). Only
+ * `shutter` still uses this shape (UX redesign, 2026-07-08) — every other
+ * numeric/discrete Facet moved to an exact-value checkbox list instead
+ * (user request: "no slider values that don't actually exist in the
+ * photos"). */
 export interface RangeFilter {
   min?: number;
   max?: number;
 }
 
-/** One entry per Facet (Story 3.3 Dev Notes' 8-Facet list), each defaulting
- * to unbounded/"All". `dateFrom`/`dateTo` are `YYYY-MM-DD` strings compared
- * lexicographically against `capturedAt`'s date prefix — sortable as plain
- * strings without a `Date` parse, consistent with normalize.ts/aggregations.ts'
- * existing string-slice convention for this field. */
+/**
+ * One entry per Facet (Story 3.3 Dev Notes' 8-Facet list). `lens`/`iso`/
+ * `aperture`/`exposureComp`/`megapixelMode`/`years` are checkbox-style
+ * multi-select value lists (UX redesign, 2026-07-08) — an empty array means
+ * inactive/"All"; a non-empty array matches a photo whose field equals ANY
+ * selected value. `years` replaced the earlier `dateFrom`/`dateTo` range
+ * (user request: simplify the date Facet down to year selection). `shutter`
+ * is the one Facet still range-based, driving a discrete-snap slider
+ * (RangeSlider) rather than a checkbox list — too many distinct raw values
+ * for a usable checkbox list.
+ */
 export interface FacetFiltersState {
-  lens?: string;
-  megapixelMode?: 12 | 48;
+  lens: string[];
+  iso: number[];
+  aperture: number[];
+  exposureComp: number[];
+  megapixelMode: (12 | 48)[];
   camera?: "front" | "rear";
-  dateFrom?: string;
-  dateTo?: string;
-  iso: RangeFilter;
-  aperture: RangeFilter;
+  years: number[];
   shutter: RangeFilter;
-  exposureComp: RangeFilter;
 }
 
 export const DEFAULT_FACET_FILTERS: FacetFiltersState = {
-  iso: {},
-  aperture: {},
+  lens: [],
+  iso: [],
+  aperture: [],
+  exposureComp: [],
+  megapixelMode: [],
+  years: [],
   shutter: {},
-  exposureComp: {},
 };
+
+/** Pure — toggles `value` in/out of a checkbox-style multi-select Facet
+ * array. Exported + unit-tested (mirrors dedupeAndCapCheck/mergeCommit's
+ * "extract the part worth getting right" pattern). */
+export function toggleInArray<T>(array: readonly T[], value: T): T[] {
+  return array.includes(value) ? array.filter((item) => item !== value) : [...array, value];
+}
 
 interface IngestState {
   photos: Photo[];
@@ -209,83 +229,86 @@ export function useReadablePhotos(): Photo[] {
   return useIngestStore(useShallow((state) => state.photos.filter((photo) => photo.readable)));
 }
 
-/** Distinct `lensLabel` values across the full readable set (Task 3) — a
- * purpose-built selector rather than `browse/` calling `useReadablePhotos()`
- * directly (AD-3's convention), and deliberately NOT derived from
- * `useFilteredPhotos()`: the lens Facet's own option list must stay stable
- * as other Facets narrow the grid, not shrink away. Sorted by focal length
- * (parsed off `formatLensLabel`'s fixed `"{n}mm"` shape) for a stable,
- * predictable order. */
-export function useLensOptions(): string[] {
-  return useIngestStore(
-    useShallow((state) => {
-      const labels = new Set<string>();
-      for (const photo of state.photos) {
-        if (photo.readable && photo.lensLabel !== undefined) {
-          labels.add(photo.lensLabel);
-        }
-      }
-      return Array.from(labels).sort((a, b) => Number.parseInt(a, 10) - Number.parseInt(b, 10));
-    }),
-  );
+export interface FacetValueOptions {
+  lens: string[];
+  iso: number[];
+  aperture: number[];
+  shutter: number[];
+  exposureComp: number[];
+  megapixelMode: (12 | 48)[];
+  years: number[];
 }
 
-/** Flat primitives, not `{ iso: [min, max], ... }` — `useShallow` only
- * compares one level deep, so nested tuple arrays (fresh references every
- * selector call) always compare unequal and drove an infinite render loop
- * ("Maximum update depth exceeded", caught via live Playwright verification,
- * 2026-07-08). Primitive numbers compare correctly by value instead. */
-export interface NumericFacetBounds {
-  isoMin: number;
-  isoMax: number;
-  apertureMin: number;
-  apertureMax: number;
-  shutterMin: number;
-  shutterMax: number;
-  exposureCompMin: number;
-  exposureCompMax: number;
+function distinctSortedNumbers(values: number[]): number[] {
+  return Array.from(new Set(values)).sort((a, b) => a - b);
 }
 
-const FALLBACK_BOUNDS: [number, number] = [0, 1];
+/** Pure — the distinct, sorted values for every checkbox-style/discrete
+ * Facet, computed across the full readable set (not `useFilteredPhotos()`):
+ * option lists must stay stable as other Facets narrow the grid, not shrink
+ * away (same reasoning the old `useLensOptions()` used). Extracted as a
+ * plain function so it's unit-testable and so the hook below can memoize on
+ * a stable upstream reference instead of re-deriving on every render. */
+export function computeFacetValueOptions(photos: readonly Photo[]): FacetValueOptions {
+  const lensSet = new Set<string>();
+  const iso: number[] = [];
+  const aperture: number[] = [];
+  const shutter: number[] = [];
+  const exposureComp: number[] = [];
+  const megapixelSet = new Set<12 | 48>();
+  const years: number[] = [];
 
-/** [min, max] observed for a numeric field across the full readable set — a
- * degenerate single-value set (min === max) widens by 1 so a slider driven
- * by these bounds always has a draggable range. */
-export function computeBounds(values: number[]): [number, number] {
-  if (values.length === 0) {
-    return FALLBACK_BOUNDS;
+  for (const photo of photos) {
+    if (!photo.readable) {
+      continue;
+    }
+    if (photo.lensLabel !== undefined) {
+      lensSet.add(photo.lensLabel);
+    }
+    if (photo.iso !== undefined) {
+      iso.push(photo.iso);
+    }
+    if (photo.apertureF !== undefined) {
+      aperture.push(photo.apertureF);
+    }
+    if (photo.shutterSpeedSec !== undefined) {
+      shutter.push(photo.shutterSpeedSec);
+    }
+    if (photo.exposureCompEv !== undefined) {
+      exposureComp.push(photo.exposureCompEv);
+    }
+    if (photo.megapixelMode !== undefined) {
+      megapixelSet.add(photo.megapixelMode);
+    }
+    if (photo.capturedAt !== undefined) {
+      years.push(Number.parseInt(photo.capturedAt.slice(0, 4), 10));
+    }
   }
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  return min === max ? [min, max + 1] : [min, max];
+
+  return {
+    lens: Array.from(lensSet).sort((a, b) => Number.parseInt(a, 10) - Number.parseInt(b, 10)),
+    iso: distinctSortedNumbers(iso),
+    aperture: distinctSortedNumbers(aperture),
+    shutter: distinctSortedNumbers(shutter),
+    exposureComp: distinctSortedNumbers(exposureComp),
+    megapixelMode: Array.from(megapixelSet).sort((a, b) => a - b),
+    years: distinctSortedNumbers(years),
+  };
 }
 
-/** Slider domain bounds for the 4 numeric range Facets (RangeSlider, user
- * request 2026-07-08) — same full-readable-set sourcing as
- * `useLensOptions()`, so the slider's own scale stays stable as other
- * Facets narrow the grid. */
-export function useNumericFacetBounds(): NumericFacetBounds {
-  return useIngestStore(
-    useShallow((state) => {
-      const readable = state.photos.filter((photo) => photo.readable);
-      const values = (pick: (photo: Photo) => number | undefined) =>
-        readable.map(pick).filter((value): value is number => value !== undefined);
-      const [isoMin, isoMax] = computeBounds(values((photo) => photo.iso));
-      const [apertureMin, apertureMax] = computeBounds(values((photo) => photo.apertureF));
-      const [shutterMin, shutterMax] = computeBounds(values((photo) => photo.shutterSpeedSec));
-      const [exposureCompMin, exposureCompMax] = computeBounds(values((photo) => photo.exposureCompEv));
-      return {
-        isoMin,
-        isoMax,
-        apertureMin,
-        apertureMax,
-        shutterMin,
-        shutterMax,
-        exposureCompMin,
-        exposureCompMax,
-      };
-    }),
-  );
+/**
+ * Memoized via React's `useMemo` keyed on `state.photos`'s own reference —
+ * NOT `useShallow` on the computed result. `computeFacetValueOptions`
+ * returns fresh nested arrays every call, which would infinite-loop under
+ * `useShallow`'s one-level-deep comparison (the same bug class the earlier
+ * `NumericFacetBounds` fix addressed, 2026-07-08 — see git history).
+ * `state.photos` only changes reference on ingest/commit, not on every
+ * Facet-filter interaction, so this selector's actual output object stays
+ * referentially stable across filter changes.
+ */
+export function useFacetValueOptions(): FacetValueOptions {
+  const photos = useIngestStore((state) => state.photos);
+  return useMemo(() => computeFacetValueOptions(photos), [photos]);
 }
 
 /** A range Facet with both bounds `undefined` is inactive — every photo
@@ -293,7 +316,7 @@ export function useNumericFacetBounds(): NumericFacetBounds {
  * bound set), a photo with an `undefined` field for this dimension is
  * excluded — there's no value to confirm it satisfies the filter (Dev
  * Notes' `[ASSUMPTION]`, following AD-4's "undefined, never a sentinel"
- * rule). */
+ * rule). Only `shutter` still uses this (see FacetFiltersState). */
 function matchesRange(value: number | undefined, filter: RangeFilter): boolean {
   if (filter.min === undefined && filter.max === undefined) {
     return true;
@@ -310,50 +333,57 @@ function matchesRange(value: number | undefined, filter: RangeFilter): boolean {
   return true;
 }
 
-/** Same inactive/undefined-field rule as matchesRange, applied to the date
- * Facet's `YYYY-MM-DD` string bounds against `capturedAt`'s date prefix. */
-function matchesDateRange(capturedAt: string | undefined, dateFrom?: string, dateTo?: string): boolean {
-  if (dateFrom === undefined && dateTo === undefined) {
+/** An empty `selected` array is inactive — every photo passes regardless of
+ * whether its own field is defined. Once active, a photo with an
+ * `undefined` field for this dimension is excluded (same rule as
+ * matchesRange, applied to checkbox-style multi-select Facets). */
+function matchesDiscrete<T>(value: T | undefined, selected: readonly T[]): boolean {
+  if (selected.length === 0) {
+    return true;
+  }
+  if (value === undefined) {
+    return false;
+  }
+  return selected.includes(value);
+}
+
+/** Same inactive/undefined-field rule as matchesDiscrete, applied to the
+ * year parsed off `capturedAt`'s `YYYY-...` prefix. */
+function matchesYear(capturedAt: string | undefined, years: readonly number[]): boolean {
+  if (years.length === 0) {
     return true;
   }
   if (capturedAt === undefined) {
     return false;
   }
-  const date = capturedAt.slice(0, 10);
-  if (dateFrom !== undefined && date < dateFrom) {
-    return false;
-  }
-  if (dateTo !== undefined && date > dateTo) {
-    return false;
-  }
-  return true;
+  return years.includes(Number.parseInt(capturedAt.slice(0, 4), 10));
 }
 
 /** AND-combines all 8 Facets (AC #4) — pure so it's unit-testable without
  * any Zustand/React wiring, mirroring dedupeAndCapCheck/mergeCommit above. */
 export function matchesFacetFilters(photo: Photo, filters: FacetFiltersState): boolean {
-  if (filters.lens !== undefined && photo.lensLabel !== filters.lens) {
+  if (!matchesDiscrete(photo.lensLabel, filters.lens)) {
     return false;
   }
-  if (filters.megapixelMode !== undefined && photo.megapixelMode !== filters.megapixelMode) {
+  if (!matchesDiscrete(photo.megapixelMode, filters.megapixelMode)) {
     return false;
   }
   if (filters.camera !== undefined && photo.camera !== filters.camera) {
     return false;
   }
-  if (!matchesDateRange(photo.capturedAt, filters.dateFrom, filters.dateTo)) {
+  if (!matchesYear(photo.capturedAt, filters.years)) {
     return false;
   }
-  if (!matchesRange(photo.iso, filters.iso)) {
+  if (!matchesDiscrete(photo.iso, filters.iso)) {
     return false;
   }
-  if (!matchesRange(photo.apertureF, filters.aperture)) {
+  if (!matchesDiscrete(photo.apertureF, filters.aperture)) {
     return false;
   }
   if (!matchesRange(photo.shutterSpeedSec, filters.shutter)) {
     return false;
   }
-  if (!matchesRange(photo.exposureCompEv, filters.exposureComp)) {
+  if (!matchesDiscrete(photo.exposureCompEv, filters.exposureComp)) {
     return false;
   }
   return true;
