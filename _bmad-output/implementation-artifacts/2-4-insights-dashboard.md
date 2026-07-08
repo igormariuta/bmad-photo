@@ -1,6 +1,10 @@
+---
+baseline_commit: 2653b4e3a60180b1ca575218c70921fc484a9135
+---
+
 # Story 2.4: Insights Dashboard
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -42,31 +46,40 @@ so that I learn something true about how I actually shoot.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Build `Header-bar` (AC: #1) — `packages/ui/src/HeaderBar/`
-  - [ ] Props: `wordmark: string`, `wordmarkAccent: string` (rendered `{wordmark} <span class="text-accent">{wordmarkAccent}</span>`, per the mockup evidence in Dev Notes — Gallery passes `wordmark="EXIF "` `wordmarkAccent="GALLERY"`, Landing (Story 4.1) passes `wordmark="LAZY "` `wordmarkAccent="CAM"`), `actions?: ReactNode`
-  - [ ] Fixed 64px (`--m-space-header-height`), wordmark left (display type) + `ThemeToggle` right, `--m-line` bottom rule, no nav links
-  - [ ] `actions` slot renders between the wordmark and `ThemeToggle`, defaulting to nothing — added specifically because Story 2.5 needs a persistent "Add more" trigger inside the Header-bar, but Landing's Story 4.1 usage must stay exactly wordmark+theme-toggle with nothing passed to this slot
-  - [ ] Storybook story (co-located, per Story 1.4/1.5's convention — this component was missed by those stories, add its story now), including one variant with `actions` populated
+- [x] Task 1: Build `Header-bar` (AC: #1) — `packages/ui/src/HeaderBar/`
+  - [x] Props: `wordmark: string`, `wordmarkAccent: string` (rendered `{wordmark} <span class="text-accent">{wordmarkAccent}</span>`, per the mockup evidence in Dev Notes — Gallery passes `wordmark="EXIF "` `wordmarkAccent="GALLERY"`, Landing (Story 4.1) passes `wordmark="LAZY "` `wordmarkAccent="CAM"`), `actions?: ReactNode`
+  - [x] Fixed 64px (`--m-space-header-height`), wordmark left (display type) + `ThemeToggle` right, `--m-line` bottom rule, no nav links
+  - [x] `actions` slot renders between the wordmark and `ThemeToggle`, defaulting to nothing — added specifically because Story 2.5 needs a persistent "Add more" trigger inside the Header-bar, but Landing's Story 4.1 usage must stay exactly wordmark+theme-toggle with nothing passed to this slot
+  - [x] Storybook story (co-located, per Story 1.4/1.5's convention — this component was missed by those stories, add its story now), including one variant with `actions` populated
 
-- [ ] Task 2: Build `Histogram-bar` (AC: #2) — `apps/gallery/src/features/insights/HistogramBar.tsx`
-  - [ ] Props: `label: string` (bucket name), `value: number` (0–100 share), `count: number` (raw count for the right-aligned display), `cells?: number` (defaults reasonably, e.g. `48` matching `StatBar`'s reference resolution)
-  - [ ] Visual: extends `StatBar`'s cell language — filled `--m-accent` cells to `value`%, dotted `--m-dim` remainder, right-aligned count/% — 20px row height, `rounded.DEFAULT`
-- [ ] Task 3: Aggregation logic per FR-7 dimension (AC: #2)
-  - [ ] Implement the 7 dimensions exactly as scoped in Dev Notes (focal length/lens combined by `lensLabel`; ISO in the mockup's 4 fixed ranges; shutter bucketed per the stated stop series; aperture/megapixel/camera by exact value; hour-of-day in the mockup's 6 four-hour ranges), each computed over `useReadablePhotos()`'s current set
-  - [ ] Each dimension's denominator is the count of readable photos where *that dimension's* source field is defined — not the full readable count
-  - [ ] Sort each dimension's rows descending by count
-- [ ] Task 4: Insights view composition (AC: #1, #2, #3)
-  - [ ] Render inside a `Panel` per dimension (default `bordered={false}`, matching the real Insights mockup), one `HistogramBar` row per bucket, in the fixed dimension order given in AC #2
-  - [ ] Update `app-shell`'s gating to a 3-way switch (empty-state / progress / header+Insights) per Dev Notes
-- [ ] Task 5: Unreadable-count InfoBox (AC: #4)
-  - [ ] Render `packages/ui`'s `InfoBox` (Story 1.5) with the unreadable count, phrased plainly (e.g. *"42 unreadable — excluded from the numbers below."*) whenever `useUnreadableCount() > 0`
-  - [ ] Render nothing when the count is 0 — never show "0 unreadable"
-- [ ] Task 6: All-unreadable empty state (AC: #5)
-  - [ ] When `useReadablePhotos()` is empty but the Ingested set is non-empty (i.e. every photo is unreadable), render a distinct empty-of-data layout — the unreadable count is the prominent message here, not a secondary `InfoBox` note, and this is **not an error state** (no `ErrorMessage`, no error styling) — it's valid information about the user's actual photo set
-- [ ] Task 7: Verify (AC: #1–#5)
-  - [ ] Ingest a mixed batch (some readable, some not) — confirm all 7 dimensions render, sorted descending, with correct per-field denominators, and the unreadable `InfoBox` shows the right count
-  - [ ] Ingest an all-readable batch — confirm the `InfoBox` is entirely absent
-  - [ ] Ingest an all-unreadable batch — confirm the distinct empty-of-data layout renders instead of 7 empty histogram panels
+- [x] Task 2: Build `Histogram-bar` (AC: #2) — `apps/gallery/src/features/insights/HistogramBar.tsx`
+  - [x] Props: `label: string` (bucket name), `value: number` (0–100 share), `count: number` (raw count for the right-aligned display), `cells?: number` (defaults reasonably, e.g. `48` matching `StatBar`'s reference resolution)
+  - [x] Visual: extends `StatBar`'s cell language — filled `--m-accent` cells to `value`%, dotted `--m-dim` remainder, right-aligned count/% — 20px row height, `rounded.DEFAULT`
+- [x] Task 3: Aggregation logic per FR-7 dimension (AC: #2)
+  - [x] Implement the 7 dimensions exactly as scoped in Dev Notes (focal length/lens combined by `lensLabel`; ISO in the mockup's 4 fixed ranges; shutter bucketed per the stated stop series; aperture/megapixel/camera by exact value; hour-of-day in the mockup's 6 four-hour ranges), each computed over `useReadablePhotos()`'s current set
+  - [x] Each dimension's denominator is the count of readable photos where *that dimension's* source field is defined — not the full readable count
+  - [x] Sort each dimension's rows descending by count
+- [x] Task 4: Insights view composition (AC: #1, #2, #3)
+  - [x] Render inside a `Panel` per dimension (default `bordered={false}`, matching the real Insights mockup), one `HistogramBar` row per bucket, in the fixed dimension order given in AC #2
+  - [x] Update `app-shell`'s gating to a 3-way switch (empty-state / progress / header+Insights) per Dev Notes
+- [x] Task 5: Unreadable-count InfoBox (AC: #4)
+  - [x] Render `packages/ui`'s `InfoBox` (Story 1.5) with the unreadable count, phrased plainly (e.g. *"42 unreadable — excluded from the numbers below."*) whenever `useUnreadableCount() > 0`
+  - [x] Render nothing when the count is 0 — never show "0 unreadable"
+- [x] Task 6: All-unreadable empty state (AC: #5)
+  - [x] When `useReadablePhotos()` is empty but the Ingested set is non-empty (i.e. every photo is unreadable), render a distinct empty-of-data layout — the unreadable count is the prominent message here, not a secondary `InfoBox` note, and this is **not an error state** (no `ErrorMessage`, no error styling) — it's valid information about the user's actual photo set
+- [x] Task 7: Verify (AC: #1–#5)
+  - [x] Ingest a mixed batch (some readable, some not) — confirm all 7 dimensions render, sorted descending, with correct per-field denominators, and the unreadable `InfoBox` shows the right count
+  - [x] Ingest an all-readable batch — confirm the `InfoBox` is entirely absent
+  - [x] Ingest an all-unreadable batch — confirm the distinct empty-of-data layout renders instead of 7 empty histogram panels
+
+### Review Findings
+
+- [x] [Review][Patch] Empty-row dimension panels render caption-only, no "no data" indication [apps/gallery/src/features/insights/Insights.tsx] — resolved: user chose to show an explicit "No data for this batch." placeholder inside the `Panel` when `dimension.rows.length === 0`, instead of hiding the panel or leaving it blank. Applied and re-verified live (Playwright, a fixture missing the `LensModel` EXIF tag reproduces the empty `// FRONT / REAR` dimension, which now renders the placeholder text).
+- [x] [Review][Defer] Per-row percentages can fail to sum to 100% within a dimension [apps/gallery/src/features/insights/aggregations.ts] — deferred, cosmetic rounding artifact from independent per-row `Math.round`; no AC requires rows to sum to 100%
+- [x] [Review][Defer] No validation for malformed/negative/zero ISO, shutter-speed, or hour values in the bucketing functions [apps/gallery/src/features/insights/aggregations.ts] — deferred, low-probability data-quality gap; upstream producers (`normalize.ts`/`exif-worker.ts`) already guarantee well-formed values in practice
+- [x] [Review][Defer] `ingestStore`'s new `complete` flag is a separately-mutated boolean rather than state derived from `photos`/`fileCount` [apps/gallery/src/store/ingestStore.ts] — deferred, safe today (only two mutators, both correctly paired), worth revisiting if more write paths are added later
+- [x] [Review][Defer] If Ingest never reaches "complete" (e.g. an uncaught worker exception), the user is stuck on the progress screen with no escape [apps/gallery/src/app-shell/App.tsx] — deferred, restates the already-known missing `worker.onerror` gap carried over unaddressed from Stories 2.2/2.3, not new to this story
+- [x] [Review][Defer] `HeaderBar` wordmark letter-spacing doesn't match the mockup's `-0.02em` (renders with `text-h3`'s `0`) [packages/ui/src/HeaderBar/HeaderBar.tsx] — deferred, low-severity pixel-fidelity nit per Acceptance Auditor
 
 ## Project Structure Notes
 
@@ -94,8 +107,39 @@ apps/gallery/src/
 
 ### Agent Model Used
 
+claude-sonnet-5
+
 ### Debug Log References
+
+None — no failures requiring debug-log capture. One test authored incorrectly (lexicographic `.sort()` misapplied to the shutter-speed assertion) was caught and fixed by `turbo test` on first run; no application code was at fault.
 
 ### Completion Notes List
 
+- Built `Header-bar` and `Panel` as new shared `packages/ui` components (both gap-fills per Dev Notes — neither existed from Epic 1). `Header-bar` renders the wordmark as two props (`wordmark`/`wordmarkAccent`) plus an `actions` slot (unused by this story, reserved for Story 2.5); `Panel` defaults `bordered={false}` per the real Insights mockup's borderless `.hist-panel`.
+- Built `HistogramBar` Gallery-local (`features/insights/`) extending `StatBar`'s filled/dotted cell language with a right-aligned `count · pct%` readout; kept the mockup's fixed 72px label column via an explicit `gridTemplateColumns` inline style (same pattern `StatBar` already uses).
+- Aggregation logic (`aggregations.ts`) implements exactly the 7 FR-7 dimensions in AC #2's fixed order (focal length/lens, ISO, shutter, aperture, megapixel mix, front/rear, hour-of-day), each with its own per-field denominator (AD-4) and rows sorted descending by count. ISO and hour-of-day buckets use the mockup's exact boundaries; shutter speed uses the story's flagged `[ASSUMPTION]` standard-stop scheme (no mockup covers it).
+- Added a `complete` flag + `useIsIngestComplete()` selector to `ingestStore.ts` — `fileCount` alone (set at Ingest start) couldn't distinguish "still parsing" from "parsing complete," which app-shell's new 3-way gate needs.
+- `app-shell/App.tsx` now gates empty-state → progress → header+Insights in that order, matching Dev Notes' 3-state model.
+- `Insights.tsx` reads only `useReadablePhotos()`/`useUnreadableCount()` (AD-3), so it recomputes automatically on any store change (AC #3) with no manual trigger. The all-unreadable branch (AC #5) renders plain informative text — no `ErrorMessage`, no error styling.
+- Verified live: `turbo lint`, `turbo build`, `turbo test` (25/25 Vitest tests passing, 12 new for `aggregations.ts`) all pass. Additionally ran the actual app in a Playwright-driven Chromium against 5 synthetic EXIF fixture JPEGs (generated via Python/piexif in the session scratchpad, not committed) covering: a mixed batch (4 readable + 1 unreadable — confirmed all 7 dimensions render with correct sorted buckets/percentages and the unreadable InfoBox reads "1 unreadable — excluded from the numbers below."), an all-readable batch (confirmed the InfoBox is entirely absent), and an all-unreadable batch (confirmed the distinct empty-of-data layout, no error chrome). No console errors in any run.
+- Minor cosmetic note (not a defect against any AC): the fixed 72px label column truncates the longest shutter-speed bucket label ("1/15s or slower") with an ellipsis at typical viewport widths; the full label is still available via the row's `aria-label`.
+
 ### File List
+
+- packages/ui/src/HeaderBar/HeaderBar.tsx (new)
+- packages/ui/src/HeaderBar/HeaderBar.stories.tsx (new)
+- packages/ui/src/Panel/Panel.tsx (new)
+- packages/ui/src/Panel/Panel.stories.tsx (new)
+- packages/ui/src/index.ts (modified — export HeaderBar, Panel)
+- apps/gallery/src/store/ingestStore.ts (modified — `complete` flag + `useIsIngestComplete()`)
+- apps/gallery/src/app-shell/App.tsx (modified — 3-way gate: empty-state / progress / header+Insights)
+- apps/gallery/src/features/insights/aggregations.ts (new)
+- apps/gallery/src/features/insights/aggregations.test.ts (new)
+- apps/gallery/src/features/insights/HistogramBar.tsx (new)
+- apps/gallery/src/features/insights/Insights.tsx (new)
+- apps/gallery/src/features/insights/.gitkeep (deleted — folder no longer empty)
+
+## Change Log
+
+- 2026-07-07 — Implemented Story 2.4: new `Header-bar`/`Panel` shared components (`packages/ui`), Gallery-local `HistogramBar` + `aggregations.ts` (the 7 FR-7 dimensions, each with its own per-field percentage denominator per AD-4), `Insights.tsx` composition (unreadable-count `InfoBox`, distinct all-unreadable empty state), `ingestStore.ts` gained a `complete` flag/`useIsIngestComplete()` selector, and `App.tsx`'s gate is now 3-way (empty-state / progress / header+Insights). `turbo lint`/`build`/`test` all pass (25 Vitest tests, 12 new); verified live via Playwright against synthetic EXIF fixtures covering mixed/all-readable/all-unreadable batches.
+- 2026-07-08 — Addressed code review findings: 3-layer adversarial review (Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 1 patch applied (empty-row dimension panels now show a "No data for this batch." placeholder instead of an empty card, per user decision on the one decision-needed finding), 5 deferred (rounding-doesn't-sum-to-100% cosmetic artifact, no validation for malformed/negative bucketing inputs, `ingestStore`'s `complete` flag not derived, restated pre-existing missing-`worker.onerror` gap from Stories 2.2/2.3, minor wordmark letter-spacing fidelity nit), 10 dismissed as noise (disproven premises — e.g. speculative-API claims against props the spec explicitly mandates, a camera-facing "bug" that's actually exhaustive given the 2-value union type — or process commentary, not code defects). `turbo lint`/`build`/`test` re-verified clean after the patch; re-verified live via Playwright with a fixture missing the `LensModel` EXIF tag.

@@ -11,6 +11,7 @@ interface IngestState {
   photos: Photo[];
   fileCount: number;
   progress: IngestProgress;
+  complete: boolean;
 }
 
 /**
@@ -23,10 +24,11 @@ const useIngestStore = create<IngestState>(() => ({
   photos: [],
   fileCount: 0,
   progress: { done: 0, total: 0 },
+  complete: false,
 }));
 
 export function beginIngest(fileCount: number): void {
-  useIngestStore.setState({ fileCount, progress: { done: 0, total: fileCount } });
+  useIngestStore.setState({ fileCount, progress: { done: 0, total: fileCount }, complete: false });
 }
 
 export function updateProgress(done: number, total: number): void {
@@ -34,7 +36,7 @@ export function updateProgress(done: number, total: number): void {
 }
 
 export function commitPhotos(photos: Photo[]): void {
-  useIngestStore.setState({ photos, fileCount: photos.length });
+  useIngestStore.setState({ photos, fileCount: photos.length, complete: true });
 }
 
 export function useIngestedFileCount(): number {
@@ -43,6 +45,13 @@ export function useIngestedFileCount(): number {
 
 export function useIngestProgress(): IngestProgress {
   return useIngestStore(useShallow((state) => state.progress));
+}
+
+/** Distinguishes "parsing in progress" from "parsing complete" for
+ * app-shell's 3-way gate — `fileCount` alone is set at the start of Ingest
+ * and can't tell the two states apart. */
+export function useIsIngestComplete(): boolean {
+  return useIngestStore((state) => state.complete);
 }
 
 export function useReadablePhotos(): Photo[] {

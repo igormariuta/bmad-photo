@@ -72,3 +72,9 @@ export type { ErrorMessageProps } from "./ErrorMessage/ErrorMessage";
 
 export { ThemeToggle, THEME_STORAGE_KEY } from "./ThemeToggle/ThemeToggle";
 export type { Theme } from "./ThemeToggle/ThemeToggle";
+
+export { HeaderBar } from "./HeaderBar/HeaderBar";
+export type { HeaderBarProps } from "./HeaderBar/HeaderBar";
+
+export { Panel } from "./Panel/Panel";
+export type { PanelProps, PanelTone } from "./Panel/Panel";

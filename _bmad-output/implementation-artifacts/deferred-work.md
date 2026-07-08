@@ -1,5 +1,13 @@
 # Deferred Work
 
+## Deferred from: code review of 2-4-insights-dashboard (2026-07-07)
+
+- **Per-row percentages can fail to sum to 100% within a dimension** [apps/gallery/src/features/insights/aggregations.ts] — cosmetic rounding artifact from independent per-row `Math.round`; no AC requires rows to sum to 100%, and no largest-remainder correction is implemented.
+- **No validation for malformed/negative/zero ISO, shutter-speed, or hour values in the bucketing functions** [apps/gallery/src/features/insights/aggregations.ts] — low-probability data-quality gap; upstream producers (`normalize.ts`/`exif-worker.ts`) already guarantee well-formed values in practice, so this is defensive-only.
+- **`ingestStore`'s new `complete` flag is a separately-mutated boolean rather than state derived from `photos`/`fileCount`** [apps/gallery/src/store/ingestStore.ts] — safe today (only two mutators, both correctly paired); worth deriving instead if more write paths are added later.
+- **If Ingest never reaches "complete" (e.g. an uncaught worker exception), the user is stuck on the progress screen with no escape** [apps/gallery/src/app-shell/App.tsx] — restates the already-known missing `worker.onerror` gap carried over unaddressed from Stories 2.2/2.3, not new to this story.
+- **`HeaderBar` wordmark letter-spacing doesn't match the mockup's `-0.02em`** [packages/ui/src/HeaderBar/HeaderBar.tsx] — renders with `text-h3`'s `0` letter-spacing instead; low-severity pixel-fidelity nit per Acceptance Auditor.
+
 ## Deferred from: code review of 2-3-ingest-progress-indicator (2026-07-07)
 
 - **No screen transition once Ingest completes** [apps/gallery/src/app-shell/App.tsx, apps/gallery/src/features/ingest/IngestProgress.tsx] — `App.tsx` gates solely on `fileCount > 0`, which stays true after `commitPhotos()` runs (it re-sets `fileCount` to the same value), so `IngestProgress` keeps rendering "Parsing N/N" indefinitely with nothing becoming interactive. This is explicitly Story 2.4's job per this story's own Dev Notes ("Story 2.4's Insights view becomes reachable at that point") and matches the identical indefinite-render behavior of Story 2.1's prior `Loading` placeholder — not a regression, but still an open gap until Story 2.4 lands.

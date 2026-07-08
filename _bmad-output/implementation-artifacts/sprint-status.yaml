@@ -41,7 +41,10 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-07-06
-last_updated: 2026-07-07
+last_updated: 2026-07-08
+# 2-4 moved review → done (2026-07-08): 3-layer adversarial code review (Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 1 patch applied (empty-row dimension panels now show a "No data for this batch." placeholder), 5 deferred (rounding-doesn't-sum-to-100% cosmetic artifact, no validation for malformed/negative bucketing inputs, ingestStore's complete flag not derived, restated pre-existing missing-worker.onerror gap from Stories 2.2/2.3, minor wordmark letter-spacing fidelity nit), 10 dismissed as noise
+# 2-4 moved ready-for-dev → in-progress (2026-07-07): starting Header-bar/Panel gap-fills + Histogram-bar aggregation logic + Insights view
+# 2-4 moved in-progress → review (2026-07-07): new Header-bar/Panel (packages/ui), Gallery-local HistogramBar + aggregations.ts (7 FR-7 dimensions, per-field denominators per AD-4), Insights.tsx composition (unreadable-count InfoBox, distinct all-unreadable empty state), ingestStore gained a complete flag/useIsIngestComplete() selector, App.tsx gate is now 3-way (empty-state/progress/header+Insights); turbo lint/build/test all pass (25 Vitest tests, 12 new); verified live via Playwright against synthetic EXIF fixtures (mixed/all-readable/all-unreadable batches)
 # 2-3 moved ready-for-dev → in-progress (2026-07-07): starting worker progress wiring + StatBar-based determinate progress screen
 # 2-3 moved in-progress → review (2026-07-07): ingestStore gained progress {done,total} slice + updateProgress mutator/useIngestProgress selector, ingestPhotos.ts consumes worker "progress" messages, new IngestProgress.tsx renders determinate StatBar (cells=48) in an aria-live="polite" region with no dismiss control, App.tsx swapped in place of Story 2.1's transitional Loading; turbo lint/build/test all pass; no browser-automation tooling available this session so UI checks were verified via static/code-level analysis rather than a live run
 # 2-3 moved review → done (2026-07-07): 3-layer adversarial code review (Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 2 patches applied (StatBar lowThreshold={0} to stop red/error styling during 0-10% of every batch, doc-comment overclaim fixed), 2 deferred (no post-complete screen transition — owned by Story 2.4, no worker.onerror — carried over from Story 2.2), 12 dismissed as noise
@@ -78,7 +81,7 @@ development_status:
   2-1-empty-state-client-side-photo-ingest: done
   2-2-in-browser-metadata-extraction-web-worker: done
   2-3-ingest-progress-indicator: done
-  2-4-insights-dashboard: ready-for-dev
+  2-4-insights-dashboard: done
   2-5-repeat-ingest-add-more-append-dedupe-cumulative-cap: ready-for-dev
   epic-2-retrospective: optional
 
