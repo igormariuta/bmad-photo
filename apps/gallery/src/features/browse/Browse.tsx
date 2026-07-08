@@ -1,12 +1,13 @@
 import { useFilteredPhotos } from "../../store/ingestStore";
+import { FacetPanel } from "./FacetPanel";
 import { PhotoGridCell } from "./PhotoGridCell";
 
 /**
- * Browse tab (Story 3.2): unfiltered photo grid plus a Facet-panel sidebar
- * region reserved now so Story 3.3 only has to fill its content, not
- * restructure the container a second time. Reads only through
- * useFilteredPhotos() (AD-3's import-boundary contract) — a trivial alias
- * today, real filtering from Story 3.3 onward.
+ * Browse tab: unfiltered/filtered photo grid plus the Facet-panel sidebar.
+ * Desktop only for now — the mobile slide-up-sheet requirement (AC #1/#4)
+ * is deferred (see deferred-work.md), so the sidebar is hidden below `lg`
+ * rather than stacking a full interactive Facet-panel above the grid.
+ * Reads only through useFilteredPhotos() (AD-3's import-boundary contract).
  */
 export function Browse() {
   const photos = useFilteredPhotos();
@@ -15,9 +16,9 @@ export function Browse() {
     <div className="mx-auto flex max-w-container-max flex-col gap-10 px-gutter py-8 lg:flex-row lg:items-start">
       <aside
         aria-label="Facets"
-        className="w-full flex-none border-2 border-dim bg-panel p-card-padding lg:w-sidebar-width"
+        className="hidden flex-none border-2 border-dim bg-panel p-card-padding lg:block lg:w-sidebar-width"
       >
-        {/* Facet-panel content is Story 3.3's job — this story only reserves the layout space. */}
+        <FacetPanel />
       </aside>
       <div className="min-w-0 flex-1">
         <p className="text-eyebrow text-accent uppercase">// BROWSE</p>

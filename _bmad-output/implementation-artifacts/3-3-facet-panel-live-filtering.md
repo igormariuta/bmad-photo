@@ -1,6 +1,10 @@
+---
+baseline_commit: 17b7007d3a2ff250f1a37ed10ebd86ed53c0e817
+---
+
 # Story 3.3: Facet Panel & Live Filtering
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -32,33 +36,33 @@ so that I can narrow down to exactly the shots I'm looking for.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: `Range-control` (AC: #2, #3) — `apps/gallery/src/features/browse/RangeControl.tsx`
-  - [ ] Two underline `Field`s (Story 1.4) sharing one `data-label` row — `min`/`max` for numeric Facets, `from`/`to` for the date Facet
-  - [ ] Either side blank means unbounded on that side
-  - [ ] If `min > max` (both sides filled): show `FieldError` on the max field, and do not commit this Facet's filter until corrected (previous valid value, or unbounded, stays active in the meantime)
-- [ ] Task 2: `Facet-panel` shell (AC: #1)
-  - [ ] Desktop: renders inside Story 3.2's reserved sidebar region (`260px` fixed, `--m-panel` background, 2px `--m-dim` border, 20px padding, 24px gap between fields — per Story 3.2's mockup-confirmed values)
-  - [ ] Each of the 8 Facet fields renders as a collapsed summary trigger (`data-label` + current value + chevron) that expands to its real control on interaction, per Dev Notes
-  - [ ] Mobile: slide-up sheet, capped ~70% viewport height, opened via a trigger showing the active-filter count (Task 5)
-  - [ ] No presence on the Insights tab (already true by construction — the panel only renders inside the Browse panel's tree)
-  - [ ] "Clear filters" button uses `Button variant="outline"` (matches the mockup's `.btn-outline` styling), placed at the bottom of the panel
-- [ ] Task 3: Discrete Facet controls (AC: #2)
-  - [ ] `lens`: `Select`, single-select, options = distinct `lensLabel` values present in `useReadablePhotos()`'s current set
-  - [ ] `megapixelMode`: `RadioGroup` — options `All` (default) / `12 MP (standard)` / `48 MP (ProRAW)`
-  - [ ] `camera`: `RadioGroup` — options `All` (default) / `Front (selfie)` / `Rear`
-- [ ] Task 4: Range Facet controls (AC: #2, #3)
-  - [ ] `date`, `iso`, `aperture`, `shutter`, `exposureComp` each get a `RangeControl` instance, wired to the corresponding `Photo` field per Dev Notes' mapping
-- [ ] Task 5: Live filtering + Clear-all + mobile count (AC: #4)
-  - [ ] Add the `facetFilters` store slot and build `useFacetFilters()` for the first time: one entry per Facet, defaulting to unbounded/`All`
-  - [ ] Replace `useFilteredPhotos()`'s trivial alias body (Story 3.2: `() => useReadablePhotos()`) with real logic that applies every active Facet's predicate against `useReadablePhotos()`, AND-combined (per Dev Notes' undefined-handling rule) — the grid doesn't need to change, it already consumes this selector
-  - [ ] Every control's `onChange` commits directly to the store — no local draft/Apply step
-  - [ ] "Clear-all" resets every Facet to its default (unbounded/`All`)
-  - [ ] `[ASSUMPTION]` Mobile trigger displays the **count of currently-non-default Facets** (e.g. lens + ISO active = "2"), not a sum of individual selected values within multi-select Facets (e.g. 3 lenses selected still counts as 1, for the `lens` Facet being active) — neither epics.md nor DESIGN.md specifies which; this reading treats the count as "how many Facet dimensions are you filtering by," which is the more legible number to show a user
-- [ ] Task 6: Verify (AC: #1–#5)
-  - [ ] Apply one filter per Facet type (one discrete, one range) — confirm the grid narrows correctly and AND-combines when two are active together
-  - [ ] Enter an invalid range (min > max) — confirm `FieldError` shows on the max side and the grid doesn't change until corrected
-  - [ ] Confirm Insights' numbers are identical with filters active vs. cleared
-  - [ ] Resize to mobile width — confirm the slide-up sheet behavior and the active-filter count on its trigger
+- [x] Task 1: `Range-control` (AC: #2, #3) — `apps/gallery/src/features/browse/RangeControl.tsx`
+  - [x] Two underline `Field`s (Story 1.4) sharing one `data-label` row — `min`/`max` for numeric Facets, `from`/`to` for the date Facet
+  - [x] Either side blank means unbounded on that side
+  - [x] If `min > max` (both sides filled): show `FieldError` on the max field, and do not commit this Facet's filter until corrected (previous valid value, or unbounded, stays active in the meantime)
+- [x] Task 2: `Facet-panel` shell (AC: #1)
+  - [x] Desktop: renders inside Story 3.2's reserved sidebar region (`260px` fixed, `--m-panel` background, 2px `--m-dim` border, 20px padding, 24px gap between fields — per Story 3.2's mockup-confirmed values)
+  - [x] Each of the 8 Facet fields renders as a collapsed summary trigger (`data-label` + current value + chevron) that expands to its real control on interaction, per Dev Notes
+  - [x] Mobile: DEFERRED — user decision 2026-07-08: this iteration focuses on desktop only; the sidebar is hidden below `lg` instead of a slide-up sheet (see deferred-work.md)
+  - [x] No presence on the Insights tab (already true by construction — the panel only renders inside the Browse panel's tree)
+  - [x] "Clear filters" button uses `Button variant="outline"` (matches the mockup's `.btn-outline` styling), placed at the bottom of the panel
+- [x] Task 3: Discrete Facet controls (AC: #2)
+  - [x] `lens`: `Select`, single-select, options = distinct `lensLabel` values present in the full readable set (via a dedicated `useLensOptions()` selector, not a direct `useReadablePhotos()` call from `browse/` — keeps AD-3's import-boundary spirit)
+  - [x] `megapixelMode`: `RadioGroup` — options `All` (default) / `12 MP (standard)` / `48 MP (ProRAW)`
+  - [x] `camera`: `RadioGroup` — options `All` (default) / `Front (selfie)` / `Rear`
+- [x] Task 4: Range Facet controls (AC: #2, #3)
+  - [x] `date`, `iso`, `aperture`, `shutter`, `exposureComp` each get a `RangeControl` instance, wired to the corresponding `Photo` field per Dev Notes' mapping
+- [x] Task 5: Live filtering + Clear-all + mobile count (AC: #4)
+  - [x] Add the `facetFilters` store slot and build `useFacetFilters()` for the first time: one entry per Facet, defaulting to unbounded/`All`
+  - [x] Replace `useFilteredPhotos()`'s trivial alias body (Story 3.2: `() => useReadablePhotos()`) with real logic that applies every active Facet's predicate against `useReadablePhotos()`, AND-combined (per Dev Notes' undefined-handling rule) — the grid doesn't need to change, it already consumes this selector
+  - [x] Every control's `onChange` commits directly to the store — no local draft/Apply step
+  - [x] "Clear-all" resets every Facet to its default (unbounded/`All`)
+  - [x] `[ASSUMPTION]` Mobile trigger count: DEFERRED along with the rest of mobile scope — no mobile trigger exists this iteration, so no count logic was built (avoids speculative code with no consumer)
+- [x] Task 6: Verify (AC: #1–#5)
+  - [x] Apply one filter per Facet type (one discrete, one range) — confirm the grid narrows correctly and AND-combines when two are active together
+  - [x] Enter an invalid range (min > max) — confirm `FieldError` shows on the max side and the grid doesn't change until corrected
+  - [x] Confirm Insights' numbers are identical with filters active vs. cleared
+  - [x] Resize to mobile width — DEFERRED, no mobile-specific behavior built this iteration (see Task 2)
 
 ## Project Structure Notes
 
@@ -80,8 +84,30 @@ apps/gallery/src/features/browse/
 
 ### Agent Model Used
 
+Claude Sonnet 5 (claude-sonnet-5)
+
 ### Debug Log References
+
+- `npx tsc -p tsconfig.json --noEmit`, `npx eslint .` (gallery) — clean throughout implementation.
+- `npx turbo run lint build test` (workspace-wide) — 10/10 tasks pass, 57 Vitest tests (20 in `ingestStore.test.ts` incl. 7 new `matchesFacetFilters` cases, 3 new `RangeControl` `isRangeInvalid` cases, 4 new `FacetPanel` `summarizeRange` cases; 30 pre-existing).
+- **Live-verified via headless Playwright** against synthetic Pillow-generated EXIF fixtures (4 photos: two 24mm, one 48mm, one front-camera 48MP, one EXIF-less/unreadable): confirmed lens=24mm narrows 3→2 readable cells, AND-combining lens=24mm + ISO≥500 narrows to 1 (the single matching photo), entering an invalid ISO range (max<min) shows the `FieldError` and leaves the grid unchanged (`COUNT_DURING_INVALID_RANGE` stayed at the last valid count), fixing the range re-commits and updates the grid, Clear-filters resets to all 3, Camera=Front(selfie) narrows to 1, and Insights' "3 readable photos" text is identical whether Browse's lens filter is active or not (AC #5) — zero console errors after the Select fix below.
+- **Found and fixed a real, pre-existing bug in `packages/ui/src/Select/Select.tsx`** during live verification: clicking a non-focusable `<li role="option">` fires a native `mousedown` that blurs the trigger button first (`relatedTarget` resolves to `null`), which fired `handleContainerBlur` → `setIsOpen(false)` → unmounted the option *before* the browser's subsequent `click` event could reach its `onClick` handler. Result: mouse-driven option selection silently did nothing (only keyboard `Enter`/`Space` selection worked) — confirmed via a debug `console.log` in `commitOption` that never fired on a real click. This is Select's first production consumer outside Storybook (previously only Storybook + keyboard-nav testing exercised it), so the bug had gone uncaught. Fixed with the standard pattern: `onMouseDown={(e) => e.preventDefault()}` on each `<li>`, which stops the browser from shifting focus away from the trigger, so the blur/close-before-click race never triggers.
 
 ### Completion Notes List
 
+- **`RangeControl.tsx`** (Gallery-local): two `Field`s sharing one `data-label` row, generic over `type="number"|"date"` (date compares `YYYY-MM-DD` strings lexicographically — no `Date` parsing, consistent with `normalize.ts`/`aggregations.ts`'s existing string-slice convention). Holds local draft state that only re-syncs from props when they change *externally* (e.g. Clear-all), so a mid-edit invalid range never gets clobbered mid-keystroke. `isRangeInvalid` extracted as a pure, exported, unit-tested function (AC #3).
+- **`FacetPanel.tsx`** (Gallery-local, fills Story 3.2's reserved sidebar): all 8 Facets behind an independent-per-field `FacetField` collapse wrapper (data-label + summary + `▾`/`▲` chevron — plain unicode character, not a heroicon, since `apps/gallery` has no direct `@heroicons/react` dependency and adding one for a single glyph wasn't worth a new dependency). `lens` uses `Select` (single-select, no `multiple`); `megapixelMode`/`camera` use `RadioGroup` with the mockup's exact option labels including the checked-by-default `All`; the 5 range Facets each get a `RangeControl` instance. Every `onChange` commits straight to the store (no local Apply step, AC #4). "Clear filters" is `Button variant="outline"`.
+- **Store additions to `ingestStore.ts`:** `FacetFiltersState`/`RangeFilter` types, `DEFAULT_FACET_FILTERS` (all-unbounded), `useFacetFilters()`, `setFacetFilter()`/`clearAllFacetFilters()` mutators, and the pure `matchesFacetFilters()` predicate (AND-combines all 8 Facets, unit-tested with 7 cases covering discrete/range/date matching and the undefined-field-under-an-active-filter exclusion rule from Dev Notes). `useFilteredPhotos()`'s trivial Story 3.2 alias is now real: filters `state.photos` by `readable && matchesFacetFilters(...)` in one selector (not by calling `useReadablePhotos()` from inside another hook, to stay a single store subscription). Added `useLensOptions()` — a purpose-built selector over the *full* readable set (not `useFilteredPhotos()`) so the lens dropdown's own option list doesn't shrink away as other Facets narrow the grid, and so `browse/` doesn't need to call `useReadablePhotos()` directly (keeping AD-3's "browse's only input is `useFacetFilters()`/`useFilteredPhotos()`" convention intact even for this one auxiliary read).
+- **Mobile scope (AC #1's slide-up sheet, AC #4's mobile trigger count, Task 2/5/6's mobile bullets): deferred by user decision, 2026-07-08** — this iteration targets desktop only. `Browse.tsx`'s `<aside>` is `hidden lg:block` (not stacked full-width like Story 3.2's placeholder was) since a fully-interactive, un-sheeted Facet-panel stacked awkwardly above the grid would be a worse experience than simply not showing it below `lg`. See deferred-work.md for the follow-up.
+- AC #5 required no new mechanism, exactly as Dev Notes predicted — verified live (see Debug Log References) rather than assumed.
+
 ### File List
+
+- `apps/gallery/src/features/browse/RangeControl.tsx` (new — Gallery-local, min/max Field pair + pure `isRangeInvalid`)
+- `apps/gallery/src/features/browse/RangeControl.test.ts` (new — unit tests for `isRangeInvalid`)
+- `apps/gallery/src/features/browse/FacetPanel.tsx` (new — Gallery-local, the 8-Facet panel + `summarizeRange` helper)
+- `apps/gallery/src/features/browse/FacetPanel.test.ts` (new — unit tests for `summarizeRange`)
+- `apps/gallery/src/features/browse/Browse.tsx` (modified — renders `FacetPanel` inside the sidebar, sidebar now `hidden lg:block` instead of stacking on mobile)
+- `apps/gallery/src/store/ingestStore.ts` (modified — `FacetFiltersState`/`RangeFilter` types, `DEFAULT_FACET_FILTERS`, `useFacetFilters`/`setFacetFilter`/`clearAllFacetFilters`, `matchesFacetFilters`, `useLensOptions`, real `useFilteredPhotos()` body)
+- `apps/gallery/src/store/ingestStore.test.ts` (modified — added `matchesFacetFilters` test suite)
+- `packages/ui/src/Select/Select.tsx` (modified — unplanned fix: `onMouseDown` preventDefault on options to fix a real click-selection bug found via live verification)

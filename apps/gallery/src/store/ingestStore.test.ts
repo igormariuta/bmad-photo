@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   dedupeAndCapCheck,
+  DEFAULT_FACET_FILTERS,
   fileSignature,
+  matchesFacetFilters,
   mergeCommit,
   MAX_PHOTOS_PER_INGEST,
+  type FacetFiltersState,
 } from "./ingestStore";
 import type { Photo } from "../worker/types";
 
@@ -122,5 +125,75 @@ describe("mergeCommit", () => {
     const state = { photos: [], signatures: original };
     mergeCommit(state, [photo({ id: "a" })], [makeFile("a.jpg")]);
     expect(original.size).toBe(0);
+  });
+});
+
+describe("matchesFacetFilters", () => {
+  function filters(overrides: Partial<FacetFiltersState>): FacetFiltersState {
+    return { ...DEFAULT_FACET_FILTERS, ...overrides };
+  }
+
+  it("matches everything against the default (all-unbounded) filters", () => {
+    expect(matchesFacetFilters(photo({}), DEFAULT_FACET_FILTERS)).toBe(true);
+    expect(matchesFacetFilters(photo({ iso: 200, lensLabel: "24mm" }), DEFAULT_FACET_FILTERS)).toBe(
+      true,
+    );
+  });
+
+  it("discrete Facet (lens): matches on exact equality, excludes a photo with an undefined field", () => {
+    const f = filters({ lens: "24mm" });
+    expect(matchesFacetFilters(photo({ lensLabel: "24mm" }), f)).toBe(true);
+    expect(matchesFacetFilters(photo({ lensLabel: "48mm" }), f)).toBe(false);
+    expect(matchesFacetFilters(photo({}), f)).toBe(false);
+  });
+
+  it("discrete Facet (megapixelMode/camera): active filter excludes undefined field, inactive filter is unaffected", () => {
+    const mp = filters({ megapixelMode: 48 });
+    expect(matchesFacetFilters(photo({ megapixelMode: 48 }), mp)).toBe(true);
+    expect(matchesFacetFilters(photo({ megapixelMode: 12 }), mp)).toBe(false);
+    expect(matchesFacetFilters(photo({}), mp)).toBe(false);
+    expect(matchesFacetFilters(photo({}), DEFAULT_FACET_FILTERS)).toBe(true);
+
+    const cam = filters({ camera: "front" });
+    expect(matchesFacetFilters(photo({ camera: "front" }), cam)).toBe(true);
+    expect(matchesFacetFilters(photo({ camera: "rear" }), cam)).toBe(false);
+  });
+
+  it("range Facet (iso): respects open-ended min/max bounds, excludes undefined field only when active", () => {
+    const minOnly = filters({ iso: { min: 400 } });
+    expect(matchesFacetFilters(photo({ iso: 400 }), minOnly)).toBe(true);
+    expect(matchesFacetFilters(photo({ iso: 399 }), minOnly)).toBe(false);
+    expect(matchesFacetFilters(photo({}), minOnly)).toBe(false);
+
+    const maxOnly = filters({ iso: { max: 400 } });
+    expect(matchesFacetFilters(photo({ iso: 401 }), maxOnly)).toBe(false);
+
+    const bounded = filters({ iso: { min: 100, max: 400 } });
+    expect(matchesFacetFilters(photo({ iso: 100 }), bounded)).toBe(true);
+    expect(matchesFacetFilters(photo({ iso: 400 }), bounded)).toBe(true);
+    expect(matchesFacetFilters(photo({ iso: 401 }), bounded)).toBe(false);
+  });
+
+  it("range Facet (aperture/shutter/exposureComp): each applies independently", () => {
+    const f = filters({ aperture: { max: 2 }, shutter: { min: 0.01 } });
+    expect(matchesFacetFilters(photo({ apertureF: 1.8, shutterSpeedSec: 0.02 }), f)).toBe(true);
+    expect(matchesFacetFilters(photo({ apertureF: 2.8, shutterSpeedSec: 0.02 }), f)).toBe(false);
+    expect(matchesFacetFilters(photo({ apertureF: 1.8, shutterSpeedSec: 0.005 }), f)).toBe(false);
+  });
+
+  it("date Facet: compares the YYYY-MM-DD prefix of capturedAt lexicographically", () => {
+    const f = filters({ dateFrom: "2026-06-14", dateTo: "2026-06-21" });
+    expect(matchesFacetFilters(photo({ capturedAt: "2026-06-14T10:00:00" }), f)).toBe(true);
+    expect(matchesFacetFilters(photo({ capturedAt: "2026-06-21T23:59:59" }), f)).toBe(true);
+    expect(matchesFacetFilters(photo({ capturedAt: "2026-06-13T23:59:59" }), f)).toBe(false);
+    expect(matchesFacetFilters(photo({ capturedAt: "2026-06-22T00:00:00" }), f)).toBe(false);
+    expect(matchesFacetFilters(photo({}), f)).toBe(false);
+  });
+
+  it("AND-combines multiple active Facets — a photo must satisfy every one", () => {
+    const f = filters({ lens: "24mm", iso: { max: 400 } });
+    expect(matchesFacetFilters(photo({ lensLabel: "24mm", iso: 200 }), f)).toBe(true);
+    expect(matchesFacetFilters(photo({ lensLabel: "48mm", iso: 200 }), f)).toBe(false);
+    expect(matchesFacetFilters(photo({ lensLabel: "24mm", iso: 800 }), f)).toBe(false);
   });
 });

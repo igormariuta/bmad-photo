@@ -42,6 +42,8 @@
 
 generated: 2026-07-06
 last_updated: 2026-07-08
+# 3-3 moved in-progress → review (2026-07-08): RangeControl (Gallery-local, min/max Field pair, min>max validation), FacetPanel (8 Facets behind collapse triggers, lens Select/megapixelMode+camera RadioGroup/5 range Facets), facetFilters store slot + matchesFacetFilters (AND-combined, unit-tested), useLensOptions (full-set selector so options don't shrink), Browse.tsx wires FacetPanel into the sidebar (hidden below lg); mobile slide-up-sheet/trigger-count deferred by user decision — desktop-only this iteration; found+fixed a real pre-existing bug in packages/ui Select.tsx (mouse click on an option never committed — blur closed the dropdown before the click landed) via live Playwright verification; turbo lint/build/test all pass (10/10 tasks, 57 Vitest tests, 27 new)
+# 3-3 moved ready-for-dev → in-progress (2026-07-08): starting Range-control + Facet-panel shell (desktop sidebar + mobile slide-up sheet) + discrete/range Facet controls + live filtering store slot
 # 3-2 moved review → done (2026-07-08): 3-layer adversarial code review (Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 2 decisions resolved by user (mobile Facet-panel slide-up-sheet deferred to focus on desktop this iteration; aria-label fallback shortened to "Photo, captured —" reusing the badge's "—" placeholder convention), 2 patches applied (aria-label fallback wording + a Completion Notes precision fix about AC #4), 4 deferred (no component-level test for PhotoGridCell, empty Facets landmark until 3.3, blank-grid empty-state owned by 3.4, no onError on the thumbnail img), 9 dismissed as noise (incl. one verified false-positive date-formatting claim); turbo lint/build/test re-verified clean (43/43 tests)
 # 3-2 moved in-progress → review (2026-07-08): Photo-grid-cell (Gallery-local, button-semantic, exact AD-4 badge format), useFilteredPhotos() trivial alias, Browse.tsx two-region grid + reserved-sidebar layout (260px sidebar, 2/4-col responsive grid at a Gallery-scoped 900px lg breakpoint override), new sidebar-width theme token following container-max/article-max precedent; turbo lint/build/test all pass (7/7 tasks, 43 Vitest tests, 5 new); live-verified via headless Playwright against synthetic Pillow-generated EXIF fixtures (exact badge format, unreadable-photo exclusion, responsive column/sidebar behavior, zero console errors)
 # 3-2 moved ready-for-dev → in-progress (2026-07-08): starting Photo-grid-cell + grid/reserved-sidebar layout + useFilteredPhotos alias
@@ -97,7 +99,7 @@ development_status:
   epic-3: in-progress
   3-1-underlinetabs-insights-browse-split: done
   3-2-photo-grid-browse-unfiltered-view: done
-  3-3-facet-panel-live-filtering: ready-for-dev
+  3-3-facet-panel-live-filtering: review
   3-4-empty-filtered-state: ready-for-dev
   3-5-photo-detail-modal: ready-for-dev
   epic-3-retrospective: optional

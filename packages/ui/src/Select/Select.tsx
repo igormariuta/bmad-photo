@@ -224,6 +224,16 @@ export function Select({
                 role="option"
                 aria-selected={isSelected}
                 onMouseEnter={() => setActiveIndex(index)}
+                // A non-focusable <li> click still fires a native mousedown
+                // first; without preventDefault the browser blurs the
+                // trigger button (relatedTarget becomes null), which fires
+                // handleContainerBlur and closes the dropdown — unmounting
+                // this <li> before the click event it's still mid-dispatch
+                // for ever reaches onClick below. Real, click-blocking bug
+                // (only keyboard selection worked) — found via Story 3.3's
+                // live Playwright verification, first real Select consumer
+                // outside Storybook.
+                onMouseDown={(event) => event.preventDefault()}
                 onClick={() => commitOption(option)}
                 className={`flex cursor-pointer items-center justify-between gap-2 px-3 py-2 text-body ${
                   isActive ? "bg-accent text-bg" : "text-fg"

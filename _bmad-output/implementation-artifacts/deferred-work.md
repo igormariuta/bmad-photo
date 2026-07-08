@@ -1,5 +1,12 @@
 # Deferred Work
 
+## Deferred from: dev-story of 3-3-facet-panel-live-filtering (2026-07-08)
+
+- **Mobile Facet-panel: no slide-up sheet, no mobile trigger, no active-filter count** [apps/gallery/src/features/browse/Browse.tsx, apps/gallery/src/features/browse/FacetPanel.tsx] — AC #1's slide-up sheet (capped ~70vh) and AC #4's mobile trigger with an active-filter count were not built. User decision 2026-07-08: this iteration targets desktop only. The sidebar is `hidden` below `lg` rather than stacking a fully-interactive, un-sheeted panel above the grid. Supersedes/confirms the same mobile deferral already noted from Story 3.2's review.
+- **`useLensOptions()` has no test coverage** [apps/gallery/src/store/ingestStore.ts] — a Zustand selector hook, not extracted as a pure function; matches this codebase's existing convention of only unit-testing store logic that's been pulled out into plain functions (e.g. `matchesFacetFilters`, `dedupeAndCapCheck`), not the hooks themselves (no component/store-test harness in the repo).
+- **No component-level test renders `RangeControl`, `FacetPanel`, or `FacetField`** [apps/gallery/src/features/browse/RangeControl.tsx, FacetPanel.tsx] — only the extracted pure helpers (`isRangeInvalid`, `summarizeRange`) are unit-tested. Same pre-existing gap noted in Story 3.2's review (no React Testing Library/component-test infra in this repo).
+- **`packages/ui/src/Select/Select.tsx`'s blur-close race was fixed narrowly** (`onMouseDown` preventDefault on options) — worth a closer audit of `RadioGroup`/`Checkbox`/other custom form controls for the same non-focusable-target-blur pattern, since this bug went unnoticed until Select's first real production consumer. Not done here — out of this story's scope.
+
 ## Deferred from: code review of 3-2-photo-grid-browse-unfiltered-view (2026-07-08)
 
 - **No component-level test renders `<PhotoGridCell>` itself** [apps/gallery/src/features/browse/PhotoGridCell.tsx] — button semantics, `onClick`→`onOpen` wiring, computed `aria-label`, and image rendering are all unverified by any committed test; only the two extracted pure helpers (`formatExifBadgeSegments`/`formatCellAriaLabel`) are unit-tested. Pre-existing gap — no React Testing Library/component-test infra exists anywhere in this repo yet.
