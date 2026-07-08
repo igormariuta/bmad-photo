@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Button, RadioGroup, Select } from "@bmad/ui";
 import {
   clearAllFacetFilters,
@@ -21,85 +21,23 @@ function stringsToRange(min: string, max: string): RangeFilter {
   };
 }
 
-/** Exported for unit testing — the display text a user actually sees on a
- * collapsed range Facet's summary trigger. */
-export function summarizeRange(min: string, max: string, unbounded: string): string {
-  if (min === "" && max === "") {
-    return unbounded;
-  }
-  if (min !== "" && max !== "") {
-    return `${min}–${max}`;
-  }
-  return min !== "" ? `≥${min}` : `≤${max}`;
-}
-
-interface FacetFieldProps {
-  label: string;
-  summary: string;
-  children: ReactNode;
-}
-
 /**
- * Collapsed summary trigger (`data-label` + current value + chevron) that
- * expands to the real control on interaction, per the mockup's
- * collapsed/expandable facet-field pattern (Dev Notes). Independent
- * per-field open state — Dev Notes only rule out all 8 being open at once
- * by default, not a strict single-open accordion.
- *
- * The outer `data-label` only renders while collapsed — every child control
- * (Select/RadioGroup/RangeControl) already renders its own label/legend, so
- * showing both at once produced a literal duplicate ("MEGAPIXEL MODE" twice)
- * once expanded (user-reported fix, 2026-07-08). Expanded state instead
- * shows just a small collapse affordance.
+ * A divider between Facets — no label of its own (UX fix, 2026-07-08:
+ * every child control — Select/RadioGroup/RangeControl — already renders
+ * its own label, and a collapse/expand toggle previously duplicated it and
+ * hid the real control behind an extra click). The control is always
+ * rendered directly, at a fixed position, never swapped for a summary line.
  */
-function FacetField({ label, summary, children }: FacetFieldProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  if (isExpanded) {
-    return (
-      <div className="border-b-2 border-dim pb-2">
-        <button
-          type="button"
-          onClick={() => setIsExpanded(false)}
-          aria-expanded
-          className="mb-1 flex w-full items-center justify-end text-muted2 hover:text-fg"
-        >
-          <span aria-hidden="true" className="-rotate-180">
-            ▾
-          </span>
-          <span className="sr-only">Collapse {label}</span>
-        </button>
-        {children}
-      </div>
-    );
-  }
-
-  return (
-    <div className="border-b-2 border-dim pb-2">
-      <button
-        type="button"
-        onClick={() => setIsExpanded(true)}
-        aria-expanded={false}
-        className="flex w-full flex-col items-start gap-2 text-left"
-      >
-        <span className="text-data-label text-muted2 uppercase">{label}</span>
-        <span className="flex w-full items-center justify-between text-body text-fg">
-          {summary}
-          <span aria-hidden="true" className="text-muted2">
-            ▾
-          </span>
-        </span>
-      </button>
-    </div>
-  );
+function FacetField({ children }: { children: ReactNode }) {
+  return <div className="border-b-2 border-dim pb-4">{children}</div>;
 }
 
 /**
- * Fills Story 3.2's reserved sidebar region (desktop only — the mobile
- * slide-up-sheet requirement from AC #1/#4 is deferred, see deferred-work.md).
- * The 8 Facets (Dev Notes' field mapping), each behind a FacetField
- * collapse trigger; every control commits directly to the store on change
- * (AC #4, no Apply step).
+ * Fills the persistent global sidebar (App.tsx) — desktop only, the mobile
+ * slide-up-sheet requirement from AC #1/#4 is deferred (see
+ * deferred-work.md). The 8 Facets (Dev Notes' field mapping), each always
+ * showing its real control; every control commits directly to the store on
+ * change (AC #4, no Apply step).
  */
 export function FacetPanel() {
   const filters = useFacetFilters();
@@ -115,7 +53,7 @@ export function FacetPanel() {
     <div className="flex flex-col gap-6">
       <p className="text-eyebrow text-accent uppercase">// FACETS</p>
 
-      <FacetField label="Lens / focal length" summary={filters.lens ?? "All lenses"}>
+      <FacetField>
         <Select
           id="facet-lens"
           label="Lens / focal length"
@@ -128,10 +66,7 @@ export function FacetPanel() {
         />
       </FacetField>
 
-      <FacetField
-        label="ISO"
-        summary={summarizeRange(isoMin, isoMax, "All ISO")}
-      >
+      <FacetField>
         <RangeControl
           id="facet-iso"
           dataLabel="ISO"
@@ -142,10 +77,7 @@ export function FacetPanel() {
         />
       </FacetField>
 
-      <FacetField
-        label="Date range"
-        summary={summarizeRange(filters.dateFrom ?? "", filters.dateTo ?? "", "All time")}
-      >
+      <FacetField>
         <RangeControl
           id="facet-date"
           dataLabel="Date range"
@@ -159,10 +91,7 @@ export function FacetPanel() {
         />
       </FacetField>
 
-      <FacetField
-        label="Aperture"
-        summary={summarizeRange(apertureMin, apertureMax, "All apertures")}
-      >
+      <FacetField>
         <RangeControl
           id="facet-aperture"
           dataLabel="Aperture (f/)"
@@ -174,10 +103,7 @@ export function FacetPanel() {
         />
       </FacetField>
 
-      <FacetField
-        label="Shutter speed"
-        summary={summarizeRange(shutterMin, shutterMax, "All shutter speeds")}
-      >
+      <FacetField>
         <RangeControl
           id="facet-shutter"
           dataLabel="Shutter speed (sec)"
@@ -189,10 +115,7 @@ export function FacetPanel() {
         />
       </FacetField>
 
-      <FacetField
-        label="Exposure comp"
-        summary={summarizeRange(exposureCompMin, exposureCompMax, "All exposure comp")}
-      >
+      <FacetField>
         <RangeControl
           id="facet-exposure-comp"
           dataLabel="Exposure comp (EV)"
@@ -204,10 +127,7 @@ export function FacetPanel() {
         />
       </FacetField>
 
-      <FacetField
-        label="Megapixel mode"
-        summary={filters.megapixelMode === undefined ? "All" : `${filters.megapixelMode} MP`}
-      >
+      <FacetField>
         <RadioGroup
           name="facet-megapixel"
           label="Megapixel mode"
@@ -223,12 +143,7 @@ export function FacetPanel() {
         />
       </FacetField>
 
-      <FacetField
-        label="Camera"
-        summary={
-          filters.camera === undefined ? "All" : filters.camera === "front" ? "Front (selfie)" : "Rear"
-        }
-      >
+      <FacetField>
         <RadioGroup
           name="facet-camera"
           label="Camera"

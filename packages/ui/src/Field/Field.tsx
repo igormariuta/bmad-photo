@@ -32,7 +32,13 @@ export function Field({
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const currentValue = isControlled ? value : uncontrolledValue;
-  const isFloating = isFocused || currentValue.length > 0;
+  // Native date/time-family inputs always render their own placeholder mask
+  // (e.g. "dd.mm.yyyy") regardless of value/focus, unlike text inputs which
+  // render nothing when empty — so the label must always float for these
+  // types, or it visually collides with that mask (bug found via live
+  // verification, 2026-07-08).
+  const alwaysFloats = type === "date" || type === "time" || type === "month" || type === "week" || type === "datetime-local";
+  const isFloating = isFocused || currentValue.length > 0 || alwaysFloats;
   const isPasswordType = type === "password";
   const inputType = isPasswordType && isPasswordVisible ? "text" : type;
   const borderClassName = error !== undefined ? "border-error" : "border-dim focus:border-accent";
