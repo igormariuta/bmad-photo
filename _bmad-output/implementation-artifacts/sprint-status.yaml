@@ -42,6 +42,7 @@
 
 generated: 2026-07-06
 last_updated: 2026-07-08
+# 3-1 round-2 pass (2026-07-08): real bug — Browse/Insights tab buttons gave no cursor feedback at all; added cursor-pointer to UnderlineTabs' tab button (packages/ui, benefits every consumer). turbo lint/build/test clean; live-verified via Playwright.
 # 2-2 round-5 pass (2026-07-08): added isImageFile to ingestPhotos.ts, resolving the non-image-file-filtering gap this story's own original review deferred to itself — folder selection (Stories 2.1/2.5) hands back non-image junk (.DS_Store etc.) a directory pick's accept attribute can't filter. turbo lint/build/test clean (113/113 tests, 3 new).
 # 2-5 round-1 pass (2026-07-08): added folder selection to AddMoreControl, matching Story 2.1's identical addition — new "Add folder" button/input (webkitdirectory), filters non-image files via isImageFile. turbo lint/build/test clean (113/113 tests); live-verified via Playwright.
 # 2-1 round-1 pass (2026-07-08): added folder selection to EmptyState (new "Add folder" button/input, webkitdirectory) resolving a gap deferred from this story's own original review; a refactor mid-round introduced a real regression (event.target.value reset before Array.from(files), same live-FileList gotcha AddMoreControl.tsx already guarded against) that made both "Add photos" and "Add folder" silently ingest nothing — caught and fixed same round. turbo lint/build/test clean (113/113 tests, 3 new); live-verified with a synthetic folder (nested subfolder + junk file) via Playwright.

@@ -94,9 +94,10 @@ Claude Sonnet 5 (claude-sonnet-5)
 - `apps/gallery/src/features/browse/.gitkeep` (deleted — superseded by real content)
 - `packages/eslint-config/src/boundaries.js` (modified — AD-3 `insights`/`browse` element types + import-boundary policies)
 - `apps/gallery/src/app-shell/app.css` (modified — base `html, body` theme background/color rule)
-- `packages/ui/src/UnderlineTabs/UnderlineTabs.tsx` (modified — `pb-3` → `py-3` on the tab button for symmetric top/bottom padding)
+- `packages/ui/src/UnderlineTabs/UnderlineTabs.tsx` (modified — `pb-3` → `py-3` on the tab button for symmetric top/bottom padding; post-completion round 2 — added `cursor-pointer` to the tab `<button>`, a real missing-hover-affordance bug)
 
 ## Change Log
 
 - 2026-07-08: Implemented Story 3.1 — `UnderlineTabs` Insights/Browse split with dual-mounted, independently-scrolling panels; AD-3 `insights`/`browse` import-boundary lint rule (deferred from Story 1.3); Browse placeholder panel. `turbo lint`/`build`/`test` all pass (10/10 tasks); no browser-automation tooling available this session, so scroll-preservation was verified via code/CSS-level reasoning rather than a live Playwright run.
 - 2026-07-08: Fixed two user-reported defects from live testing — dark mode not reaching the page background outside Header-bar (added a base `html, body` rule in `apps/gallery/src/app-shell/app.css`), and no top padding on the Tabs row's labels (fixed `UnderlineTabs.tsx`'s tab button padding from `pb-3` to `py-3`). Re-verified `turbo lint`/`build`/`test` clean (10/10 tasks).
+- 2026-07-08 — Post-completion fix-up round 2 (user report) — real bug: the Browse/Insights tab buttons gave no cursor feedback at all, the default browser cursor stayed on hover with nothing signaling they're clickable. Added `cursor-pointer` to `UnderlineTabs`' tab `<button>` — benefits every consumer of this shared `packages/ui` component, not just this app. `turbo lint/build/test` clean; live-verified via Playwright (`getComputedStyle(...).cursor === "pointer"`).
