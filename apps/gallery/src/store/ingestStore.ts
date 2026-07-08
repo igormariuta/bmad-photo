@@ -65,6 +65,13 @@ interface IngestState {
   fileCount: number;
   progress: IngestProgress;
   complete: boolean;
+  /** True from `beginIngest` until the worker's own "complete" message
+   * arrives (see `finishIngestBatch`) — distinct from `complete`, which
+   * flips true on the *first* per-photo commit (round-18) so the grid can
+   * render progressively. `AddMoreControl` gates its disabled state on this
+   * flag instead, so it stays disabled for the whole batch's parse, not
+   * just until the first photo lands. */
+  parsing: boolean;
   /** Dedup key set (AD-7) — not `Photo` fields (AD-4 has no filename/size/
    * timestamp-of-file), so tracked separately, populated for every Ingested
    * file regardless of `readable` outcome, from the very first Ingest batch. */
@@ -92,6 +99,7 @@ const useIngestStore = create<IngestState>(() => ({
   fileCount: 0,
   progress: { done: 0, total: 0 },
   complete: false,
+  parsing: false,
   signatures: new Set(),
   hasCommittedOnce: false,
   facetFilters: DEFAULT_FACET_FILTERS,
@@ -158,11 +166,22 @@ export function checkAddMore(files: File[]): DedupeAndCapCheckResult {
 }
 
 export function beginIngest(fileCount: number): void {
-  useIngestStore.setState({ fileCount, progress: { done: 0, total: fileCount }, complete: false });
+  useIngestStore.setState({
+    fileCount,
+    progress: { done: 0, total: fileCount },
+    complete: false,
+    parsing: true,
+  });
 }
 
 export function updateProgress(done: number, total: number): void {
   useIngestStore.setState({ progress: { done, total } });
+}
+
+/** Called once the worker's own "complete" message arrives (the whole batch has
+ * finished parsing, not just its first photo) — see `parsing`'s doc comment. */
+export function finishIngestBatch(): void {
+  useIngestStore.setState({ parsing: false });
 }
 
 export interface CommitPhotosResult {
@@ -244,6 +263,12 @@ export function useIngestProgress(): IngestProgress {
  * and can't tell the two states apart. */
 export function useIsIngestComplete(): boolean {
   return useIngestStore((state) => state.complete);
+}
+
+/** True while a batch (initial or "Add more") is actively being parsed by the
+ * worker — see `parsing`'s doc comment for why this is distinct from `complete`. */
+export function useIsBatchParsing(): boolean {
+  return useIngestStore((state) => state.parsing);
 }
 
 export function useReadablePhotos(): Photo[] {

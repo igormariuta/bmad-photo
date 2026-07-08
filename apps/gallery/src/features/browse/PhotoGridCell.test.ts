@@ -3,7 +3,7 @@ import { formatCellAriaLabel, formatExifBadgeSegments } from "./PhotoGridCell";
 import type { Photo } from "../../worker/types";
 
 function photo(fields: Partial<Photo>): Photo {
-  return { id: "p1", readable: true, thumbnailUrl: "", fullUrl: "", ...fields };
+  return { id: "p1", readable: true, fileName: "photo.jpg", thumbnailUrl: "", fullUrl: "", ...fields };
 }
 
 describe("formatExifBadgeSegments", () => {
@@ -25,6 +25,10 @@ describe("formatExifBadgeSegments", () => {
       "—",
       "ISO 400",
     ]);
+  });
+
+  it("rounds an imprecise real-phone EXIF aperture float to 1 decimal", () => {
+    expect(formatExifBadgeSegments(photo({ apertureF: 1.7799999713880652 }))[1]).toBe("f/1.8");
   });
 });
 

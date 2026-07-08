@@ -19,7 +19,7 @@ function makeFile(name: string, lastModified = 1, size = 7): File {
 }
 
 function photo(fields: Partial<Photo>): Photo {
-  return { id: "id", readable: true, thumbnailUrl: "", fullUrl: "", ...fields };
+  return { id: "id", readable: true, fileName: "photo.jpg", thumbnailUrl: "", fullUrl: "", ...fields };
 }
 
 describe("fileSignature", () => {

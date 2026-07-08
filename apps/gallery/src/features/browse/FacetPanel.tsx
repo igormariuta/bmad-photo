@@ -12,13 +12,17 @@ import { RangeSlider, SingleSlider } from "./RangeSlider";
 /** Exported for unit testing — shutter speeds read as fractions below 1s
  * (matching photographic convention, e.g. "1/500s"), plain seconds above. */
 export function formatShutterSpeed(value: number): string {
-  return value >= 1 ? `${value}s` : `1/${Math.round(1 / value)}s`;
+  return value > 0 && value < 1 ? `1/${Math.round(1 / value)}s` : `${value}s`;
 }
 
 /** Exported for unit testing — a leading "+" for positive EV, per
- * photographic convention (e.g. "+0.3", "-0.3", "0"). */
+ * photographic convention (e.g. "+0.3", "-0.3", "0"). Rounds to 1 decimal
+ * (round-11, 2026-07-08, user report) — real phone EXIF is "a bit shaky":
+ * exposure bias computes as an imprecise float (e.g. `0.33539035466185535`)
+ * rather than the clean `0.3` a photographer actually dialed in. */
 export function formatExposureComp(value: number): string {
-  return value > 0 ? `+${value}` : `${value}`;
+  const rounded = Math.round(value * 10) / 10;
+  return rounded > 0 ? `+${rounded}` : `${rounded}`;
 }
 
 function formatMegapixelMode(value: 12 | 48): string {
@@ -29,8 +33,12 @@ function formatLens(value: number): string {
   return `${value}mm`;
 }
 
-function formatAperture(value: number): string {
-  return `f/${value}`;
+/** Exported for unit testing — rounds to 1 decimal (round-11, 2026-07-08,
+ * user report), same reasoning as `formatExposureComp`: real phone EXIF
+ * apertures compute as imprecise floats (e.g. `1.7799999713880652`) instead
+ * of the clean `f/1.8` a lens actually reports. */
+export function formatAperture(value: number): string {
+  return `f/${Math.round(value * 10) / 10}`;
 }
 
 interface CheckboxFacetGroupProps<T extends number> {
@@ -287,12 +295,14 @@ function CameraFacet({ value, onChange }: CameraFacetProps) {
  * showing its real control; every control commits directly to the store on
  * change (AC #4, no Apply step). No divider lines between Facets (round 7 —
  * "an extra thing that adds extra spacing") — the parent's `gap-6` alone
- * separates them. Order (round-5 user request): Camera, Year, Lens,
- * Aperture, Shutter, ISO, Exposure comp, Megapixel mode. Camera itself is
- * hidden entirely unless the batch has *both* front and rear camera photos
- * (round 8, tightened from round 6's "neither" check) — with only one of
- * the two present, "All" and that value already filter to the same set,
- * so there's no real choice to offer.
+ * separates them. Order (round-9 user request, 2026-07-08): Year, Lens,
+ * Aperture, Shutter, ISO, Exposure comp, Megapixel mode, Camera — the same
+ * relative order now used by the Photo-detail-modal and Insights' dimension
+ * list, for cross-page consistency. Camera itself is hidden entirely unless
+ * the batch has *both* front and rear camera photos (round 8, tightened
+ * from round 6's "neither" check) — with only one of the two present,
+ * "All" and that value already filter to the same set, so there's no real
+ * choice to offer.
  */
 export function FacetPanel() {
   const filters = useFacetFilters();
@@ -302,10 +312,6 @@ export function FacetPanel() {
   return (
     <div className="flex flex-col gap-6">
       <p className="text-eyebrow text-accent uppercase">// FILTERS</p>
-
-      {hasCameraChoice && (
-        <CameraFacet value={filters.camera} onChange={(value) => setFacetFilter("camera", value)} />
-      )}
 
       <SliderFacet
         label="Year"
@@ -363,6 +369,10 @@ export function FacetPanel() {
         formatLabel={formatMegapixelMode}
         onToggle={(value) => setFacetFilter("megapixelMode", toggleInArray(filters.megapixelMode, value))}
       />
+
+      {hasCameraChoice && (
+        <CameraFacet value={filters.camera} onChange={(value) => setFacetFilter("camera", value)} />
+      )}
 
       <Button type="button" variant="outline" onClick={clearAllFacetFilters}>
         Clear filters

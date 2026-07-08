@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@bmad/ui";
 import {
   clearAllFacetFilters,
@@ -6,6 +7,7 @@ import {
   useReadablePhotos,
   useUnreadableCount,
 } from "../../store/ingestStore";
+import { PhotoDetailModal } from "../photo-detail/PhotoDetailModal";
 import { PhotoGridCell } from "./PhotoGridCell";
 
 /**
@@ -26,12 +28,20 @@ import { PhotoGridCell } from "./PhotoGridCell";
  */
 export function Browse() {
   const photos = useFilteredPhotos();
-  const readablePhotoCount = useReadablePhotos().length;
+  const readablePhotos = useReadablePhotos();
   const unreadableCount = useUnreadableCount();
   const hasActiveFilters = useHasActiveFacetFilters();
 
-  const isFilteredEmpty = photos.length === 0 && readablePhotoCount > 0 && hasActiveFilters;
-  const isAllUnreadable = readablePhotoCount === 0;
+  const isFilteredEmpty = photos.length === 0 && readablePhotos.length > 0 && hasActiveFilters;
+  const isAllUnreadable = readablePhotos.length === 0;
+
+  // Tracked by id, not the `Photo` object itself — `readablePhotos` is a live store
+  // subscription, so this always resolves to the up-to-date photo (e.g. once its
+  // thumbnailUrl/fullUrl arrive after progressive media loading) instead of a stale
+  // snapshot captured at click time.
+  const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
+  const selectedPhoto =
+    selectedPhotoId === null ? null : (readablePhotos.find((photo) => photo.id === selectedPhotoId) ?? null);
 
   return (
     <div>
@@ -57,10 +67,11 @@ export function Browse() {
       ) : (
         <div className="mt-7 grid grid-cols-2 gap-item-gap lg:grid-cols-4">
           {photos.map((photo) => (
-            <PhotoGridCell key={photo.id} photo={photo} />
+            <PhotoGridCell key={photo.id} photo={photo} onOpen={() => setSelectedPhotoId(photo.id)} />
           ))}
         </div>
       )}
+      <PhotoDetailModal photo={selectedPhoto} onClose={() => setSelectedPhotoId(null)} />
     </div>
   );
 }

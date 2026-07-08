@@ -55,10 +55,10 @@ async function parseFile(file: File): Promise<WorkerPhoto> {
     if (!hasUsableExifData(rawFields)) {
       throw new Error("no usable EXIF/metadata block");
     }
-    return { ...normalizeExifFields(rawFields), blob: file };
+    return { ...normalizeExifFields(rawFields), fileName: file.name, blob: file };
   } catch {
     ctx.postMessage({ type: "error", fileName: file.name } satisfies WorkerMessage);
-    return { ...createUnreadablePhoto(), blob: file };
+    return { ...createUnreadablePhoto(), fileName: file.name, blob: file };
   }
 }
 

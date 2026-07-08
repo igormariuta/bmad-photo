@@ -37,6 +37,7 @@ export function EmptyState() {
     const images = Array.from(files).filter(isImageFile);
     event.target.value = "";
     if (images.length === 0) {
+      setLimitMessage("No photos found in that selection.");
       return;
     }
 

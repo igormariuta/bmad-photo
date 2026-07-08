@@ -1,5 +1,10 @@
+import { useState } from "react";
+
 export interface SparklineProps {
   series: number[];
+  /** Optional, parallel to `series` — shown in a small tooltip while hovering the point, so a
+   * point's exact meaning is available without a permanent label row taking up layout space. */
+  labels?: string[];
   /** Must be unique per instance — two gradients with the same id collide in the DOM. */
   gradientId: string;
   ariaLabel: string;
@@ -38,8 +43,12 @@ function smoothPath(points: Point[]): string {
 }
 
 /** An all-zero series renders a muted flat baseline with no accent/gradient; any non-zero
- * point renders the accent curve + dots + gradient fill. */
-export function Sparkline({ series, gradientId, ariaLabel }: SparklineProps) {
+ * point renders the accent curve + dots + gradient fill. A hovered point shows its `labels`
+ * entry in a small custom tooltip (not the native `title` attribute — that relies on the
+ * browser's own hover delay/styling, which read as "nothing happens" to a user moving the
+ * mouse quickly across points). */
+export function Sparkline({ series, labels, gradientId, ariaLabel }: SparklineProps) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const max = Math.max(1, ...series);
   const empty = series.every((value) => value === 0);
   const tone = empty ? "var(--m-muted2)" : "var(--m-accent)";
@@ -78,13 +87,30 @@ export function Sparkline({ series, gradientId, ariaLabel }: SparklineProps) {
         />
       </svg>
       {points.map((point, i) => (
+        // A bigger invisible hit target than the visible dot itself — size-1.5 alone is a
+        // small, fiddly mouse target.
         <span
           key={i}
-          aria-hidden="true"
-          className="absolute size-1.5 -translate-x-1/2 -translate-y-1/2"
-          style={{ left: `${point.x}%`, top: `${(point.y / VB_H) * 100}%`, backgroundColor: tone }}
-        />
+          className="absolute flex size-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center"
+          style={{ left: `${point.x}%`, top: `${(point.y / VB_H) * 100}%` }}
+          onMouseEnter={() => setHoveredIndex(i)}
+          onMouseLeave={() => setHoveredIndex((current) => (current === i ? null : current))}
+        >
+          <span aria-hidden="true" className="size-1.5" style={{ backgroundColor: tone }} />
+        </span>
       ))}
+      {hoveredIndex !== null && labels?.[hoveredIndex] !== undefined && (
+        <div
+          className="pointer-events-none absolute -mt-2 -translate-x-1/2 -translate-y-full whitespace-nowrap border-2 border-dim bg-bg px-2 py-1 text-caption text-fg"
+          style={{
+            left: `${points[hoveredIndex]!.x}%`,
+            top: `${(points[hoveredIndex]!.y / VB_H) * 100}%`,
+            zIndex: "var(--m-z-dropdown)",
+          }}
+        >
+          {labels[hoveredIndex]}
+        </div>
+      )}
     </div>
   );
 }

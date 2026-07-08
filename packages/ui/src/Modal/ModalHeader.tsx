@@ -6,6 +6,9 @@ export interface ModalHeaderProps {
   onClose: () => void;
   /** Full override for the eyebrow's default accent styling (e.g. ConfirmModal's danger tone). */
   eyebrowClassName?: string;
+  /** Full override for the title's default size/weight (e.g. a narrower `variant="wide"` detail
+   * panel wanting a smaller heading than the default `text-h1`). */
+  titleClassName?: string;
 }
 
 export function ModalHeader({
@@ -15,12 +18,13 @@ export function ModalHeader({
   subtitle,
   onClose,
   eyebrowClassName = "text-eyebrow text-accent uppercase",
+  titleClassName = "font-display text-h1 text-fg",
 }: ModalHeaderProps) {
   return (
     <div className="mb-6 flex items-start justify-between gap-4">
       <div>
         {eyebrow ? <div className={`mb-6 ${eyebrowClassName}`}>{eyebrow}</div> : null}
-        <h2 id={titleId} className="font-display text-h1 text-fg">
+        <h2 id={titleId} className={titleClassName}>
           {title}
         </h2>
         {subtitle ? <p className="mt-4 text-body text-muted">{subtitle}</p> : null}

@@ -1,6 +1,6 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import { Button, InfoBox } from "@bmad/ui";
-import { checkAddMore, useIsIngestComplete } from "../../store/ingestStore";
+import { checkAddMore, useIsBatchParsing } from "../../store/ingestStore";
 import { ingestPhotos, isImageFile } from "./ingestPhotos";
 
 /**
@@ -9,16 +9,19 @@ import { ingestPhotos, isImageFile } from "./ingestPhotos";
  * cap-checks (AD-7) before any file reaches the worker; exact duplicates are
  * dropped silently, a would-exceed-cap selection is rejected wholesale.
  *
- * Disabled while a batch is already parsing (`!ingestComplete`) — otherwise a
- * second "Add more" dispatched before the first one commits reads stale
- * `fileCount`/`signatures` (the in-flight batch hasn't landed in the store
- * yet), letting the cap check and dedup both be bypassed.
+ * Disabled while a batch is already parsing (`isParsing`) — otherwise a
+ * second "Add more" dispatched before the first one finishes reads stale
+ * `fileCount`/`signatures` (the in-flight batch hasn't fully landed in the
+ * store yet), letting the cap check and dedup both be bypassed. Keyed on
+ * `useIsBatchParsing()`, not `useIsIngestComplete()` — the latter flips true
+ * on the first photo of a batch (round-18's progressive-commit design), well
+ * before the rest of the batch has finished parsing.
  */
 export function AddMoreControl() {
   const [limitMessage, setLimitMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
-  const ingestComplete = useIsIngestComplete();
+  const isParsing = useIsBatchParsing();
 
   function handleAddPhotosClick() {
     setLimitMessage(null);
@@ -46,6 +49,7 @@ export function AddMoreControl() {
     event.target.value = "";
 
     if (selected.length === 0) {
+      setLimitMessage("No photos found in that selection.");
       return;
     }
 
@@ -69,10 +73,10 @@ export function AddMoreControl() {
 
   return (
     <div className="relative flex gap-3">
-      <Button type="button" onClick={handleAddPhotosClick} disabled={!ingestComplete}>
+      <Button type="button" onClick={handleAddPhotosClick} disabled={isParsing}>
         Add photos
       </Button>
-      <Button type="button" variant="outline" onClick={handleAddFolderClick} disabled={!ingestComplete}>
+      <Button type="button" variant="outline" onClick={handleAddFolderClick} disabled={isParsing}>
         Add folder
       </Button>
       <input
@@ -80,7 +84,7 @@ export function AddMoreControl() {
         type="file"
         accept="image/*"
         multiple
-        disabled={!ingestComplete}
+        disabled={isParsing}
         onChange={handleFilesSelected}
         className="hidden"
         tabIndex={-1}
@@ -95,7 +99,7 @@ export function AddMoreControl() {
         }}
         type="file"
         multiple
-        disabled={!ingestComplete}
+        disabled={isParsing}
         onChange={handleFilesSelected}
         className="hidden"
         tabIndex={-1}

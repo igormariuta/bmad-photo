@@ -1,5 +1,12 @@
 # Deferred Work
 
+## Deferred from: code review of 3-5-photo-detail-modal (2026-07-08)
+
+- **Load-bearing dependency on `heic2any` (pinned `^0.0.4`, pre-1.0)** [apps/gallery/package.json, apps/gallery/src/features/ingest/ingestPhotos.ts] — the sole path making any HEIC/HEIF photo displayable anywhere in the app, with a documented non-reentrant-WASM concurrency bug already worked around by a hand-rolled serial queue and no fallback decoder. Needs a deliberate vendor-evaluation decision, not a quick patch.
+- **Worker→main-thread file/message pairing relies on strict sequential ordering with no id carried in the message to verify it** [apps/gallery/src/features/ingest/ingestPhotos.ts:136-164] — correct today since the worker's `parseBatch` processes files strictly in order, one at a time; silently fragile against any future move toward parallel/out-of-order parsing.
+- **Progressive per-photo commits mean up to ~2×N store updates/re-renders for an N-photo batch** [apps/gallery/src/features/ingest/ingestPhotos.ts, apps/gallery/src/store/ingestStore.ts] — one `commitPhotos` call per EXIF-parse completion plus one `updatePhotoMedia` call per media-ready completion, instead of one batched commit. Inherent trade-off of the explicit user-requested progressive-loading redesign (round 3, "чтоб они постепенно появлялись"); unmeasured cost for large batches.
+- **Heavy iterative churn on shared `packages/ui` components verified only via this app's own checks** [packages/ui/src/Modal, ModalHeader, Panel, StatBar, HeaderBar, UnderlineTabs, Sparkline] — `Modal`, `ModalHeader`, `Panel`, `StatBar`, `HeaderBar`, `UnderlineTabs`, and `Sparkline` were all modified across many rounds of this one consumer's feedback loop; no evidence `@bmad/landing` (the other real `@bmad/ui` consumer) was visually checked against any of the new props/variants added along the way.
+
 ## Deferred from: code review of 3-4-empty-filtered-state (2026-07-08)
 
 - **No automated component-rendering regression test for the new Browse.tsx empty-filtered branch** [apps/gallery/src/features/browse/Browse.tsx] — pre-existing gap: no jsdom/React Testing Library component-test infra in this repo (vitest runs with `environment: "node"`); verified live via Playwright against synthetic EXIF fixtures instead, matching prior stories' precedent (e.g. 3.2's deferred "no component-level test for PhotoGridCell").

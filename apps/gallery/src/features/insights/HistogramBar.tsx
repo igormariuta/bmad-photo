@@ -13,7 +13,13 @@ export interface HistogramBarProps {
  * Extends StatBar's (packages/ui) block-cell visual language with a
  * right-aligned count — Insights needs both, unlike the generic StatBar.
  * Kept Gallery-local (not packages/ui): Insights is its only consumer
- * anywhere in this project.
+ * anywhere in this project. The bar column is `auto`-sized to its own
+ * cell strip, not `1fr` (round-6 bug fix, 2026-07-08, user report) — `1fr`
+ * stretched that grid track to fill the whole row width regardless of how
+ * many cells were actually rendered, leaving a large gap between the last
+ * cell and the count. `auto`/`auto` packs both to the content's natural
+ * width, left-aligned, with any unused row width simply left empty after
+ * the count instead of stretched into the bar.
  */
 export function HistogramBar({ label, value, count, cells = 48, className = "" }: HistogramBarProps) {
   const pct = Math.min(100, Math.max(0, Math.round(value)));
@@ -22,7 +28,7 @@ export function HistogramBar({ label, value, count, cells = 48, className = "" }
   return (
     <div
       className={`grid h-5 items-center gap-3 rounded ${className}`}
-      style={{ gridTemplateColumns: "72px 1fr auto" }}
+      style={{ gridTemplateColumns: "72px auto auto" }}
     >
       <span className="truncate text-data-label text-muted2 uppercase">{label}</span>
       <span

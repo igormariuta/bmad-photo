@@ -14,7 +14,7 @@ export interface HeaderBarProps {
  * there is nowhere else in either app to point. */
 export function HeaderBar({ wordmark, wordmarkAccent, actions }: HeaderBarProps) {
   return (
-    <header className="flex h-header-height items-center justify-between border-b-2 border-line bg-bg px-gutter">
+    <header className="flex h-header-height items-center justify-between border-b-2 border-dim bg-bg px-gutter">
       <span className="font-display text-h3 font-bold text-fg">
         {wordmark}
         <span className="text-accent">{wordmarkAccent}</span>

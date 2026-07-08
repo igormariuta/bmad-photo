@@ -53,15 +53,20 @@ export function App() {
         // scroll position independently (Story 3.1's original AC #2) since
         // there's one shared page scroll position now — accepted
         // deliberately, same as the AD-3/AC #5 reversal above.
-        <div className="mx-auto flex w-full max-w-container-max flex-1 flex-col gap-10 px-gutter py-8 lg:flex-row">
+        <div className="mx-auto flex w-full max-w-container-max flex-1 flex-col gap-section-rhythm px-gutter py-8 lg:flex-row">
           {/* Facet-panel is global (dev-story fix-up, 2026-07-08) — one
            * persistent instance to the left of both tabs, filtering
            * Browse's grid and Insights' aggregate numbers alike. Desktop
            * only for now (mobile slide-up sheet deferred — see
-           * deferred-work.md). */}
+           * deferred-work.md). `self-start` (round-2 fix, 2026-07-08, user
+           * report) opts out of the row's default stretch — otherwise this
+           * sidebar's height matched the (usually much taller) tab content
+           * next to it, leaving a large empty box below its own content. No
+           * border (round-5, user request) — `bg-panel` alone sets it off
+           * from the page background. */}
           <aside
             aria-label="Facets"
-            className="hidden flex-none border-2 border-dim bg-panel p-card-padding lg:block lg:w-sidebar-width"
+            className="hidden flex-none self-start bg-panel p-card-padding lg:block lg:w-sidebar-width"
           >
             <FacetPanel />
           </aside>

@@ -43,6 +43,20 @@ export function formatLensLabel(focalLengthMm: number | undefined): string | und
 }
 
 /**
+ * Rounds to 1 decimal — real phone EXIF `apertureF`/`exposureCompEv` compute
+ * as imprecise floats (e.g. `1.7799999713880652`) rather than the clean
+ * `1.8` a camera actually reports (round-12, 2026-07-08, user report).
+ * Applied at normalization, to the *stored* value, not just at display —
+ * two photos at "the same" real f-stop/EV need identical stored numbers so
+ * the Facet-panel's exact-equality dedup (`distinctSortedNumbers`, a `Set`)
+ * and exact-equality filter matching (`matchesDiscrete`) both treat them as
+ * one value instead of two near-identical, visually-duplicate entries.
+ */
+export function roundToOneDecimal(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
+/**
  * EXIF's DateTimeOriginal is "YYYY:MM:DD HH:MM:SS" with no timezone info.
  * Stored as a timezone-naive ISO-8601 string rather than guessing an offset
  * — Story 2.4's hour-of-day bucketing needs local time, and a false UTC
@@ -64,22 +78,23 @@ export function hasUsableExifData(fields: RawExifFields): boolean {
   return Object.values(fields).some((value) => value !== undefined);
 }
 
-export function normalizeExifFields(fields: RawExifFields): Omit<WorkerPhoto, "blob"> {
+export function normalizeExifFields(fields: RawExifFields): Omit<WorkerPhoto, "blob" | "fileName"> {
   return {
     id: crypto.randomUUID(),
     readable: true,
     focalLengthMm: fields.focalLengthMm,
     lensLabel: formatLensLabel(fields.focalLengthMm),
     iso: fields.iso,
-    apertureF: fields.apertureF,
+    apertureF: fields.apertureF === undefined ? undefined : roundToOneDecimal(fields.apertureF),
     shutterSpeedSec: fields.shutterSpeedSec,
-    exposureCompEv: fields.exposureCompEv,
+    exposureCompEv:
+      fields.exposureCompEv === undefined ? undefined : roundToOneDecimal(fields.exposureCompEv),
     capturedAt: parseCapturedAt(fields.capturedAtRaw),
     megapixelMode: deriveMegapixelMode(fields.pixelWidth, fields.pixelHeight),
     camera: deriveCameraFacing(fields.lensModelDescription),
   };
 }
 
-export function createUnreadablePhoto(): Omit<WorkerPhoto, "blob"> {
+export function createUnreadablePhoto(): Omit<WorkerPhoto, "blob" | "fileName"> {
   return { id: crypto.randomUUID(), readable: false };
 }

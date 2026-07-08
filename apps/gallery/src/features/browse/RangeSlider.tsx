@@ -269,9 +269,10 @@ export function SingleSlider({ min, max, step = 1, value, onChange }: SingleSlid
   return (
     <div className="px-2">
       <div ref={trackRef} className="relative flex h-4 items-center" onPointerDown={handleTrackPointerDown}>
-        <div className="h-0.5 w-full bg-dim">
-          <div className="h-full bg-accent" style={{ width: `${percent}%` }} />
-        </div>
+        {/* No accent fill here (unlike RangeSlider's two-thumb track) — a single
+         * picked value has no "selected span from zero" to represent; only the
+         * thumb itself needs the accent color (user report, 2026-07-08). */}
+        <div className="h-0.5 w-full bg-dim" />
         <StepTicks min={min} max={max} step={step} />
         <div
           role="slider"

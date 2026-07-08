@@ -1,6 +1,9 @@
 export interface Photo {
   id: string;
   readable: boolean;
+  /** The original `File.name` — always present (every `File` object has one), unlike the
+   * EXIF-derived fields below which may genuinely be missing. */
+  fileName: string;
   focalLengthMm?: number;
   lensLabel?: string;
   iso?: number;

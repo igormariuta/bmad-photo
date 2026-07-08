@@ -1,6 +1,7 @@
 import {
   beginIngest,
   commitPhotos,
+  finishIngestBatch,
   updatePhotoMedia,
   updateProgress,
 } from "../../store/ingestStore";
@@ -15,7 +16,7 @@ const IMAGE_EXTENSION = /\.(jpe?g|png|heic|heif|webp|gif|bmp|tiff?)$/i;
  * `accept` attribute for directory picks. Filtering here, before any cap-check/dedup/worker
  * dispatch, keeps a folder of otherwise-all-photos from being wrongly counted against the
  * 100-photo cap by a few incidental non-image files. Falls back to the filename extension since
- * some OSes don't reliably set `File.type` for less common formats (the same gap `isHeic` above
+ * some OSes don't reliably set `File.type` for less common formats (the same gap `isHeic` below
  * already works around). */
 export function isImageFile(file: File): boolean {
   return file.type.startsWith("image/") || IMAGE_EXTENSION.test(file.name);
@@ -150,6 +151,7 @@ export function ingestPhotos(files: File[]): void {
 
     if (message.type === "complete") {
       worker.terminate();
+      finishIngestBatch();
       return;
     }
 

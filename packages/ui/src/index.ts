@@ -48,7 +48,7 @@ export { UnderlineTabs } from "./UnderlineTabs/UnderlineTabs";
 export type { UnderlineTabsProps, UnderlineTabItem } from "./UnderlineTabs/UnderlineTabs";
 
 export { Modal } from "./Modal/Modal";
-export type { ModalProps } from "./Modal/Modal";
+export type { ModalProps, ModalVariant } from "./Modal/Modal";
 
 export { ModalHeader } from "./Modal/ModalHeader";
 export type { ModalHeaderProps } from "./Modal/ModalHeader";

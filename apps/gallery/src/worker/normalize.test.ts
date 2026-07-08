@@ -5,6 +5,7 @@ import {
   formatLensLabel,
   hasUsableExifData,
   parseCapturedAt,
+  roundToOneDecimal,
 } from "./normalize";
 
 describe("deriveMegapixelMode", () => {
@@ -61,6 +62,23 @@ describe("parseCapturedAt", () => {
   it("returns undefined when the raw value is missing or malformed", () => {
     expect(parseCapturedAt(undefined)).toBeUndefined();
     expect(parseCapturedAt("not-a-date")).toBeUndefined();
+  });
+});
+
+describe("roundToOneDecimal", () => {
+  it("rounds imprecise real-phone EXIF floats to 1 decimal", () => {
+    expect(roundToOneDecimal(1.7799999713880652)).toBe(1.8);
+    expect(roundToOneDecimal(0.33539035466185535)).toBe(0.3);
+    expect(roundToOneDecimal(-0.669083118102841)).toBe(-0.7);
+  });
+
+  it("collapses near-identical floats to the same rounded value", () => {
+    expect(roundToOneDecimal(0.33539035466185535)).toBe(roundToOneDecimal(0.3353903590644559));
+  });
+
+  it("leaves already-clean values unchanged", () => {
+    expect(roundToOneDecimal(1.8)).toBe(1.8);
+    expect(roundToOneDecimal(2)).toBe(2);
   });
 });
 
