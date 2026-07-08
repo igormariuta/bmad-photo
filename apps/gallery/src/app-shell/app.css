@@ -1,3 +1,15 @@
 @import "@bmad/theme/index.css";
 @import "tailwindcss";
 @import "@bmad/theme/tailwind-preset";
+
+/* Neither `packages/theme` nor `index.html` paints an actual background —
+ * `.dark` only flips the `--m-*` custom properties. Without this, the page
+ * outside components that explicitly set `bg-bg` (e.g. Header-bar) falls
+ * back to the browser's default white, so dark mode never reaches the rest
+ * of the page. */
+html,
+body {
+  min-height: 100%;
+  background-color: var(--m-bg);
+  color: var(--m-fg);
+}

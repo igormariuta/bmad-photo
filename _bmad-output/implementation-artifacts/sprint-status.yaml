@@ -42,6 +42,9 @@
 
 generated: 2026-07-06
 last_updated: 2026-07-08
+# 3-1 moved review → done (2026-07-08): accepted directly by user after live testing (no formal code-review workflow run this round) — live testing caught and fixed the two defects noted below, then approved
+# 3-1 moved in-progress → review (2026-07-08): UnderlineTabs mechanism under Header-bar with dual-mounted Insights/Browse panels, each in its own overflow-y-auto scroll region inside a h-screen flex shell (preserves Insights' scroll position across tab switches); AD-3 insights/browse import-boundary eslint rule (deferred from Story 1.3) added to packages/eslint-config, verified fails/passes in both directions then reverted; Browse.tsx placeholder panel added; turbo lint/build/test all pass (10/10 tasks, 38 existing Vitest tests untouched) — no browser-automation tooling available this session, so scroll-preservation was verified via code/CSS-level reasoning rather than a live Playwright run; live user testing then caught two real defects — dark mode not reaching the page background outside Header-bar (base html/body rule added to apps/gallery/app.css) and no top padding on the Tabs row (UnderlineTabs.tsx pb-3 → py-3) — both fixed and re-verified clean
+# 3-1 moved ready-for-dev → in-progress (2026-07-08): starting UnderlineTabs Insights/Browse split + AD-3 insights/browse import-boundary lint rule + Browse placeholder
 # 2-5 moved review → done (2026-07-08): 3-layer adversarial code review (Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 5 patches applied (disabled the persistent "Add photos" trigger while a batch is mid-parse, closing a real cap/dedup-bypass bug all three review layers independently converged on; intra-batch dedup in dedupeAndCapCheck; extracted+unit-tested a pure mergeCommit reducer out of commitPhotos; hardened fileSignature to a JSON-encoded key though the original join was already safe on analysis; deduplicated MAX_PHOTOS_PER_INGEST between EmptyState.tsx and ingestStore.ts), 4 deferred (worker.onerror still absent, no component/e2e test infra in repo, fileCount field overloaded, rejection InfoBox doesn't re-announce identical messages — matches EmptyState's existing pattern), 5 dismissed as noise
 # 2-5 moved in-progress → review (2026-07-08): AddMoreControl (persistent Header-bar "Add photos" trigger), ingestStore gained a signatures Set (dedup key) + hasCommittedOnce flag, commitPhotos now always appends (photos + files' signatures) instead of replacing, pure dedupeAndCapCheck (dedupe-then-cap-check per AD-7) unit-tested directly, App.tsx gate keeps the Header-bar visible during a later Add More parse (only first-ever Ingest is full-screen); turbo lint/build/test all pass (32 Vitest tests, 7 new); verified live via Playwright against synthetic EXIF fixtures (first ingest, add-more with dup+new mix, over-cap rejection) — caught and fixed a real live-input-reset-ordering bug that silently no-opped every Add More
 # 2-5 moved ready-for-dev → in-progress (2026-07-08): starting Header-bar "Add more" trigger + dedup signature set + cumulative cap + append-only store update
@@ -89,7 +92,7 @@ development_status:
   epic-2-retrospective: optional
 
   epic-3: in-progress
-  3-1-underlinetabs-insights-browse-split: ready-for-dev
+  3-1-underlinetabs-insights-browse-split: done
   3-2-photo-grid-browse-unfiltered-view: ready-for-dev
   3-3-facet-panel-live-filtering: ready-for-dev
   3-4-empty-filtered-state: ready-for-dev

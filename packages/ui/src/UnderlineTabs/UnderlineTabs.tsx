@@ -57,7 +57,7 @@ export function UnderlineTabs({
             tabIndex={active ? 0 : -1}
             onClick={() => onSelect(tab.id)}
             onKeyDown={(event) => onKeyDown(event, index)}
-            className={`-mb-0.5 border-b-2 pb-3 text-eyebrow uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+            className={`-mb-0.5 border-b-2 py-3 text-eyebrow uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
               active ? "border-accent text-fg" : "border-transparent text-muted2 hover:text-fg"
             }`}
           >
