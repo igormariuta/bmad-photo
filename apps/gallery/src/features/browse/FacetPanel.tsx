@@ -5,6 +5,7 @@ import {
   setFacetFilter,
   useFacetFilters,
   useLensOptions,
+  useNumericFacetBounds,
   type RangeFilter,
 } from "../../store/ingestStore";
 import { RangeControl } from "./RangeControl";
@@ -38,31 +39,57 @@ interface FacetFieldProps {
   children: ReactNode;
 }
 
-/** Collapsed summary trigger (`data-label` + current value + chevron) that
+/**
+ * Collapsed summary trigger (`data-label` + current value + chevron) that
  * expands to the real control on interaction, per the mockup's
  * collapsed/expandable facet-field pattern (Dev Notes). Independent
  * per-field open state — Dev Notes only rule out all 8 being open at once
- * by default, not a strict single-open accordion. */
+ * by default, not a strict single-open accordion.
+ *
+ * The outer `data-label` only renders while collapsed — every child control
+ * (Select/RadioGroup/RangeControl) already renders its own label/legend, so
+ * showing both at once produced a literal duplicate ("MEGAPIXEL MODE" twice)
+ * once expanded (user-reported fix, 2026-07-08). Expanded state instead
+ * shows just a small collapse affordance.
+ */
 function FacetField({ label, summary, children }: FacetFieldProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  if (isExpanded) {
+    return (
+      <div className="border-b-2 border-dim pb-2">
+        <button
+          type="button"
+          onClick={() => setIsExpanded(false)}
+          aria-expanded
+          className="mb-1 flex w-full items-center justify-end text-muted2 hover:text-fg"
+        >
+          <span aria-hidden="true" className="-rotate-180">
+            ▾
+          </span>
+          <span className="sr-only">Collapse {label}</span>
+        </button>
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div className="border-b-2 border-dim pb-2">
       <button
         type="button"
-        onClick={() => setIsExpanded((expanded) => !expanded)}
-        aria-expanded={isExpanded}
+        onClick={() => setIsExpanded(true)}
+        aria-expanded={false}
         className="flex w-full flex-col items-start gap-2 text-left"
       >
         <span className="text-data-label text-muted2 uppercase">{label}</span>
         <span className="flex w-full items-center justify-between text-body text-fg">
           {summary}
-          <span aria-hidden="true" className={`text-muted2 transition-transform ${isExpanded ? "-rotate-180" : ""}`}>
+          <span aria-hidden="true" className="text-muted2">
             ▾
           </span>
         </span>
       </button>
-      {isExpanded && <div className="mt-3">{children}</div>}
     </div>
   );
 }
@@ -77,6 +104,7 @@ function FacetField({ label, summary, children }: FacetFieldProps) {
 export function FacetPanel() {
   const filters = useFacetFilters();
   const lensOptions = useLensOptions();
+  const bounds = useNumericFacetBounds();
 
   const [isoMin, isoMax] = rangeToStrings(filters.iso);
   const [apertureMin, apertureMax] = rangeToStrings(filters.aperture);
@@ -110,6 +138,7 @@ export function FacetPanel() {
           min={isoMin}
           max={isoMax}
           onChange={(min, max) => setFacetFilter("iso", stringsToRange(min, max))}
+          sliderBounds={[bounds.isoMin, bounds.isoMax]}
         />
       </FacetField>
 
@@ -140,6 +169,8 @@ export function FacetPanel() {
           onChange={(min, max) => setFacetFilter("aperture", stringsToRange(min, max))}
           min={apertureMin}
           max={apertureMax}
+          sliderBounds={[bounds.apertureMin, bounds.apertureMax]}
+          sliderStep={0.1}
         />
       </FacetField>
 
@@ -153,6 +184,8 @@ export function FacetPanel() {
           min={shutterMin}
           max={shutterMax}
           onChange={(min, max) => setFacetFilter("shutter", stringsToRange(min, max))}
+          sliderBounds={[bounds.shutterMin, bounds.shutterMax]}
+          sliderStep={0.001}
         />
       </FacetField>
 
@@ -166,6 +199,8 @@ export function FacetPanel() {
           min={exposureCompMin}
           max={exposureCompMax}
           onChange={(min, max) => setFacetFilter("exposureComp", stringsToRange(min, max))}
+          sliderBounds={[bounds.exposureCompMin, bounds.exposureCompMax]}
+          sliderStep={0.1}
         />
       </FacetField>
 

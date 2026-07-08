@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  computeBounds,
   dedupeAndCapCheck,
   DEFAULT_FACET_FILTERS,
   fileSignature,
@@ -195,5 +196,19 @@ describe("matchesFacetFilters", () => {
     expect(matchesFacetFilters(photo({ lensLabel: "24mm", iso: 200 }), f)).toBe(true);
     expect(matchesFacetFilters(photo({ lensLabel: "48mm", iso: 200 }), f)).toBe(false);
     expect(matchesFacetFilters(photo({ lensLabel: "24mm", iso: 800 }), f)).toBe(false);
+  });
+});
+
+describe("computeBounds", () => {
+  it("returns the fallback [0, 1] for an empty set", () => {
+    expect(computeBounds([])).toEqual([0, 1]);
+  });
+
+  it("returns [min, max] for a normal set", () => {
+    expect(computeBounds([200, 800, 400])).toEqual([200, 800]);
+  });
+
+  it("widens a degenerate single-value set by 1 so the slider has a draggable range", () => {
+    expect(computeBounds([400, 400, 400])).toEqual([400, 401]);
   });
 });

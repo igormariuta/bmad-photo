@@ -1,24 +1,27 @@
 import { useState } from "react";
 import { HeaderBar, UnderlineTabs, type UnderlineTabItem } from "@bmad/ui";
 import { Browse } from "../features/browse/Browse";
+import { FacetPanel } from "../features/browse/FacetPanel";
 import { AddMoreControl } from "../features/ingest/AddMoreControl";
 import { EmptyState } from "../features/ingest/EmptyState";
 import { IngestProgress } from "../features/ingest/IngestProgress";
 import { Insights } from "../features/insights/Insights";
 import { useHasCommittedOnce, useIngestedFileCount, useIsIngestComplete } from "../store/ingestStore";
 
-type GalleryTabId = "insights" | "browse";
+type GalleryTabId = "browse" | "insights";
 
+// Browse first — photos are the primary thing a user wants to see;
+// Insights is a bonus (user direction, 2026-07-08).
 const GALLERY_TABS: UnderlineTabItem[] = [
-  { id: "insights", label: "Insights" },
   { id: "browse", label: "Browse" },
+  { id: "insights", label: "Insights" },
 ];
 
 export function App() {
   const ingestedFileCount = useIngestedFileCount();
   const ingestComplete = useIsIngestComplete();
   const hasCommittedOnce = useHasCommittedOnce();
-  const [currentTab, setCurrentTab] = useState<GalleryTabId>("insights");
+  const [currentTab, setCurrentTab] = useState<GalleryTabId>("browse");
 
   if (ingestedFileCount === 0) {
     return <EmptyState />;
@@ -35,25 +38,37 @@ export function App() {
     <div className="flex h-screen flex-col">
       <HeaderBar wordmark="EXIF " wordmarkAccent="GALLERY" actions={<AddMoreControl />} />
       {ingestComplete ? (
-        <>
-          <UnderlineTabs
-            ariaLabel="Gallery views"
-            current={currentTab}
-            onSelect={(id) => setCurrentTab(id as GalleryTabId)}
-            tabs={GALLERY_TABS}
-            className="px-gutter"
-          />
-          {/* Both panels stay mounted at all times (no client-side router
-           * exists) — only the inactive one is visually hidden, via its own
-           * scrollable region, so switching tabs never resets its scroll
-           * position (AC #2). */}
-          <div className="min-h-0 flex-1 overflow-y-auto" role="tabpanel" hidden={currentTab !== "insights"}>
-            <Insights />
+        <div className="mx-auto flex min-h-0 w-full max-w-container-max flex-1 flex-col gap-10 px-gutter py-8 lg:flex-row">
+          {/* Facet-panel is global (dev-story fix-up, 2026-07-08) — one
+           * persistent instance to the left of both tabs, filtering
+           * Browse's grid and Insights' aggregate numbers alike. Desktop
+           * only for now (mobile slide-up sheet deferred — see
+           * deferred-work.md). */}
+          <aside
+            aria-label="Facets"
+            className="hidden flex-none overflow-y-auto border-2 border-dim bg-panel p-card-padding lg:block lg:w-sidebar-width"
+          >
+            <FacetPanel />
+          </aside>
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+            <UnderlineTabs
+              ariaLabel="Gallery views"
+              current={currentTab}
+              onSelect={(id) => setCurrentTab(id as GalleryTabId)}
+              tabs={GALLERY_TABS}
+            />
+            {/* Both panels stay mounted at all times (no client-side router
+             * exists) — only the inactive one is visually hidden, via its own
+             * scrollable region, so switching tabs never resets its scroll
+             * position (AC #2, Story 3.1). */}
+            <div className="min-h-0 flex-1 overflow-y-auto" role="tabpanel" hidden={currentTab !== "browse"}>
+              <Browse />
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto" role="tabpanel" hidden={currentTab !== "insights"}>
+              <Insights />
+            </div>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto" role="tabpanel" hidden={currentTab !== "browse"}>
-            <Browse />
-          </div>
-        </>
+        </div>
       ) : (
         <IngestProgress />
       )}

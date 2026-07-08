@@ -1,5 +1,6 @@
 import { useEffect, useState, type ChangeEvent } from "react";
 import { Field } from "@bmad/ui";
+import { RangeSlider } from "./RangeSlider";
 
 export interface RangeControlProps {
   /** Stable key used to derive each Field's id — e.g. "iso", "date". */
@@ -16,6 +17,11 @@ export interface RangeControlProps {
   min: string;
   max: string;
   onChange: (min: string, max: string) => void;
+  /** Domain bounds for the optional dual-thumb slider (user request,
+   * 2026-07-08) — `type="date"` or an omitted prop skips the slider,
+   * falling back to the two Fields alone. */
+  sliderBounds?: [number, number];
+  sliderStep?: number;
 }
 
 /** Pure so the min>max rule (AC #3) is unit-testable without rendering.
@@ -48,6 +54,8 @@ export function RangeControl({
   min,
   max,
   onChange,
+  sliderBounds,
+  sliderStep,
 }: RangeControlProps) {
   const [draftMin, setDraftMin] = useState(min);
   const [draftMax, setDraftMax] = useState(max);
@@ -59,26 +67,45 @@ export function RangeControl({
 
   const invalid = isRangeInvalid(type, draftMin, draftMax);
 
-  function handleMinChange(event: ChangeEvent<HTMLInputElement>) {
-    const value = event.target.value;
-    setDraftMin(value);
-    if (!isRangeInvalid(type, value, draftMax)) {
-      onChange(value, draftMax);
+  function commit(nextMin: string, nextMax: string) {
+    setDraftMin(nextMin);
+    setDraftMax(nextMax);
+    if (!isRangeInvalid(type, nextMin, nextMax)) {
+      onChange(nextMin, nextMax);
     }
   }
 
+  function handleMinChange(event: ChangeEvent<HTMLInputElement>) {
+    commit(event.target.value, draftMax);
+  }
+
   function handleMaxChange(event: ChangeEvent<HTMLInputElement>) {
-    const value = event.target.value;
-    setDraftMax(value);
-    if (!isRangeInvalid(type, draftMin, value)) {
-      onChange(draftMin, value);
-    }
+    commit(draftMin, event.target.value);
+  }
+
+  // The slider always produces an in-range (valid) pair by construction —
+  // hidden while the Fields are mid-edit and invalid so it never shows a
+  // stale position fighting with the error text below.
+  const showSlider = type === "number" && sliderBounds !== undefined && !invalid;
+
+  function handleSliderChange(nextMin: number, nextMax: number) {
+    commit(String(nextMin), String(nextMax));
   }
 
   return (
     <div>
       <div className="mb-2 text-data-label text-muted2 uppercase">{dataLabel}</div>
-      <div className="flex gap-3">
+      {showSlider && (
+        <RangeSlider
+          min={sliderBounds[0]}
+          max={sliderBounds[1]}
+          step={sliderStep}
+          valueMin={draftMin === "" ? sliderBounds[0] : Number(draftMin)}
+          valueMax={draftMax === "" ? sliderBounds[1] : Number(draftMax)}
+          onChange={handleSliderChange}
+        />
+      )}
+      <div className={`flex gap-3 ${type === "date" ? "flex-col" : ""} ${showSlider ? "mt-4" : ""}`}>
         <Field id={`${id}-min`} label={minLabel} type={type} value={draftMin} onChange={handleMinChange} />
         <Field
           id={`${id}-max`}
