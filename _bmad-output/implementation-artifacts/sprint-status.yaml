@@ -42,6 +42,9 @@
 
 generated: 2026-07-06
 last_updated: 2026-07-08
+# 2-5 moved review → done (2026-07-08): 3-layer adversarial code review (Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 5 patches applied (disabled the persistent "Add photos" trigger while a batch is mid-parse, closing a real cap/dedup-bypass bug all three review layers independently converged on; intra-batch dedup in dedupeAndCapCheck; extracted+unit-tested a pure mergeCommit reducer out of commitPhotos; hardened fileSignature to a JSON-encoded key though the original join was already safe on analysis; deduplicated MAX_PHOTOS_PER_INGEST between EmptyState.tsx and ingestStore.ts), 4 deferred (worker.onerror still absent, no component/e2e test infra in repo, fileCount field overloaded, rejection InfoBox doesn't re-announce identical messages — matches EmptyState's existing pattern), 5 dismissed as noise
+# 2-5 moved in-progress → review (2026-07-08): AddMoreControl (persistent Header-bar "Add photos" trigger), ingestStore gained a signatures Set (dedup key) + hasCommittedOnce flag, commitPhotos now always appends (photos + files' signatures) instead of replacing, pure dedupeAndCapCheck (dedupe-then-cap-check per AD-7) unit-tested directly, App.tsx gate keeps the Header-bar visible during a later Add More parse (only first-ever Ingest is full-screen); turbo lint/build/test all pass (32 Vitest tests, 7 new); verified live via Playwright against synthetic EXIF fixtures (first ingest, add-more with dup+new mix, over-cap rejection) — caught and fixed a real live-input-reset-ordering bug that silently no-opped every Add More
+# 2-5 moved ready-for-dev → in-progress (2026-07-08): starting Header-bar "Add more" trigger + dedup signature set + cumulative cap + append-only store update
 # 2-4 moved review → done (2026-07-08): 3-layer adversarial code review (Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 1 patch applied (empty-row dimension panels now show a "No data for this batch." placeholder), 5 deferred (rounding-doesn't-sum-to-100% cosmetic artifact, no validation for malformed/negative bucketing inputs, ingestStore's complete flag not derived, restated pre-existing missing-worker.onerror gap from Stories 2.2/2.3, minor wordmark letter-spacing fidelity nit), 10 dismissed as noise
 # 2-4 moved ready-for-dev → in-progress (2026-07-07): starting Header-bar/Panel gap-fills + Histogram-bar aggregation logic + Insights view
 # 2-4 moved in-progress → review (2026-07-07): new Header-bar/Panel (packages/ui), Gallery-local HistogramBar + aggregations.ts (7 FR-7 dimensions, per-field denominators per AD-4), Insights.tsx composition (unreadable-count InfoBox, distinct all-unreadable empty state), ingestStore gained a complete flag/useIsIngestComplete() selector, App.tsx gate is now 3-way (empty-state/progress/header+Insights); turbo lint/build/test all pass (25 Vitest tests, 12 new); verified live via Playwright against synthetic EXIF fixtures (mixed/all-readable/all-unreadable batches)
@@ -82,7 +85,7 @@ development_status:
   2-2-in-browser-metadata-extraction-web-worker: done
   2-3-ingest-progress-indicator: done
   2-4-insights-dashboard: done
-  2-5-repeat-ingest-add-more-append-dedupe-cumulative-cap: ready-for-dev
+  2-5-repeat-ingest-add-more-append-dedupe-cumulative-cap: done
   epic-2-retrospective: optional
 
   epic-3: in-progress

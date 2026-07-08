@@ -25,7 +25,7 @@ export function ingestPhotos(files: File[]): void {
       thumbnailUrl: URL.createObjectURL(blob),
     }));
 
-    commitPhotos(photos);
+    commitPhotos(photos, files);
     worker.terminate();
   };
 

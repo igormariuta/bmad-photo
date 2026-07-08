@@ -1,5 +1,12 @@
 # Deferred Work
 
+## Deferred from: code review of 2-5-repeat-ingest-add-more-append-dedupe-cumulative-cap (2026-07-08)
+
+- **Worker error handling still absent** [apps/gallery/src/features/ingest/ingestPhotos.ts] — restates the already-known missing `worker.onerror` gap carried over unaddressed from Stories 2.2/2.3/2.4; Add More now makes repeated ingest actions more common but doesn't introduce the gap itself.
+- **No automated component/e2e test coverage for the AddMoreControl input-reset-ordering regression, App.tsx's 3-way branch, or the Playwright-verified flows** [apps/gallery/src/features/ingest/AddMoreControl.tsx, apps/gallery/src/app-shell/App.tsx] — the repo has no React Testing Library/e2e framework installed, so these were verified live via a one-off Playwright script instead (consistent with every prior story's verification approach); worth a real component-test harness in a future story.
+- **`fileCount` is overloaded (cumulative library size vs. transient in-flight batch size)** [apps/gallery/src/store/ingestStore.ts] — root-cause design smell underlying the concurrency bug patched in this review (the "Add More" trigger is now disabled while a batch is in flight, so no consumer currently observes the staleness); a full split into two distinct fields is a larger refactor not required for AC compliance today.
+- **Rejection `InfoBox`/`role="alert"` doesn't re-announce an identical repeated message, and has no dismiss affordance** [apps/gallery/src/features/ingest/AddMoreControl.tsx] — matches `EmptyState.tsx`'s existing, already-shipped pattern; not a regression introduced by this story.
+
 ## Deferred from: code review of 2-4-insights-dashboard (2026-07-07)
 
 - **Per-row percentages can fail to sum to 100% within a dimension** [apps/gallery/src/features/insights/aggregations.ts] — cosmetic rounding artifact from independent per-row `Math.round`; no AC requires rows to sum to 100%, and no largest-remainder correction is implemented.

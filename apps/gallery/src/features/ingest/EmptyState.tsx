@@ -1,8 +1,7 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import { Button, InfoBox } from "@bmad/ui";
+import { MAX_PHOTOS_PER_INGEST } from "../../store/ingestStore";
 import { ingestPhotos } from "./ingestPhotos";
-
-const MAX_PHOTOS_PER_INGEST = 100;
 
 /**
  * First-run screen: no Ingested photos yet. No header/tabs/panel chrome
