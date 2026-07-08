@@ -1,5 +1,9 @@
 # Deferred Work
 
+## Deferred from: code review of 4-1-header-hero (2026-07-08)
+
+- **`GlitchText`'s one-shot animation has no guard against remounts** [apps/landing/src/components/GlitchText.tsx] — the "never loops" guarantee holds only within a single mount (no `infinite` in the keyframe); a future remount (key change, prop-driven remount) would replay the settle-in. Not reachable by any code path in this story (`Hero.astro` is fully static), so not actionable now — revisit if `GlitchText` ever gains props/state that could trigger a remount.
+
 ## Deferred from: code review of 3-5-photo-detail-modal (2026-07-08)
 
 - **Load-bearing dependency on `heic2any` (pinned `^0.0.4`, pre-1.0)** [apps/gallery/package.json, apps/gallery/src/features/ingest/ingestPhotos.ts] — the sole path making any HEIC/HEIF photo displayable anywhere in the app, with a documented non-reentrant-WASM concurrency bug already worked around by a hand-rolled serial queue and no fallback decoder. Needs a deliberate vendor-evaluation decision, not a quick patch.

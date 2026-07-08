@@ -42,6 +42,9 @@
 
 generated: 2026-07-06
 last_updated: 2026-07-08
+# 4-1 code review (2026-07-08): 3-layer adversarial review (Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 0 decisions, 2 patches applied, 1 deferred, 8 dismissed as noise. Patches: the in-progress fix's own client:only="react" on HeaderBar was itself a regression (drops all SSR fallback, so no-JS/slow-JS visitors get no header at all — worse than the bug it fixed); reverted to client:load and fixed the true root cause in packages/ui/ThemeToggle.tsx instead (SSR-safe deterministic default + useIsomorphicLayoutEffect post-mount correction, zero behavior change for Gallery's pure-CSR usage); added the missing viewport meta tag (pre-existing Story 1.1 gap this story's own Task 6 should have caught). Deferred: GlitchText's one-shot animation has no remount guard, not reachable by any current code path — see deferred-work.md. turbo lint/build/test clean (10/10 tasks, forced no-cache); live-verified via headless Playwright.
+# 4-1 moved in-progress → review (2026-07-08): first apps/landing content, first Astro page in the project — @astrojs/react integration, HeaderBar (client:only) + Hero (eyebrow/h1/body, confirmed mockup copy) + GlitchText one-shot settle-in + CSS-only eyebrow/body fade-up, both collapsing under prefers-reduced-motion; 2 real bugs found+fixed live (dark mode not reaching page background outside Header-bar, same as Story 3.1; ThemeToggle showing the wrong icon/aria-label on first paint because client:load's SSR pre-render wasn't corrected by hydration — switched to client:only). turbo lint/build/test clean (10/10 tasks, no regressions); live-verified via headless Playwright (golden path, reduced-motion, mobile viewport, light/dark screenshots).
+# 4-1 moved ready-for-dev → in-progress (2026-07-08): starting Header-bar + Hero (first apps/landing content, first Astro page in the project) — GlitchText settle-in + eyebrow/body fade-up
 # 3-5 code review (2026-07-08): 3-layer adversarial review (Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 1 decision resolved by user (story-attribution/documentation-consistency gap in the retroactive scope cleanup; accepted as-is), 7 patches applied (stale-modal-photo-on-slow-load bug, AddMoreControl re-entrancy guard broken by the progressive-commit `complete` flag, shutter-speed division-by-zero in 3 duplicated formatters, modal photo alt="", zero-image-file silent no-op, a stale comment, Insights all-zero-dimensions blank state), 4 deferred (heic2any dependency risk, worker-ordering fragility, progressive-commit store churn, unverified @bmad/landing consumer — see deferred-work.md), 7 dismissed as noise. Also fixed a live user-reported bug found in the same session: SingleSlider's meaningless accent fill in single-value mode. turbo lint/build/test clean (113/113 tests); live-verified via Playwright.
 # 3-3 round-12 pass (2026-07-08): round-10's step-dot ticks used bg-bg (page background), which happened to look right in dark mode but read as a visibly lighter/whiter mark in light mode, where the Facets sidebar's own bg-panel differs from the page background. Changed StepTicks to bg-panel, matching the actual surface. turbo lint/build/test clean (113/113 tests); live-verified via screenshot in both themes.
 # 3-3 round-11 pass (2026-07-08): sidebar eyebrow "// FACETS" changed to "// FILTERS", a plainer term matching what the panel actually does. turbo lint/build/test clean; live-verified via screenshot.
@@ -144,7 +147,7 @@ development_status:
   epic-3-retrospective: optional
 
   epic-4: in-progress
-  4-1-header-hero: ready-for-dev
+  4-1-header-hero: done
   4-2-value-pillars: ready-for-dev
   4-3-preset-showcase: ready-for-dev
   4-4-coming-soon-close-cross-cutting-compliance: ready-for-dev

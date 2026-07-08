@@ -1,3 +1,86 @@
 @import "@bmad/theme/index.css";
 @import "tailwindcss";
 @import "@bmad/theme/tailwind-preset";
+
+/* Neither `packages/theme` nor `Layout.astro` paints an actual background —
+ * `.dark` only flips the `--m-*` custom properties. Without this, the page
+ * outside components that explicitly set `bg-bg` (e.g. Header-bar) falls
+ * back to the browser's default white, so dark mode never reaches the rest
+ * of the page (same fix as apps/gallery/app.css, Story 3.1). */
+html,
+body {
+  min-height: 100%;
+  background-color: var(--m-bg);
+  color: var(--m-fg);
+}
+
+/*
+ * Hero motion (Story 4.1) — one-shot glitch-settle on the headline plus a
+ * fade-up on the eyebrow/body, ported from
+ * ux-designs/ux-BMAD/mockups/landing-hero.html. CSS-only so
+ * prefers-reduced-motion collapses everything to its final state instantly,
+ * even before GlitchText's client:load island has hydrated.
+ */
+@keyframes hero-glitch-settle {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+    text-shadow: none;
+  }
+  8% {
+    opacity: 1;
+    transform: translate(-2px, 0);
+    text-shadow:
+      2px 0 var(--m-accent),
+      -2px 0 var(--m-error);
+  }
+  16% {
+    transform: translate(2px, 0);
+    text-shadow:
+      -2px 0 var(--m-accent),
+      2px 0 var(--m-error);
+  }
+  24% {
+    transform: translate(0, 0);
+    text-shadow: none;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    text-shadow: none;
+  }
+}
+
+.hero-glitch {
+  display: inline-block;
+  animation: hero-glitch-settle 900ms steps(1, end) both;
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal {
+  animation: reveal-up 500ms ease-out both;
+}
+
+.reveal-delay {
+  animation-delay: 150ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-glitch,
+  .reveal {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    text-shadow: none !important;
+  }
+}

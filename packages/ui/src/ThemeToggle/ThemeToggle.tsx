@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { SunIcon, MoonIcon } from "@heroicons/react/24/solid";
 import { ICON_BUTTON_CLASS_NAME } from "../Button/Button";
 
@@ -9,6 +9,11 @@ export type Theme = "light" | "dark";
 // apps/landing/src/layouts/Layout.astro — since those must run inline, non-deferred, before
 // hydration, and can't import this module. Keep all three in sync by hand if this ever changes.
 export const THEME_STORAGE_KEY = "theme";
+
+// Server-rendered consumers (Astro's `client:load`) can't call useLayoutEffect during their
+// build-time SSR pass without a console warning; a plain useEffect there is a no-op anyway
+// (SSR never runs effects), so this only matters for picking the right hook once hydrated.
+const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 function readInitialTheme(): Theme {
   if (typeof document === "undefined") return "light";
@@ -24,15 +29,26 @@ function applyTheme(theme: Theme) {
   document.documentElement.classList.toggle("dark", theme === "dark");
 }
 
-/** Independent of any app wiring it into a header — reads/applies its own initial theme on
- * first render (localStorage, falling back to `prefers-color-scheme`), so it's correct even
- * without the separate flash-prevention script. */
+/** Independent of any app wiring it into a header — reads/applies its own initial theme
+ * (localStorage, falling back to `prefers-color-scheme`), so it's correct even without the
+ * separate flash-prevention script.
+ *
+ * Initial render always starts at the SSR-safe default ("light"), never reading `document` —
+ * a server-pre-rendered consumer (e.g. Astro's `client:load`) builds its static markup with
+ * `document` undefined too, so the first client commit matches it exactly and needs no
+ * attribute patch. The layout effect below corrects to the real theme right after mount: a
+ * hydration commit doesn't reliably repaint mismatched attributes even when the fiber's
+ * internal state is already correct, but a genuine follow-up render (what this effect
+ * triggers) does. `useLayoutEffect` (not `useEffect`) keeps this invisible for plain
+ * client-rendered consumers (e.g. the Gallery SPA) by correcting before the first paint. */
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>(() => {
+  const [theme, setTheme] = useState<Theme>("light");
+
+  useIsomorphicLayoutEffect(() => {
     const initial = readInitialTheme();
-    if (typeof document !== "undefined") applyTheme(initial);
-    return initial;
-  });
+    applyTheme(initial);
+    setTheme(initial);
+  }, []);
 
   function toggle() {
     const next: Theme = theme === "dark" ? "light" : "dark";
