@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Button, Checkbox, RadioGroup } from "@bmad/ui";
+import { Button, Checkbox } from "@bmad/ui";
 import {
   clearAllFacetFilters,
   setFacetFilter,
@@ -102,54 +102,55 @@ interface SliderFacetProps {
 type SliderMode = "single" | "range";
 
 /**
- * Compact icon segmented control (round-5 UX request — text like "Pick
- * range" didn't fit next to longer labels, e.g. "Lens / focal length").
- * Two always-visible glyph buttons rather than one state-flipping button,
- * so which mode is active is unambiguous without reading text: "•" (one
- * exact value) and "↔" (a range).
+ * A single icon button, not two (round-6 UX request, reversing round 5's
+ * segmented control) — muted-background fill instead of a bordered box,
+ * showing the *current* mode's glyph ("•" one value, "↔" a range); clicking
+ * flips to the other mode. Disabled (round-6) when the Facet has ≤1
+ * distinct value — a "range" of one value is meaningless, so there's
+ * nothing to toggle to.
  */
-function SliderModeToggle({ mode, onChange }: { mode: SliderMode; onChange: (mode: SliderMode) => void }) {
+function SliderModeToggle({
+  mode,
+  disabled,
+  onChange,
+}: {
+  mode: SliderMode;
+  disabled: boolean;
+  onChange: (mode: SliderMode) => void;
+}) {
   return (
-    <div className="flex flex-none items-center gap-1" role="group" aria-label="Selection mode">
-      <button
-        type="button"
-        aria-label="Pick one value"
-        aria-pressed={mode === "single"}
-        onClick={() => onChange("single")}
-        className={`flex size-5 flex-none items-center justify-center border-2 text-caption leading-none ${
-          mode === "single" ? "border-accent text-accent" : "border-dim text-muted2 hover:text-fg"
-        }`}
-      >
-        •
-      </button>
-      <button
-        type="button"
-        aria-label="Pick a range"
-        aria-pressed={mode === "range"}
-        onClick={() => onChange("range")}
-        className={`flex size-5 flex-none items-center justify-center border-2 text-caption leading-none ${
-          mode === "range" ? "border-accent text-accent" : "border-dim text-muted2 hover:text-fg"
-        }`}
-      >
-        ↔
-      </button>
-    </div>
+    <button
+      type="button"
+      aria-label={mode === "single" ? "Picking one value — switch to a range" : "Picking a range — switch to one value"}
+      aria-pressed={mode === "range"}
+      disabled={disabled}
+      onClick={() => onChange(mode === "single" ? "range" : "single")}
+      className={`flex size-5 flex-none items-center justify-center bg-dim text-caption leading-none text-muted2 disabled:cursor-not-allowed disabled:opacity-50 ${
+        disabled ? "" : "hover:bg-accent hover:text-bg"
+      }`}
+    >
+      {mode === "single" ? "•" : "↔"}
+    </button>
   );
 }
 
 /**
- * Slider-driven Facet (lens/aperture/shutter/ISO, round-4/5 UX requests) —
- * the slider always operates on *indices* into the batch's sorted distinct
- * values, never a continuous numeric domain, so it can only land on a
- * value that actually occurs. A toggle switches between "pick one exact
- * value" (single thumb, `min === max`) and "pick a range" (two thumbs) —
- * both read/write the same `RangeFilter` shape, `matchesRange` already
- * treats `min === max` as an exact match with no store-level change needed.
+ * Slider-driven Facet (lens/aperture/shutter/ISO/year) — the slider always
+ * operates on *indices* into the batch's sorted distinct values, never a
+ * continuous numeric domain, so it can only land on a value that actually
+ * occurs. A toggle switches between "pick one exact value" (single thumb,
+ * `min === max`) and "pick a range" (two thumbs) — both read/write the
+ * same `RangeFilter` shape, `matchesRange` already treats `min === max` as
+ * an exact match with no store-level change needed. With only one distinct
+ * value, range mode is locked out entirely (round-6 UX request) — always
+ * `"single"`, toggle disabled.
  */
 function SliderFacet({ label, values, filter, formatValue, onChange }: SliderFacetProps) {
+  const canRange = values.length > 1;
   const [mode, setMode] = useState<SliderMode>(
-    filter.min !== undefined && filter.min === filter.max ? "single" : "range",
+    canRange && !(filter.min !== undefined && filter.min === filter.max) ? "range" : "single",
   );
+  const effectiveMode: SliderMode = canRange ? mode : "single";
 
   if (values.length === 0) {
     return (
@@ -169,6 +170,9 @@ function SliderFacet({ label, values, filter, formatValue, onChange }: SliderFac
   const maxValue = values[maxIndex] ?? lastValue;
 
   function handleModeChange(nextMode: SliderMode) {
+    if (!canRange) {
+      return;
+    }
     setMode(nextMode);
     if (nextMode === "single") {
       onChange(minValue, minValue);
@@ -179,9 +183,9 @@ function SliderFacet({ label, values, filter, formatValue, onChange }: SliderFac
     <div>
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="text-data-label text-muted2 uppercase">{label}</span>
-        <SliderModeToggle mode={mode} onChange={handleModeChange} />
+        <SliderModeToggle mode={effectiveMode} disabled={!canRange} onChange={handleModeChange} />
       </div>
-      {mode === "single" ? (
+      {effectiveMode === "single" ? (
         <SingleSlider
           min={0}
           max={lastIndex}
@@ -203,9 +207,77 @@ function SliderFacet({ label, values, filter, formatValue, onChange }: SliderFac
         />
       )}
       <p className="mt-3 text-body text-fg">
-        {mode === "single" ? formatValue(minValue) : `${formatValue(minValue)} – ${formatValue(maxValue)}`}
+        {effectiveMode === "single"
+          ? formatValue(minValue)
+          : `${formatValue(minValue)} – ${formatValue(maxValue)}`}
       </p>
     </div>
+  );
+}
+
+interface CameraFacetProps {
+  value: "front" | "rear" | undefined;
+  hasFront: boolean;
+  hasRear: boolean;
+  onChange: (value: "front" | "rear" | undefined) => void;
+}
+
+/**
+ * Compact horizontal Camera selector (round-6 UX request) — one row, a
+ * small label below each option, rather than a vertical label-beside-input
+ * stack, so it takes minimal space even when shown. Gallery-local rather
+ * than a `packages/ui` `RadioGroup` variant, since this row-with-label-
+ * below layout is specific to this one Facet. The caller hides this
+ * component entirely when the batch has no camera data at all — see
+ * `FacetPanel`.
+ */
+function CameraFacet({ value, hasFront, hasRear, onChange }: CameraFacetProps) {
+  const current = value ?? "all";
+  const options: Array<{ value: "all" | "front" | "rear"; label: string; disabled: boolean }> = [
+    { value: "all", label: "All", disabled: false },
+    { value: "front", label: "Front", disabled: !hasFront },
+    { value: "rear", label: "Rear", disabled: !hasRear },
+  ];
+
+  return (
+    <fieldset>
+      <legend className="mb-2 text-data-label text-muted2 uppercase">Camera</legend>
+      <div className="flex gap-5">
+        {options.map((option) => {
+          const isChecked = option.value === current;
+          const optionId = `facet-camera-${option.value}`;
+          return (
+            <label
+              key={option.value}
+              htmlFor={optionId}
+              className={`flex flex-col items-center gap-1.5 ${
+                option.disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+              }`}
+            >
+              <input
+                id={optionId}
+                type="radio"
+                name="facet-camera"
+                value={option.value}
+                checked={isChecked}
+                disabled={option.disabled}
+                onChange={() => onChange(option.value === "all" ? undefined : option.value)}
+                className="peer sr-only"
+              />
+              <span
+                aria-hidden="true"
+                className={`flex size-4.5 items-center justify-center border-2 ${
+                  isChecked ? "border-accent" : "border-dim"
+                }`}
+              >
+                {isChecked && <span className="size-2 bg-accent" />}
+              </span>
+              <span className="text-caption text-muted2 uppercase">{option.label}</span>
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }
 
@@ -215,43 +287,37 @@ function SliderFacet({ label, values, filter, formatValue, onChange }: SliderFac
  * deferred-work.md). The 8 Facets (Dev Notes' field mapping), each always
  * showing its real control; every control commits directly to the store on
  * change (AC #4, no Apply step). Order (round-5 user request): Camera,
- * Year, Lens, Aperture, Shutter, ISO, Exposure comp, Megapixel mode.
+ * Year, Lens, Aperture, Shutter, ISO, Exposure comp, Megapixel mode. Camera
+ * itself is hidden entirely (round-6) when the batch has camera data for
+ * neither front nor rear — not worth the space if there's nothing to filter.
  */
 export function FacetPanel() {
   const filters = useFacetFilters();
   const options = useFacetValueOptions();
+  const hasCameraData = options.hasCameraFront || options.hasCameraRear;
 
   return (
     <div className="flex flex-col gap-6">
       <p className="text-eyebrow text-accent uppercase">// FACETS</p>
 
-      <FacetField>
-        <RadioGroup
-          name="facet-camera"
-          label="Camera"
-          value={filters.camera ?? "all"}
-          onChange={(value) =>
-            setFacetFilter("camera", value === "all" ? undefined : (value as "front" | "rear"))
-          }
-          options={[
-            { value: "all", label: "All" },
-            // Disabled rather than omitted when the batch has no matching
-            // photos (round-5 UX request) — no point offering a choice
-            // that can only ever produce zero results.
-            { value: "front", label: "Front (selfie)", disabled: !options.hasCameraFront },
-            { value: "rear", label: "Rear", disabled: !options.hasCameraRear },
-          ]}
-        />
-      </FacetField>
+      {hasCameraData && (
+        <FacetField>
+          <CameraFacet
+            value={filters.camera}
+            hasFront={options.hasCameraFront}
+            hasRear={options.hasCameraRear}
+            onChange={(value) => setFacetFilter("camera", value)}
+          />
+        </FacetField>
+      )}
 
       <FacetField>
-        <CheckboxFacetGroup
-          facetKey="year"
+        <SliderFacet
           label="Year"
-          options={options.years}
-          selected={filters.years}
-          formatLabel={(value) => String(value)}
-          onToggle={(value) => setFacetFilter("years", toggleInArray(filters.years, value))}
+          values={options.years}
+          filter={filters.years}
+          formatValue={(value) => String(value)}
+          onChange={(min, max) => setFacetFilter("years", { min, max })}
         />
       </FacetField>
 

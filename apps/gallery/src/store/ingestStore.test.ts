@@ -212,8 +212,8 @@ describe("matchesFacetFilters", () => {
     expect(matchesFacetFilters(photo({ shutterSpeedSec: 0.2 }), bounded)).toBe(false);
   });
 
-  it("year Facet: matches the year parsed off capturedAt's YYYY prefix", () => {
-    const f = filters({ years: [2026] });
+  it("range Facet (years): matches the year parsed off capturedAt's YYYY prefix", () => {
+    const f = filters({ years: { min: 2026, max: 2026 } });
     expect(matchesFacetFilters(photo({ capturedAt: "2026-06-14T10:00:00" }), f)).toBe(true);
     expect(matchesFacetFilters(photo({ capturedAt: "2025-12-31T23:59:59" }), f)).toBe(false);
     expect(matchesFacetFilters(photo({}), f)).toBe(false);

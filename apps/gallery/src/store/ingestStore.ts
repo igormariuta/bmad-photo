@@ -39,7 +39,7 @@ export interface FacetFiltersState {
   exposureComp: number[];
   megapixelMode: (12 | 48)[];
   camera?: "front" | "rear";
-  years: number[];
+  years: RangeFilter;
   shutter: RangeFilter;
 }
 
@@ -49,7 +49,7 @@ export const DEFAULT_FACET_FILTERS: FacetFiltersState = {
   aperture: {},
   exposureComp: [],
   megapixelMode: [],
-  years: [],
+  years: {},
   shutter: {},
 };
 
@@ -299,7 +299,7 @@ export function computeFacetValueOptions(photos: readonly Photo[]): FacetValueOp
       megapixelSet.add(photo.megapixelMode);
     }
     if (photo.capturedAt !== undefined) {
-      years.push(Number.parseInt(photo.capturedAt.slice(0, 4), 10));
+      years.push(parseYear(photo.capturedAt));
     }
     if (photo.camera === "front") {
       hasCameraFront = true;
@@ -372,16 +372,12 @@ function matchesDiscrete<T>(value: T | undefined, selected: readonly T[]): boole
   return selected.includes(value);
 }
 
-/** Same inactive/undefined-field rule as matchesDiscrete, applied to the
- * year parsed off `capturedAt`'s `YYYY-...` prefix. */
-function matchesYear(capturedAt: string | undefined, years: readonly number[]): boolean {
-  if (years.length === 0) {
-    return true;
-  }
-  if (capturedAt === undefined) {
-    return false;
-  }
-  return years.includes(Number.parseInt(capturedAt.slice(0, 4), 10));
+/** The year a `capturedAt` timestamp falls in, parsed off its `YYYY-...`
+ * prefix — `years` is `RangeFilter`-shaped (round-6 UX request, joining
+ * lens/aperture/shutter/ISO's slider pattern), matched via the same generic
+ * `matchesRange` used everywhere else. */
+function parseYear(capturedAt: string): number {
+  return Number.parseInt(capturedAt.slice(0, 4), 10);
 }
 
 /** AND-combines all 8 Facets (AC #4) — pure so it's unit-testable without
@@ -397,7 +393,8 @@ export function matchesFacetFilters(photo: Photo, filters: FacetFiltersState): b
   if (filters.camera !== undefined && photo.camera !== filters.camera) {
     return false;
   }
-  if (!matchesYear(photo.capturedAt, filters.years)) {
+  const yearValue = photo.capturedAt === undefined ? undefined : parseYear(photo.capturedAt);
+  if (!matchesRange(yearValue, filters.years)) {
     return false;
   }
   if (!matchesRange(photo.iso, filters.iso)) {
