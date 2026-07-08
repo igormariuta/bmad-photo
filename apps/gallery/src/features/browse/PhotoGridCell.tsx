@@ -37,7 +37,11 @@ export function formatCellAriaLabel(photo: Photo): string {
 /**
  * Gallery-local (FR-2 single-consumer rule) — Browse's grid tile. Renders as
  * a real <button> (UX-DR15) so it's keyboard/screen-reader operable ahead of
- * Story 3.5 wiring `onOpen` to open Photo-detail-modal.
+ * Story 3.5 wiring `onOpen` to open Photo-detail-modal. An empty
+ * `thumbnailUrl` (round-17, 2026-07-08 — photos now commit before their
+ * thumbnail is ready, so cells fill in progressively) renders a pulsing
+ * placeholder in the same aspect-square box instead of an `<img>` with no
+ * `src`, which would show the browser's broken-image icon.
  */
 export function PhotoGridCell({ photo, onOpen }: PhotoGridCellProps) {
   const [lens, aperture, iso] = formatExifBadgeSegments(photo);
@@ -49,11 +53,18 @@ export function PhotoGridCell({ photo, onOpen }: PhotoGridCellProps) {
       onClick={onOpen}
       className="flex flex-col gap-2 text-left"
     >
-      <img
-        src={photo.thumbnailUrl}
-        alt=""
-        className="aspect-square w-full border-2 border-dim object-cover"
-      />
+      {photo.thumbnailUrl ? (
+        <img
+          src={photo.thumbnailUrl}
+          alt=""
+          className="aspect-square w-full border-2 border-dim object-cover"
+        />
+      ) : (
+        <div
+          aria-hidden="true"
+          className="aspect-square w-full animate-pulse border-2 border-dim bg-panel"
+        />
+      )}
       <span className="flex items-center gap-1 text-caption text-muted">
         <span>{lens}</span>
         <Dot />

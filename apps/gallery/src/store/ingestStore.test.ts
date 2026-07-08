@@ -7,6 +7,7 @@ import {
   hasActiveFacetFilters,
   matchesFacetFilters,
   mergeCommit,
+  mergePhotoMedia,
   toggleInArray,
   MAX_PHOTOS_PER_INGEST,
   type FacetFiltersState,
@@ -18,7 +19,7 @@ function makeFile(name: string, lastModified = 1, size = 7): File {
 }
 
 function photo(fields: Partial<Photo>): Photo {
-  return { id: "id", readable: true, thumbnailUrl: "", ...fields };
+  return { id: "id", readable: true, thumbnailUrl: "", fullUrl: "", ...fields };
 }
 
 describe("fileSignature", () => {
@@ -128,6 +129,21 @@ describe("mergeCommit", () => {
     const state = { photos: [], signatures: original };
     mergeCommit(state, [photo({ id: "a" })], [makeFile("a.jpg")]);
     expect(original.size).toBe(0);
+  });
+});
+
+describe("mergePhotoMedia", () => {
+  it("replaces only the matching photo's media, leaving its other fields untouched", () => {
+    const photos = [photo({ id: "a", lensLabel: "24mm" }), photo({ id: "b" })];
+    const result = mergePhotoMedia(photos, "a", { thumbnailUrl: "thumb", fullUrl: "full" });
+    expect(result[0]).toEqual({ ...photo({ id: "a", lensLabel: "24mm" }), thumbnailUrl: "thumb", fullUrl: "full" });
+    expect(result[1]).toEqual(photo({ id: "b" }));
+  });
+
+  it("leaves every photo unchanged when no id matches", () => {
+    const photos = [photo({ id: "a" })];
+    const result = mergePhotoMedia(photos, "missing", { thumbnailUrl: "thumb", fullUrl: "full" });
+    expect(result).toEqual(photos);
   });
 });
 

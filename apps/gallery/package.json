@@ -13,6 +13,7 @@
     "@bmad/theme": "workspace:*",
     "@bmad/ui": "workspace:*",
     "exifreader": "4.41.0",
+    "heic2any": "^0.0.4",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "zustand": "5.0.14"

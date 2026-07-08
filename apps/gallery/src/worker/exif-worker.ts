@@ -64,16 +64,16 @@ async function parseFile(file: File): Promise<WorkerPhoto> {
 
 async function parseBatch(files: File[]): Promise<void> {
   const total = files.length;
-  const photos: WorkerPhoto[] = [];
   let done = 0;
 
   for (const file of files) {
-    photos.push(await parseFile(file));
+    const photo = await parseFile(file);
+    ctx.postMessage({ type: "photo", photo } satisfies WorkerMessage);
     done += 1;
     ctx.postMessage({ type: "progress", done, total } satisfies WorkerMessage);
   }
 
-  ctx.postMessage({ type: "complete", photos } satisfies WorkerMessage);
+  ctx.postMessage({ type: "complete" } satisfies WorkerMessage);
 }
 
 ctx.onmessage = (event: MessageEvent<File[]>) => {

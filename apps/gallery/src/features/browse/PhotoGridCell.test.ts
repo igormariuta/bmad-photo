@@ -3,7 +3,7 @@ import { formatCellAriaLabel, formatExifBadgeSegments } from "./PhotoGridCell";
 import type { Photo } from "../../worker/types";
 
 function photo(fields: Partial<Photo>): Photo {
-  return { id: "p1", readable: true, thumbnailUrl: "", ...fields };
+  return { id: "p1", readable: true, thumbnailUrl: "", fullUrl: "", ...fields };
 }
 
 describe("formatExifBadgeSegments", () => {

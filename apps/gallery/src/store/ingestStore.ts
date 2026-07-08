@@ -204,6 +204,25 @@ export function commitPhotos(photos: Photo[], files: File[]): void {
   useIngestStore.setState((state) => mergeCommit(state, photos, files));
 }
 
+/** Pure — replaces one photo's media URLs by `id`, leaving every other photo
+ * untouched. Extracted for direct unit testing, mirroring mergeCommit's "the
+ * part worth getting right" pattern. Used to populate `thumbnailUrl`/
+ * `fullUrl` progressively after `commitPhotos` (round-17, 2026-07-08, user
+ * report — committing only once *every* photo's thumbnail had finished
+ * generating meant the grid stayed on the ingest-progress screen long after
+ * EXIF parsing itself had reached 100%, reading as a stall). */
+export function mergePhotoMedia(
+  photos: readonly Photo[],
+  id: string,
+  media: Pick<Photo, "thumbnailUrl" | "fullUrl">,
+): Photo[] {
+  return photos.map((photo) => (photo.id === id ? { ...photo, ...media } : photo));
+}
+
+export function updatePhotoMedia(id: string, media: Pick<Photo, "thumbnailUrl" | "fullUrl">): void {
+  useIngestStore.setState((state) => ({ photos: mergePhotoMedia(state.photos, id, media) }));
+}
+
 export function useIngestedFileCount(): number {
   return useIngestStore((state) => state.fileCount);
 }
