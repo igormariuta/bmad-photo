@@ -4,6 +4,7 @@ import {
   dedupeAndCapCheck,
   DEFAULT_FACET_FILTERS,
   fileSignature,
+  hasActiveFacetFilters,
   matchesFacetFilters,
   mergeCommit,
   toggleInArray,
@@ -224,6 +225,41 @@ describe("matchesFacetFilters", () => {
     expect(matchesFacetFilters(photo({ lensLabel: "24mm", iso: 200 }), f)).toBe(true);
     expect(matchesFacetFilters(photo({ lensLabel: "48mm", iso: 200 }), f)).toBe(false);
     expect(matchesFacetFilters(photo({ lensLabel: "24mm", iso: 800 }), f)).toBe(false);
+  });
+});
+
+describe("hasActiveFacetFilters", () => {
+  function filters(overrides: Partial<FacetFiltersState>): FacetFiltersState {
+    return { ...DEFAULT_FACET_FILTERS, ...overrides };
+  }
+
+  it("is false for the default (all-inactive) filters", () => {
+    expect(hasActiveFacetFilters(DEFAULT_FACET_FILTERS)).toBe(false);
+  });
+
+  it("is true when a range Facet has either bound set", () => {
+    expect(hasActiveFacetFilters(filters({ lens: { min: 24 } }))).toBe(true);
+    expect(hasActiveFacetFilters(filters({ shutter: { max: 0.1 } }))).toBe(true);
+    expect(hasActiveFacetFilters(filters({ iso: { min: 100 } }))).toBe(true);
+    expect(hasActiveFacetFilters(filters({ aperture: { max: 2.8 } }))).toBe(true);
+    expect(hasActiveFacetFilters(filters({ years: { min: 2020 } }))).toBe(true);
+  });
+
+  it("is true for a bound of exactly 0 — a falsy value that is still meaningfully 'set'", () => {
+    expect(hasActiveFacetFilters(filters({ shutter: { min: 0 } }))).toBe(true);
+  });
+
+  it("is true when a checkbox-style Facet has a non-empty selection", () => {
+    expect(hasActiveFacetFilters(filters({ megapixelMode: [48] }))).toBe(true);
+    expect(hasActiveFacetFilters(filters({ exposureComp: [0.3] }))).toBe(true);
+  });
+
+  it("is true when camera is set", () => {
+    expect(hasActiveFacetFilters(filters({ camera: "front" }))).toBe(true);
+  });
+
+  it("is false when arrays are empty and ranges are both-undefined, even as new object instances", () => {
+    expect(hasActiveFacetFilters(filters({ lens: {}, megapixelMode: [] }))).toBe(false);
   });
 });
 

@@ -1,5 +1,10 @@
 # Deferred Work
 
+## Deferred from: code review of 3-4-empty-filtered-state (2026-07-08)
+
+- **No automated component-rendering regression test for the new Browse.tsx empty-filtered branch** [apps/gallery/src/features/browse/Browse.tsx] — pre-existing gap: no jsdom/React Testing Library component-test infra in this repo (vitest runs with `environment: "node"`); verified live via Playwright against synthetic EXIF fixtures instead, matching prior stories' precedent (e.g. 3.2's deferred "no component-level test for PhotoGridCell").
+- **`hasActiveFacetFilters`'s "8 Facets" check is a hardcoded list with no structural exhaustiveness enforcement** [apps/gallery/src/store/ingestStore.ts:454-465] — a 9th Facet field added later to `FacetFiltersState` wouldn't be caught by a type error. Mirrors `matchesFacetFilters`'s own pre-existing 8-field hardcoded AND-chain from Story 3.3; this story extends the same pattern consistently rather than introducing a new one.
+
 ## Deferred from: dev-story of 3-3-facet-panel-live-filtering (2026-07-08)
 
 - **Mobile Facet-panel: no slide-up sheet, no mobile trigger, no active-filter count** [apps/gallery/src/features/browse/Browse.tsx, apps/gallery/src/features/browse/FacetPanel.tsx] — AC #1's slide-up sheet (capped ~70vh) and AC #4's mobile trigger with an active-filter count were not built. User decision 2026-07-08: this iteration targets desktop only. The sidebar is `hidden` below `lg` rather than stacking a fully-interactive, un-sheeted panel above the grid. Supersedes/confirms the same mobile deferral already noted from Story 3.2's review.

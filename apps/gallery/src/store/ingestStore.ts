@@ -443,6 +443,34 @@ export function clearAllFacetFilters(): void {
   useIngestStore.setState({ facetFilters: DEFAULT_FACET_FILTERS });
 }
 
+function isRangeActive(filter: RangeFilter): boolean {
+  return filter.min !== undefined || filter.max !== undefined;
+}
+
+/** Pure — true when at least one of the 8 Facets is non-default ("All").
+ * Story 3.3's Dev Notes point at "the mobile filter-count logic" for this
+ * same check, but that logic was never built (mobile Facet-panel deferred to
+ * desktop-only) — this is the first real implementation, not a duplicate. */
+export function hasActiveFacetFilters(filters: FacetFiltersState): boolean {
+  return (
+    isRangeActive(filters.lens) ||
+    isRangeActive(filters.iso) ||
+    isRangeActive(filters.aperture) ||
+    isRangeActive(filters.shutter) ||
+    isRangeActive(filters.years) ||
+    filters.exposureComp.length > 0 ||
+    filters.megapixelMode.length > 0 ||
+    filters.camera !== undefined
+  );
+}
+
+/** Selector wrapper — Browse's empty-filtered check (Story 3.4) reads
+ * through this rather than calling the pure function directly against
+ * useFacetFilters(), matching this file's existing derived-hook pattern. */
+export function useHasActiveFacetFilters(): boolean {
+  return useIngestStore((state) => hasActiveFacetFilters(state.facetFilters));
+}
+
 export function useUnreadableCount(): number {
   return useIngestStore((state) => state.photos.filter((photo) => !photo.readable).length);
 }

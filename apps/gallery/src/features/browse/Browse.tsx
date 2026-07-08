@@ -1,4 +1,11 @@
-import { useFilteredPhotos } from "../../store/ingestStore";
+import { Button } from "@bmad/ui";
+import {
+  clearAllFacetFilters,
+  useFilteredPhotos,
+  useHasActiveFacetFilters,
+  useReadablePhotos,
+  useUnreadableCount,
+} from "../../store/ingestStore";
 import { PhotoGridCell } from "./PhotoGridCell";
 
 /**
@@ -8,18 +15,52 @@ import { PhotoGridCell } from "./PhotoGridCell";
  * page-level width/padding it used to apply also moved up to App.tsx so
  * Browse and Insights share identical page width. Reads only through
  * useFilteredPhotos() (AD-3's import-boundary contract).
+ *
+ * Two distinct "nothing to show" messages replace the grid (Story 3.4,
+ * round 2 — code-review follow-up): every ingested photo is unreadable (no
+ * Clear-filters action, since there's no filter to clear) versus the active
+ * Facet filters matching zero of the readable photos (narrower copy, with
+ * the Clear-filters entry point into Story 3.3's clearAllFacetFilters).
+ * Both are `aria-live="polite"`, matching this app's existing dynamic-status
+ * convention (IngestProgress).
  */
 export function Browse() {
   const photos = useFilteredPhotos();
+  const readablePhotoCount = useReadablePhotos().length;
+  const unreadableCount = useUnreadableCount();
+  const hasActiveFilters = useHasActiveFacetFilters();
+
+  const isFilteredEmpty = photos.length === 0 && readablePhotoCount > 0 && hasActiveFilters;
+  const isAllUnreadable = readablePhotoCount === 0;
 
   return (
     <div>
       <p className="text-eyebrow text-accent uppercase">// BROWSE</p>
-      <div className="mt-7 grid grid-cols-2 gap-item-gap lg:grid-cols-4">
-        {photos.map((photo) => (
-          <PhotoGridCell key={photo.id} photo={photo} />
-        ))}
-      </div>
+      {isFilteredEmpty ? (
+        <div
+          aria-live="polite"
+          className="mt-7 flex flex-col items-center gap-4 border-2 border-dim px-8 py-16 text-center"
+        >
+          <p className="text-body text-fg">No photos match these filters.</p>
+          <Button type="button" variant="outline" onClick={clearAllFacetFilters}>
+            Clear filters
+          </Button>
+        </div>
+      ) : isAllUnreadable ? (
+        <div
+          aria-live="polite"
+          className="mt-7 flex flex-col items-center gap-2 border-2 border-dim px-8 py-16 text-center"
+        >
+          <p className="text-body text-fg">No readable photos.</p>
+          <p className="text-caption text-muted">{unreadableCount} unreadable — always excluded.</p>
+        </div>
+      ) : (
+        <div className="mt-7 grid grid-cols-2 gap-item-gap lg:grid-cols-4">
+          {photos.map((photo) => (
+            <PhotoGridCell key={photo.id} photo={photo} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
