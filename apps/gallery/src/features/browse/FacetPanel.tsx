@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Button, Checkbox, RadioGroup } from "@bmad/ui";
 import {
   clearAllFacetFilters,
@@ -8,7 +8,7 @@ import {
   useFacetValueOptions,
   type RangeFilter,
 } from "../../store/ingestStore";
-import { RangeSlider } from "./RangeSlider";
+import { RangeSlider, SingleSlider } from "./RangeSlider";
 
 /** Exported for unit testing — shutter speeds read as fractions below 1s
  * (matching photographic convention, e.g. "1/500s"), plain seconds above. */
@@ -26,6 +26,14 @@ function formatMegapixelMode(value: 12 | 48): string {
   return value === 12 ? "12 MP (standard)" : "48 MP (ProRAW)";
 }
 
+function formatLens(value: number): string {
+  return `${value}mm`;
+}
+
+function formatAperture(value: number): string {
+  return `f/${value}`;
+}
+
 /**
  * A divider between Facets — no label of its own (UX fix, 2026-07-08:
  * every child control already renders its own label). Always shows the
@@ -35,7 +43,7 @@ function FacetField({ children }: { children: ReactNode }) {
   return <div className="border-b-2 border-dim pb-4">{children}</div>;
 }
 
-interface CheckboxFacetGroupProps<T extends string | number> {
+interface CheckboxFacetGroupProps<T extends number> {
   facetKey: string;
   label: string;
   options: readonly T[];
@@ -49,9 +57,11 @@ interface CheckboxFacetGroupProps<T extends string | number> {
  * request: exact values that actually occur in the ingested photos, no
  * slider values that don't exist in the data). Renders nothing selectable
  * when the batch has no data for this dimension, matching Insights'
- * existing "No data for this batch." convention.
+ * existing "No data for this batch." convention. Generic over `T extends
+ * number` (not just `number`) so `megapixelMode: (12 | 48)[]` infers
+ * without widening `formatMegapixelMode`'s parameter type.
  */
-function CheckboxFacetGroup<T extends string | number>({
+function CheckboxFacetGroup<T extends number>({
   facetKey,
   label,
   options,
@@ -81,24 +91,32 @@ function CheckboxFacetGroup<T extends string | number>({
   );
 }
 
-/** The one Facet still slider-driven (user request, 2026-07-08) — too many
- * distinct raw shutter-speed values for a usable checkbox list. The slider
- * itself snaps only to indices into the sorted distinct values actually
- * present (not a continuous numeric range), so it can never land on a
- * shutter speed that doesn't exist in the batch. */
-function ShutterFacet({
-  values,
-  filter,
-  onChange,
-}: {
+interface SliderFacetProps {
+  label: string;
   values: readonly number[];
   filter: RangeFilter;
+  formatValue: (value: number) => string;
   onChange: (min: number, max: number) => void;
-}) {
+}
+
+/**
+ * Slider-driven Facet (lens/aperture/shutter, round-4 UX request) — the
+ * slider always operates on *indices* into the batch's sorted distinct
+ * values, never a continuous numeric domain, so it can only land on a
+ * value that actually occurs. A toggle switches between "pick one exact
+ * value" (single thumb, `min === max`) and "pick a range" (two thumbs) —
+ * both read/write the same `RangeFilter` shape, `matchesRange` already
+ * treats `min === max` as an exact match with no store-level change needed.
+ */
+function SliderFacet({ label, values, filter, formatValue, onChange }: SliderFacetProps) {
+  const [mode, setMode] = useState<"single" | "range">(
+    filter.min !== undefined && filter.min === filter.max ? "single" : "range",
+  );
+
   if (values.length === 0) {
     return (
       <div>
-        <div className="mb-2 text-data-label text-muted2 uppercase">Shutter speed</div>
+        <div className="mb-2 text-data-label text-muted2 uppercase">{label}</div>
         <p className="text-caption text-muted">No data for this batch.</p>
       </div>
     );
@@ -112,19 +130,50 @@ function ShutterFacet({
   const minValue = values[minIndex] ?? firstValue;
   const maxValue = values[maxIndex] ?? lastValue;
 
+  function handleModeToggle() {
+    if (mode === "range") {
+      setMode("single");
+      onChange(minValue, minValue);
+    } else {
+      setMode("range");
+    }
+  }
+
   return (
     <div>
-      <div className="mb-2 text-data-label text-muted2 uppercase">Shutter speed</div>
-      <RangeSlider
-        min={0}
-        max={lastIndex}
-        step={1}
-        valueMin={minIndex}
-        valueMax={maxIndex}
-        onChange={(i, j) => onChange(values[i] ?? firstValue, values[j] ?? lastValue)}
-      />
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <span className="text-data-label text-muted2 uppercase">{label}</span>
+        <button
+          type="button"
+          onClick={handleModeToggle}
+          className="text-caption text-muted2 uppercase hover:text-accent"
+        >
+          {mode === "range" ? "Pick one" : "Pick range"}
+        </button>
+      </div>
+      {mode === "single" ? (
+        <SingleSlider
+          min={0}
+          max={lastIndex}
+          step={1}
+          value={minIndex}
+          onChange={(i) => {
+            const v = values[i] ?? firstValue;
+            onChange(v, v);
+          }}
+        />
+      ) : (
+        <RangeSlider
+          min={0}
+          max={lastIndex}
+          step={1}
+          valueMin={minIndex}
+          valueMax={maxIndex}
+          onChange={(i, j) => onChange(values[i] ?? firstValue, values[j] ?? lastValue)}
+        />
+      )}
       <p className="mt-3 text-body text-fg">
-        {formatShutterSpeed(minValue)} – {formatShutterSpeed(maxValue)}
+        {mode === "single" ? formatValue(minValue) : `${formatValue(minValue)} – ${formatValue(maxValue)}`}
       </p>
     </div>
   );
@@ -135,7 +184,8 @@ function ShutterFacet({
  * slide-up-sheet requirement from AC #1/#4 is deferred (see
  * deferred-work.md). The 8 Facets (Dev Notes' field mapping), each always
  * showing its real control; every control commits directly to the store on
- * change (AC #4, no Apply step).
+ * change (AC #4, no Apply step). Camera listed first (user request,
+ * round 4) — the rest keep their existing relative order.
  */
 export function FacetPanel() {
   const filters = useFacetFilters();
@@ -146,13 +196,28 @@ export function FacetPanel() {
       <p className="text-eyebrow text-accent uppercase">// FACETS</p>
 
       <FacetField>
-        <CheckboxFacetGroup
-          facetKey="lens"
+        <RadioGroup
+          name="facet-camera"
+          label="Camera"
+          value={filters.camera ?? "all"}
+          onChange={(value) =>
+            setFacetFilter("camera", value === "all" ? undefined : (value as "front" | "rear"))
+          }
+          options={[
+            { value: "all", label: "All" },
+            { value: "front", label: "Front (selfie)" },
+            { value: "rear", label: "Rear" },
+          ]}
+        />
+      </FacetField>
+
+      <FacetField>
+        <SliderFacet
           label="Lens / focal length"
-          options={options.lens}
-          selected={filters.lens}
-          formatLabel={(value) => value}
-          onToggle={(value) => setFacetFilter("lens", toggleInArray(filters.lens, value))}
+          values={options.lens}
+          filter={filters.lens}
+          formatValue={formatLens}
+          onChange={(min, max) => setFacetFilter("lens", { min, max })}
         />
       </FacetField>
 
@@ -179,20 +244,21 @@ export function FacetPanel() {
       </FacetField>
 
       <FacetField>
-        <CheckboxFacetGroup
-          facetKey="aperture"
+        <SliderFacet
           label="Aperture"
-          options={options.aperture}
-          selected={filters.aperture}
-          formatLabel={(value) => `f/${value}`}
-          onToggle={(value) => setFacetFilter("aperture", toggleInArray(filters.aperture, value))}
+          values={options.aperture}
+          filter={filters.aperture}
+          formatValue={formatAperture}
+          onChange={(min, max) => setFacetFilter("aperture", { min, max })}
         />
       </FacetField>
 
       <FacetField>
-        <ShutterFacet
+        <SliderFacet
+          label="Shutter speed"
           values={options.shutter}
           filter={filters.shutter}
+          formatValue={formatShutterSpeed}
           onChange={(min, max) => setFacetFilter("shutter", { min, max })}
         />
       </FacetField>
@@ -216,22 +282,6 @@ export function FacetPanel() {
           selected={filters.megapixelMode}
           formatLabel={formatMegapixelMode}
           onToggle={(value) => setFacetFilter("megapixelMode", toggleInArray(filters.megapixelMode, value))}
-        />
-      </FacetField>
-
-      <FacetField>
-        <RadioGroup
-          name="facet-camera"
-          label="Camera"
-          value={filters.camera ?? "all"}
-          onChange={(value) =>
-            setFacetFilter("camera", value === "all" ? undefined : (value as "front" | "rear"))
-          }
-          options={[
-            { value: "all", label: "All" },
-            { value: "front", label: "Front (selfie)" },
-            { value: "rear", label: "Rear" },
-          ]}
         />
       </FacetField>
 

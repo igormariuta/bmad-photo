@@ -113,43 +113,146 @@ export function RangeSlider({ min, max, step = 1, valueMin, valueMax, onChange }
   const maxPercent = percentFor(valueMax, min, max);
 
   return (
-    <div className="relative flex h-4 items-center" onPointerDown={handleTrackPointerDown}>
-      <div ref={trackRef} className="relative h-0.5 w-full bg-dim">
+    // Outer px-2 (8px, half of the size-4/16px thumb) — thumbs are centered
+    // on their percent position via -translate-x-1/2, so at 0%/100% half a
+    // thumb would otherwise overhang past the track's own edges. Inset by
+    // exactly that padding makes the thumb's OUTER edge land flush with
+    // this component's own bounding box instead of overflowing past it
+    // (user-reported fix, 2026-07-08). trackRef and both thumbs share this
+    // same padded box as their one coordinate space.
+    <div className="px-2">
+      <div ref={trackRef} className="relative flex h-4 items-center" onPointerDown={handleTrackPointerDown}>
+        <div className="h-0.5 w-full bg-dim">
+          <div
+            className="h-full bg-accent"
+            style={{ marginLeft: `${minPercent}%`, width: `${maxPercent - minPercent}%` }}
+          />
+        </div>
         <div
-          className="absolute h-full bg-accent"
-          style={{ left: `${minPercent}%`, width: `${maxPercent - minPercent}%` }}
+          role="slider"
+          tabIndex={0}
+          aria-label="Minimum"
+          aria-valuemin={min}
+          aria-valuemax={max}
+          aria-valuenow={valueMin}
+          onPointerDown={(event) => {
+            event.stopPropagation();
+            setDragging("min");
+          }}
+          onKeyDown={handleThumbKeyDown("min")}
+          className="absolute size-4 -translate-x-1/2 cursor-pointer border-2 border-accent bg-bg"
+          style={{ left: `${minPercent}%` }}
+        />
+        <div
+          role="slider"
+          tabIndex={0}
+          aria-label="Maximum"
+          aria-valuemin={min}
+          aria-valuemax={max}
+          aria-valuenow={valueMax}
+          onPointerDown={(event) => {
+            event.stopPropagation();
+            setDragging("max");
+          }}
+          onKeyDown={handleThumbKeyDown("max")}
+          className="absolute size-4 -translate-x-1/2 cursor-pointer border-2 border-accent bg-bg"
+          style={{ left: `${maxPercent}%` }}
         />
       </div>
-      <div
-        role="slider"
-        tabIndex={0}
-        aria-label="Minimum"
-        aria-valuemin={min}
-        aria-valuemax={max}
-        aria-valuenow={valueMin}
-        onPointerDown={(event) => {
-          event.stopPropagation();
-          setDragging("min");
-        }}
-        onKeyDown={handleThumbKeyDown("min")}
-        className="absolute size-4 -translate-x-1/2 cursor-pointer border-2 border-accent bg-bg"
-        style={{ left: `${minPercent}%` }}
-      />
-      <div
-        role="slider"
-        tabIndex={0}
-        aria-label="Maximum"
-        aria-valuemin={min}
-        aria-valuemax={max}
-        aria-valuenow={valueMax}
-        onPointerDown={(event) => {
-          event.stopPropagation();
-          setDragging("max");
-        }}
-        onKeyDown={handleThumbKeyDown("max")}
-        className="absolute size-4 -translate-x-1/2 cursor-pointer border-2 border-accent bg-bg"
-        style={{ left: `${maxPercent}%` }}
-      />
+    </div>
+  );
+}
+
+export interface SingleSliderProps {
+  min: number;
+  max: number;
+  step?: number;
+  value: number;
+  onChange: (value: number) => void;
+}
+
+/** One-thumb variant (user request, 2026-07-08 — a toggle switches a
+ * slider-driven Facet between "pick one exact value" and "pick a range").
+ * Shares the same pure pixel↔value helpers as RangeSlider and the same
+ * flush-edge padding treatment. */
+export function SingleSlider({ min, max, step = 1, value, onChange }: SingleSliderProps) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [dragging, setDragging] = useState(false);
+
+  const valueFromClientX = useCallback(
+    (clientX: number): number => {
+      const track = trackRef.current;
+      if (!track) {
+        return min;
+      }
+      const rect = track.getBoundingClientRect();
+      const ratio = rect.width === 0 ? 0 : (clientX - rect.left) / rect.width;
+      return valueFromRatio(ratio, min, max, step);
+    },
+    [min, max, step],
+  );
+
+  useEffect(() => {
+    if (!dragging) {
+      return;
+    }
+    function handlePointerMove(event: globalThis.PointerEvent) {
+      onChange(valueFromClientX(event.clientX));
+    }
+    function handlePointerUp() {
+      setDragging(false);
+    }
+    document.addEventListener("pointermove", handlePointerMove);
+    document.addEventListener("pointerup", handlePointerUp);
+    return () => {
+      document.removeEventListener("pointermove", handlePointerMove);
+      document.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [dragging, valueFromClientX, onChange]);
+
+  function handleTrackPointerDown(event: PointerEvent<HTMLDivElement>) {
+    onChange(valueFromClientX(event.clientX));
+    setDragging(true);
+  }
+
+  function handleThumbKeyDown(event: KeyboardEvent) {
+    const delta =
+      event.key === "ArrowRight" || event.key === "ArrowUp"
+        ? step
+        : event.key === "ArrowLeft" || event.key === "ArrowDown"
+          ? -step
+          : 0;
+    if (delta === 0) {
+      return;
+    }
+    event.preventDefault();
+    onChange(clamp(value + delta, min, max));
+  }
+
+  const percent = percentFor(value, min, max);
+
+  return (
+    <div className="px-2">
+      <div ref={trackRef} className="relative flex h-4 items-center" onPointerDown={handleTrackPointerDown}>
+        <div className="h-0.5 w-full bg-dim">
+          <div className="h-full bg-accent" style={{ width: `${percent}%` }} />
+        </div>
+        <div
+          role="slider"
+          tabIndex={0}
+          aria-label="Value"
+          aria-valuemin={min}
+          aria-valuemax={max}
+          aria-valuenow={value}
+          onPointerDown={(event) => {
+            event.stopPropagation();
+            setDragging(true);
+          }}
+          onKeyDown={handleThumbKeyDown}
+          className="absolute size-4 -translate-x-1/2 cursor-pointer border-2 border-accent bg-bg"
+          style={{ left: `${percent}%` }}
+        />
+      </div>
     </div>
   );
 }

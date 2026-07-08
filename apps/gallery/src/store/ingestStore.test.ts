@@ -158,12 +158,18 @@ describe("matchesFacetFilters", () => {
     );
   });
 
-  it("discrete Facet (lens): matches when the value is in the selected list, excludes a photo with an undefined field", () => {
-    const f = filters({ lens: ["24mm", "48mm"] });
+  it("range Facet (lens): matches the integer parsed off lensLabel's '{n}mm' shape, excludes a photo with an undefined field", () => {
+    const f = filters({ lens: { min: 24, max: 48 } });
     expect(matchesFacetFilters(photo({ lensLabel: "24mm" }), f)).toBe(true);
     expect(matchesFacetFilters(photo({ lensLabel: "48mm" }), f)).toBe(true);
     expect(matchesFacetFilters(photo({ lensLabel: "85mm" }), f)).toBe(false);
     expect(matchesFacetFilters(photo({}), f)).toBe(false);
+  });
+
+  it("range Facet (lens): min === max is an exact single-value pick (slider 'pick one' mode)", () => {
+    const f = filters({ lens: { min: 24, max: 24 } });
+    expect(matchesFacetFilters(photo({ lensLabel: "24mm" }), f)).toBe(true);
+    expect(matchesFacetFilters(photo({ lensLabel: "35mm" }), f)).toBe(false);
   });
 
   it("discrete Facet (megapixelMode/camera): active filter excludes undefined field, inactive filter is unaffected", () => {
@@ -178,23 +184,23 @@ describe("matchesFacetFilters", () => {
     expect(matchesFacetFilters(photo({ camera: "rear" }), cam)).toBe(false);
   });
 
-  it("discrete Facet (iso/aperture/exposureComp): matches any selected value, excludes undefined field only when active", () => {
+  it("discrete Facet (iso/exposureComp): matches any selected value, excludes undefined field only when active", () => {
     const iso = filters({ iso: [100, 400] });
     expect(matchesFacetFilters(photo({ iso: 100 }), iso)).toBe(true);
     expect(matchesFacetFilters(photo({ iso: 400 }), iso)).toBe(true);
     expect(matchesFacetFilters(photo({ iso: 200 }), iso)).toBe(false);
     expect(matchesFacetFilters(photo({}), iso)).toBe(false);
 
-    const aperture = filters({ aperture: [1.8] });
-    expect(matchesFacetFilters(photo({ apertureF: 1.8 }), aperture)).toBe(true);
-    expect(matchesFacetFilters(photo({ apertureF: 2.8 }), aperture)).toBe(false);
-
     const exposureComp = filters({ exposureComp: [0.3, -0.3] });
     expect(matchesFacetFilters(photo({ exposureCompEv: 0.3 }), exposureComp)).toBe(true);
     expect(matchesFacetFilters(photo({ exposureCompEv: 0 }), exposureComp)).toBe(false);
   });
 
-  it("range Facet (shutter): the one Facet still min/max-based, respects open-ended bounds", () => {
+  it("range Facet (aperture/shutter): min/max-based, respects open-ended bounds", () => {
+    const aperture = filters({ aperture: { min: 1.8, max: 1.8 } });
+    expect(matchesFacetFilters(photo({ apertureF: 1.8 }), aperture)).toBe(true);
+    expect(matchesFacetFilters(photo({ apertureF: 2.8 }), aperture)).toBe(false);
+
     const minOnly = filters({ shutter: { min: 0.01 } });
     expect(matchesFacetFilters(photo({ shutterSpeedSec: 0.02 }), minOnly)).toBe(true);
     expect(matchesFacetFilters(photo({ shutterSpeedSec: 0.005 }), minOnly)).toBe(false);
@@ -213,7 +219,7 @@ describe("matchesFacetFilters", () => {
   });
 
   it("AND-combines multiple active Facets — a photo must satisfy every one", () => {
-    const f = filters({ lens: ["24mm"], iso: [200] });
+    const f = filters({ lens: { min: 24, max: 24 }, iso: [200] });
     expect(matchesFacetFilters(photo({ lensLabel: "24mm", iso: 200 }), f)).toBe(true);
     expect(matchesFacetFilters(photo({ lensLabel: "48mm", iso: 200 }), f)).toBe(false);
     expect(matchesFacetFilters(photo({ lensLabel: "24mm", iso: 800 }), f)).toBe(false);
@@ -241,7 +247,7 @@ describe("computeFacetValueOptions", () => {
       photo({ readable: false, lensLabel: "85mm", iso: 3200 }), // unreadable — excluded
     ];
     const options = computeFacetValueOptions(photos);
-    expect(options.lens).toEqual(["24mm", "48mm"]);
+    expect(options.lens).toEqual([24, 48]);
     expect(options.iso).toEqual([200, 800]);
     expect(options.aperture).toEqual([1.8, 2.8]);
     expect(options.years).toEqual([2025, 2026]);

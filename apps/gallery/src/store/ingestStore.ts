@@ -9,31 +9,33 @@ interface IngestProgress {
 }
 
 /** A range Facet's bounds — either side `undefined` means unbounded on that
- * side; both `undefined` means the Facet is inactive/default ("All"). Only
- * `shutter` still uses this shape (UX redesign, 2026-07-08) — every other
- * numeric/discrete Facet moved to an exact-value checkbox list instead
- * (user request: "no slider values that don't actually exist in the
- * photos"). */
+ * side; both `undefined` means the Facet is inactive/default ("All");
+ * `min === max` means an exact single value (the "pick one" slider mode,
+ * round-4 UX request, 2026-07-08). `lens`/`aperture`/`shutter` use this
+ * shape, each driving a discrete-snap slider (only values actually present
+ * in the batch) with a single-value/range toggle. */
 export interface RangeFilter {
   min?: number;
   max?: number;
 }
 
 /**
- * One entry per Facet (Story 3.3 Dev Notes' 8-Facet list). `lens`/`iso`/
- * `aperture`/`exposureComp`/`megapixelMode`/`years` are checkbox-style
- * multi-select value lists (UX redesign, 2026-07-08) — an empty array means
+ * One entry per Facet (Story 3.3 Dev Notes' 8-Facet list). `iso`/
+ * `exposureComp`/`megapixelMode`/`years` are checkbox-style multi-select
+ * value lists (UX redesign, 2026-07-08) — an empty array means
  * inactive/"All"; a non-empty array matches a photo whose field equals ANY
  * selected value. `years` replaced the earlier `dateFrom`/`dateTo` range
- * (user request: simplify the date Facet down to year selection). `shutter`
- * is the one Facet still range-based, driving a discrete-snap slider
- * (RangeSlider) rather than a checkbox list — too many distinct raw values
- * for a usable checkbox list.
+ * (user request: simplify the date Facet down to year selection).
+ * `lens`/`aperture`/`shutter` are slider-driven `RangeFilter`s instead
+ * (round-4 UX request: these read more naturally as a slider than a long
+ * checkbox list) — `lens` matches against the integer parsed off
+ * `lensLabel`'s `"{n}mm"` shape, not `focalLengthMm` directly, so it can
+ * never land on a value more precise than what's actually displayed.
  */
 export interface FacetFiltersState {
-  lens: string[];
+  lens: RangeFilter;
   iso: number[];
-  aperture: number[];
+  aperture: RangeFilter;
   exposureComp: number[];
   megapixelMode: (12 | 48)[];
   camera?: "front" | "rear";
@@ -42,9 +44,9 @@ export interface FacetFiltersState {
 }
 
 export const DEFAULT_FACET_FILTERS: FacetFiltersState = {
-  lens: [],
+  lens: {},
   iso: [],
-  aperture: [],
+  aperture: {},
   exposureComp: [],
   megapixelMode: [],
   years: [],
@@ -230,7 +232,7 @@ export function useReadablePhotos(): Photo[] {
 }
 
 export interface FacetValueOptions {
-  lens: string[];
+  lens: number[];
   iso: number[];
   aperture: number[];
   shutter: number[];
@@ -243,14 +245,22 @@ function distinctSortedNumbers(values: number[]): number[] {
   return Array.from(new Set(values)).sort((a, b) => a - b);
 }
 
-/** Pure — the distinct, sorted values for every checkbox-style/discrete
+/** The integer a `lensLabel` (e.g. `"24mm"`) displays — parsed rather than
+ * reading `focalLengthMm` directly, so the lens slider's positions always
+ * match exactly what's shown (`formatLensLabel`'s rounding), never a more
+ * precise raw value a user could never see or intentionally pick. */
+function parseLensLabel(lensLabel: string): number {
+  return Number.parseInt(lensLabel, 10);
+}
+
+/** Pure — the distinct, sorted values for every discrete/slider-driven
  * Facet, computed across the full readable set (not `useFilteredPhotos()`):
  * option lists must stay stable as other Facets narrow the grid, not shrink
  * away (same reasoning the old `useLensOptions()` used). Extracted as a
  * plain function so it's unit-testable and so the hook below can memoize on
  * a stable upstream reference instead of re-deriving on every render. */
 export function computeFacetValueOptions(photos: readonly Photo[]): FacetValueOptions {
-  const lensSet = new Set<string>();
+  const lens: number[] = [];
   const iso: number[] = [];
   const aperture: number[] = [];
   const shutter: number[] = [];
@@ -263,7 +273,7 @@ export function computeFacetValueOptions(photos: readonly Photo[]): FacetValueOp
       continue;
     }
     if (photo.lensLabel !== undefined) {
-      lensSet.add(photo.lensLabel);
+      lens.push(parseLensLabel(photo.lensLabel));
     }
     if (photo.iso !== undefined) {
       iso.push(photo.iso);
@@ -286,7 +296,7 @@ export function computeFacetValueOptions(photos: readonly Photo[]): FacetValueOp
   }
 
   return {
-    lens: Array.from(lensSet).sort((a, b) => Number.parseInt(a, 10) - Number.parseInt(b, 10)),
+    lens: distinctSortedNumbers(lens),
     iso: distinctSortedNumbers(iso),
     aperture: distinctSortedNumbers(aperture),
     shutter: distinctSortedNumbers(shutter),
@@ -362,7 +372,8 @@ function matchesYear(capturedAt: string | undefined, years: readonly number[]): 
 /** AND-combines all 8 Facets (AC #4) — pure so it's unit-testable without
  * any Zustand/React wiring, mirroring dedupeAndCapCheck/mergeCommit above. */
 export function matchesFacetFilters(photo: Photo, filters: FacetFiltersState): boolean {
-  if (!matchesDiscrete(photo.lensLabel, filters.lens)) {
+  const lensValue = photo.lensLabel === undefined ? undefined : parseLensLabel(photo.lensLabel);
+  if (!matchesRange(lensValue, filters.lens)) {
     return false;
   }
   if (!matchesDiscrete(photo.megapixelMode, filters.megapixelMode)) {
@@ -377,7 +388,7 @@ export function matchesFacetFilters(photo: Photo, filters: FacetFiltersState): b
   if (!matchesDiscrete(photo.iso, filters.iso)) {
     return false;
   }
-  if (!matchesDiscrete(photo.apertureF, filters.aperture)) {
+  if (!matchesRange(photo.apertureF, filters.aperture)) {
     return false;
   }
   if (!matchesRange(photo.shutterSpeedSec, filters.shutter)) {
