@@ -103,12 +103,18 @@ Claude Sonnet 5
 
 All 13 Vitest tests in `ingestStore.test.ts` pass (6 new from the patch round); turbo lint/build/test all green; re-verified live via Playwright that the full Add More flow (dedupe, append, over-cap rejection) still works after the patches.
 
+### Post-completion fix-up round 1 (2026-07-08, user request — folder upload, matching Story 2.1's own)
+
+Same request as Story 2.1's identical fix-up (see that story for the full write-up) — this control is `AddMoreControl.tsx`'s own concern for every batch after the first. Added a second "Add folder" button/input (`webkitdirectory`, set imperatively via ref callback) alongside the existing "Add photos"; the selected `FileList` is filtered through Story 2.2's new `isImageFile` helper before the existing dedupe/cap-check pipeline, so a folder's non-image junk (`.DS_Store`, etc.) never counts against the cumulative cap or the dedup signature set. This file's own `handleFilesSelected` already ordered `Array.from(files)` before the `event.target.value` reset correctly (unlike Story 2.1's `EmptyState.tsx`, which had the same fix applied after a real regression there) — no equivalent bug existed here.
+
+turbo lint/build/test clean (113/113 tests); live-verified via Playwright.
+
 ### File List
 
 - `apps/gallery/src/store/ingestStore.ts` (modified)
 - `apps/gallery/src/store/ingestStore.test.ts` (new)
 - `apps/gallery/src/features/ingest/ingestPhotos.ts` (modified)
-- `apps/gallery/src/features/ingest/AddMoreControl.tsx` (new)
+- `apps/gallery/src/features/ingest/AddMoreControl.tsx` (new; post-completion round 1 — added a second "Add folder" button/input, filters non-image files via Story 2.2's `isImageFile`)
 - `apps/gallery/src/features/ingest/EmptyState.tsx` (modified — post-review patch, shares `MAX_PHOTOS_PER_INGEST`)
 - `apps/gallery/src/app-shell/App.tsx` (modified)
 
@@ -116,3 +122,4 @@ All 13 Vitest tests in `ingestStore.test.ts` pass (6 new from the patch round); 
 
 - 2026-07-08: Implemented Story 2.5 — persistent Add More trigger, dedup signature tracking, cumulative cap check, append-only store, progress-screen reuse with persistent header. All ACs verified live via Playwright against synthetic EXIF fixtures.
 - 2026-07-08: Addressed code review findings — 5 patches applied (disabled Add More trigger during in-flight parse to close a cap/dedup-bypass bug, intra-batch dedup in `dedupeAndCapCheck`, extracted+tested `mergeCommit` reducer, hardened `fileSignature` encoding, deduplicated `MAX_PHOTOS_PER_INGEST`), 4 deferred, 5 dismissed as noise.
+- 2026-07-08 — Post-completion fix-up round 1 (user request) — added folder selection to `AddMoreControl`, matching the identical addition to Story 2.1's `EmptyState`; filters non-image files via Story 2.2's new `isImageFile` helper before the existing dedupe/cap pipeline. `turbo lint/build/test` clean (113/113 tests); live-verified via Playwright.

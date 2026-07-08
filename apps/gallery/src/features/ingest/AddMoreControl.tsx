@@ -1,7 +1,7 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import { Button, InfoBox } from "@bmad/ui";
 import { checkAddMore, useIsIngestComplete } from "../../store/ingestStore";
-import { ingestPhotos } from "./ingestPhotos";
+import { ingestPhotos, isImageFile } from "./ingestPhotos";
 
 /**
  * Persistent Header-bar "Add photos" trigger (AC #1) — passed into
@@ -17,11 +17,17 @@ import { ingestPhotos } from "./ingestPhotos";
 export function AddMoreControl() {
   const [limitMessage, setLimitMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
   const ingestComplete = useIsIngestComplete();
 
   function handleAddPhotosClick() {
     setLimitMessage(null);
     fileInputRef.current?.click();
+  }
+
+  function handleAddFolderClick() {
+    setLimitMessage(null);
+    folderInputRef.current?.click();
   }
 
   function handleFilesSelected(event: ChangeEvent<HTMLInputElement>) {
@@ -33,9 +39,15 @@ export function AddMoreControl() {
     // `files` is captured as a plain array before the input reset below —
     // `input.files` is live and would otherwise go empty the moment
     // `value` is cleared, since it's the same FileList reference.
-    const selected = Array.from(files);
+    // Folder picks hand back every file in the tree, including non-image junk the input's own
+    // `accept` can't filter out for a directory selection — drop those before the dedupe/cap check.
+    const selected = Array.from(files).filter(isImageFile);
     // Reset so re-selecting the exact same file(s) still fires a change event.
     event.target.value = "";
+
+    if (selected.length === 0) {
+      return;
+    }
 
     const { accepted, rejectionMessage } = checkAddMore(selected);
 
@@ -56,14 +68,32 @@ export function AddMoreControl() {
   }
 
   return (
-    <div className="relative">
+    <div className="relative flex gap-3">
       <Button type="button" onClick={handleAddPhotosClick} disabled={!ingestComplete}>
         Add photos
+      </Button>
+      <Button type="button" variant="outline" onClick={handleAddFolderClick} disabled={!ingestComplete}>
+        Add folder
       </Button>
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
+        multiple
+        disabled={!ingestComplete}
+        onChange={handleFilesSelected}
+        className="hidden"
+        tabIndex={-1}
+        aria-hidden="true"
+      />
+      {/* `webkitdirectory` (non-standard, no JSX prop) is set imperatively on mount — see
+       * EmptyState.tsx's identical control for the full rationale (round-22, 2026-07-08). */}
+      <input
+        ref={(el) => {
+          folderInputRef.current = el;
+          if (el) el.webkitdirectory = true;
+        }}
+        type="file"
         multiple
         disabled={!ingestComplete}
         onChange={handleFilesSelected}
