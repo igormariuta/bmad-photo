@@ -43,6 +43,7 @@
 generated: 2026-07-06
 last_updated: 2026-07-08
 # 2-2 round-5 pass (2026-07-08): added isImageFile to ingestPhotos.ts, resolving the non-image-file-filtering gap this story's own original review deferred to itself — folder selection (Stories 2.1/2.5) hands back non-image junk (.DS_Store etc.) a directory pick's accept attribute can't filter. turbo lint/build/test clean (113/113 tests, 3 new).
+# 2-1 round-1 pass (2026-07-08): added folder selection to EmptyState (new "Add folder" button/input, webkitdirectory) resolving a gap deferred from this story's own original review; a refactor mid-round introduced a real regression (event.target.value reset before Array.from(files), same live-FileList gotcha AddMoreControl.tsx already guarded against) that made both "Add photos" and "Add folder" silently ingest nothing — caught and fixed same round. turbo lint/build/test clean (113/113 tests, 3 new); live-verified with a synthetic folder (nested subfolder + junk file) via Playwright.
 # NOTE (2026-07-08): the 5 entries below were originally logged under story key "3-5" (they
 # happened in the same dev-story session as Story 3.5's own work) but were retroactively
 # reattributed to their real owning stories once the scope-creep was noticed — 2-2 for the
