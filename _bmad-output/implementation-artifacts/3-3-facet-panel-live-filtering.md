@@ -4,7 +4,7 @@ baseline_commit: 17b7007d3a2ff250f1a37ed10ebd86ed53c0e817
 
 # Story 3.3: Facet Panel & Live Filtering
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -39,7 +39,7 @@ so that I can narrow down to exactly the shots I'm looking for.
 - [x] Task 1: `Range-control` (AC: #2, #3) — `apps/gallery/src/features/browse/RangeControl.tsx`
   - [x] Two underline `Field`s (Story 1.4) sharing one `data-label` row — `min`/`max` for numeric Facets, `from`/`to` for the date Facet
   - [x] Either side blank means unbounded on that side
-  - [x] If `min > max` (both sides filled): show `FieldError` on the max field, and do not commit this Facet's filter until corrected (previous valid value, or unbounded, stays active in the meantime)
+  - [x] ~~If `min > max` (both sides filled): show `FieldError` on the max field~~ — **superseded round 3 (see Review Findings, resolved 2026-07-09):** `RangeControl`/`isRangeInvalid` deleted once every range Facet became slider-driven; thumbs are clamped so `min > max` is now structurally impossible, satisfying AC #3's intent without a validation-and-error path
 - [x] Task 2: `Facet-panel` shell (AC: #1)
   - [x] Desktop: renders inside Story 3.2's reserved sidebar region (`260px` fixed, `--m-panel` background, 2px `--m-dim` border, 20px padding, 24px gap between fields — per Story 3.2's mockup-confirmed values)
   - [x] Each of the 8 Facet fields renders as a collapsed summary trigger (`data-label` + current value + chevron) that expands to its real control on interaction, per Dev Notes
@@ -60,9 +60,29 @@ so that I can narrow down to exactly the shots I'm looking for.
   - [x] `[ASSUMPTION]` Mobile trigger count: DEFERRED along with the rest of mobile scope — no mobile trigger exists this iteration, so no count logic was built (avoids speculative code with no consumer)
 - [x] Task 6: Verify (AC: #1–#5)
   - [x] Apply one filter per Facet type (one discrete, one range) — confirm the grid narrows correctly and AND-combines when two are active together
-  - [x] Enter an invalid range (min > max) — confirm `FieldError` shows on the max side and the grid doesn't change until corrected
+  - [x] ~~Enter an invalid range (min > max) — confirm `FieldError` shows on the max side~~ — **N/A after round 3** (see Review Findings): slider thumbs can't be dragged past each other, so this scenario is no longer reachable
   - [x] Confirm Insights' numbers are identical with filters active vs. cleared
   - [x] Resize to mobile width — DEFERRED, no mobile-specific behavior built this iteration (see Task 2)
+
+### Review Findings
+
+_Code review 2026-07-09 — 3-layer adversarial review (Blind Hunter, Edge Case Hunter, Acceptance Auditor) against the squashed diff of Story 3.3's own commits (`17b7007..5c494d5` + the later `53d74a7` rounds-9–12 commit). 14 raw findings — 2 dismissed as noise, 1 decision needed, 11 patches._
+
+- [x] [Review][Decision] **Resolved by user (2026-07-09): accepted as superseded-by-construction.** AC #3's invalid-range `FieldError` behavior was silently dropped without being documented as a deliberate reversal — round 3 deleted `RangeControl.tsx`/`isRangeInvalid` entirely once every range Facet became slider-driven. Slider thumbs are structurally clamped (`clamp()` in `RangeSlider.tsx`/`SingleSlider`) so `min > max` can never occur — the AC's underlying intent (never let the user apply an invalid range) is satisfied by construction rather than by a validation-and-error path, unlike AC #5's explicit documented reversal. No code change; Tasks 1 and 6 below are corrected to describe what actually shipped instead of the deleted `RangeControl`/`FieldError` mechanism.
+
+- [ ] [Review][Patch] `RangeSlider`'s track click never moves a thumb, contradicting its own doc comment — `apps/gallery/src/features/browse/RangeSlider.tsx` `handleTrackPointerDown` only computes the nearer thumb and calls `setDragging(...)`; it never calls `onChange`. A plain click with no intervening `pointermove` changes nothing. `SingleSlider`'s equivalent handler correctly calls `onChange` immediately on pointerdown.
+- [ ] [Review][Patch] Keyboard focus is lost when a range slider auto-collapses to single mode — `apps/gallery/src/features/browse/FacetPanel.tsx` `SliderFacet` derives `isSingle` from `filter` every render and swaps the mounted `RangeSlider` for a `SingleSlider` (a different DOM subtree) the instant `minValue === maxValue`. Nothing refocuses the new thumb, so keyboard operation of that Facet is interrupted exactly when round 7's own "auto-switch to single mode" fix is exercised via the keyboard.
+- [ ] [Review][Patch] `matchesRange` is vacuously satisfied by `NaN`, letting malformed lens data silently pass an active filter — `apps/gallery/src/store/ingestStore.ts` `parseLensLabel` returns `NaN` (not `undefined`) when a `lensLabel` fails to parse; `matchesRange`'s `value === undefined` guard doesn't catch `NaN`, and `NaN < min`/`NaN > max` are both `false`, so it falls through to `true` instead of excluding.
+- [ ] [Review][Patch] Camera filter can remain silently active after its Facet disappears — `apps/gallery/src/features/browse/FacetPanel.tsx` gates `<CameraFacet>` on `hasCameraFront && hasCameraRear`, but nothing resets `filters.camera` when that flips from true to false (e.g. an "Add more" ingest changes the readable set's camera mix). The grid stays filtered by a Facet the user can no longer see or individually clear.
+- [ ] [Review][Patch] `SliderFacet`'s displayed thumb position can desync from the enforced filter — `indexOf(filter.min)`/`indexOf(filter.max)` clamp to `0` via `Math.max(0, ...)` when a stored filter value falls outside the current `values` domain (e.g. domain shifts after "Add more"), so the UI shows the domain minimum while `matchesFacetFilters` still enforces the raw, stale, out-of-domain value.
+- [ ] [Review][Patch] Slider drag listeners aren't scoped to the initiating pointer — `apps/gallery/src/features/browse/RangeSlider.tsx`'s `pointermove`/`pointerup` handlers (both `RangeSlider` and `SingleSlider`) never check `event.pointerId`, so a second unrelated pointer (multi-touch, or an unrelated mouseup) can move the wrong thumb or end an in-progress drag prematurely.
+- [ ] [Review][Patch] No `pointercancel` handling on sliders — only `pointerup` resets `dragging`; an OS/browser-cancelled gesture (touch-scroll takeover, right-click during a drag) leaves the dragging state stuck, tracking any later unrelated `pointermove`.
+- [ ] [Review][Patch] No primary-button guard on slider pointerdown — right-clicking the track or a thumb still starts a drag simultaneously with the browser's context menu (`handleTrackPointerDown` and the thumb `onPointerDown` handlers, `RangeSlider.tsx`).
+- [ ] [Review][Patch] `formatShutterSpeed` divides by zero when `shutterSpeedSec === 0` — a corrupt EXIF `ExposureTime` of `0/250` passes the worker's `finite()` filter (which only screens `NaN`/`Infinity`/`undefined`) and renders as `"1/Infinitys"` in the slider readout (`apps/gallery/src/features/browse/FacetPanel.tsx`).
+- [ ] [Review][Patch] Insights' empty-filtered-result message loses vertical centering — its `h-full` wrapper has no definite-height ancestor under the new document-level-scroll model (`App.tsx`'s `role="tabpanel"` wrappers carry no height/flex sizing), so `h-full` computes as `auto` per CSS spec and `items-center`/`justify-center` have nothing to center within (`apps/gallery/src/features/insights/Insights.tsx`).
+- [ ] [Review][Patch] Tasks/Subtasks checklist is stale — several `[x]` items describe designs superseded by later rounds and never updated: Task 2's collapsed-summary-trigger pattern (removed round 2), Task 3's `Select`-for-lens/`RadioGroup`-for-camera (both became slider/bespoke components in rounds 4/6), Task 4's `RangeControl` for range Facets (deleted round 3), Task 2's "no presence on Insights tab" (reversed by the global-Facet-panel fix-up).
+- [x] [Review][Dismiss] Blind Hunter flagged `hasActiveFacetFilters`/`isRangeActive` as referenced-but-never-defined in the diff — verified false positive, an artifact of this review's diff scoping. Both functions exist in the current codebase; they were introduced by Story 3.4's commit (`56af8b4`), which falls chronologically between this review's two extracted commit ranges and was correctly excluded as out-of-scope for a 3.3-only review.
+- [x] [Review][Dismiss] `packages/ui/src/RadioGroup/RadioGroup.tsx`'s per-option `disabled` field (added round 5 for Camera) has zero remaining consumers after round 6 replaced Camera's `RadioGroup` usage with a bespoke `CameraFacet` — harmless unused shared-component surface, no functional impact.
 
 ## Project Structure Notes
 

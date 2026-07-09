@@ -4,7 +4,7 @@ baseline_commit: 00d3680e4562128633889a9323fa86c838b843fa
 
 # Story 1.2: Design Tokens Package
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
