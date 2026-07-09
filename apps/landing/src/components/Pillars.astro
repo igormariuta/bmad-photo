@@ -1,0 +1,30 @@
+---
+import { PillarCard, type PillarCardProps } from "./PillarCard";
+
+const PILLARS: PillarCardProps[] = [
+  {
+    eyebrow: "01",
+    title: "Kill forced HDR",
+    body: "iOS forces HDR into every frame the moment you tap the shutter. Lazy Cam starts from a clean base — no fighting the system after the fact.",
+    stagger: 0,
+  },
+  {
+    eyebrow: "02",
+    title: "Strip native processing",
+    body: "No aggressive sharpening, no synthetic smoothing pass on faces. What the sensor saw is what you get to work with.",
+    stagger: 1,
+  },
+  {
+    eyebrow: "03",
+    title: "Own preset system",
+    body: "Shadow-to-highlight tone curves and a per-color mixer. Even if iOS lets you disable HDR one day, presets are still the reason to stay.",
+    stagger: 2,
+  },
+];
+---
+
+<section class="px-gutter py-section-rhythm">
+  <div class="mx-auto grid max-w-container-max grid-cols-1 gap-item-gap md:grid-cols-3">
+    {PILLARS.map((pillar) => <PillarCard {...pillar} key={pillar.eyebrow} />)}
+  </div>
+</section>

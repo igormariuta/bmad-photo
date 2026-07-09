@@ -1,5 +1,12 @@
 # Deferred Work
 
+## Deferred from: code review of 4-2-value-pillars (2026-07-09)
+
+- **Pillars section has no accessible name / heading-hierarchy skip** [apps/landing/src/components/Pillars.astro, apps/landing/src/components/PillarCard.tsx:22] — three `<h3>` titles sit directly under Hero's `<h1>` with no `<h2>` in between, and the wrapping `<section>` has no `aria-label`/`aria-labelledby`; the confirmed mockup's `// THREE PILLARS` section-eyebrow (`mockups/landing-hero.html:24`) wasn't ported either, which would have doubled as a fix. Deferred by user (2026-07-09): out of this story's explicit 5-task list; revisit at the next Landing story or a systemic a11y audit rather than as a one-off scope addition here.
+- **`stagger` has no runtime bounds guard** [apps/landing/src/components/PillarCard.tsx:18] — `NaN`/`Infinity`/negative values would produce an invalid/negative `animation-delay`; not reachable via any current code path since `Pillars.astro`'s `PILLARS` is a static 3-item literal always passing `0`/`1`/`2`.
+- **`PILLARS` array growth beyond 3 items has no cap on `stagger`** [apps/landing/src/components/Pillars.astro:23] — later cards would get an ever-larger, uncapped `animation-delay`; not reachable today, same static 3-item literal.
+- **`.scroll-reveal` cards already within the viewport on initial page load may stay stuck at `opacity: 0`** [apps/landing/src/styles/app.css] — on browser engines that only resolve `animation-timeline: view()` progress on a scroll event rather than continuously sampling scroll position each frame. Matches this story's own already-disclosed "honest approximation, not a perfect guarantee" limitation for the CSS-only scroll-linked reveal approach.
+
 ## Deferred from: code review of 4-1-header-hero (2026-07-08)
 
 - **`GlitchText`'s one-shot animation has no guard against remounts** [apps/landing/src/components/GlitchText.tsx] — the "never loops" guarantee holds only within a single mount (no `infinite` in the keyframe); a future remount (key change, prop-driven remount) would replay the settle-in. Not reachable by any code path in this story (`Hero.astro` is fully static), so not actionable now — revisit if `GlitchText` ever gains props/state that could trigger a remount.
