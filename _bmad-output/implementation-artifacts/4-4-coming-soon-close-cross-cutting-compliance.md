@@ -1,6 +1,10 @@
+---
+baseline_commit: 3d29931f1650fb7265adcbd0f26123f3b00ed621
+---
+
 # Story 4.4: Coming Soon Close & Cross-cutting Compliance
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -33,18 +37,18 @@ so that I trust the brand's honesty even without signing up.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Footer (AC: #1, #2)
-  - [ ] Render the confirmed copy verbatim: **`"Coming soon."`** — nothing more added to it (per `EXPERIENCE.md`'s explicit "no more" annotation)
-  - [ ] Confirm no form, email field, waitlist, purchase, or App Store link anywhere on the page (not just the footer)
-- [ ] Task 2: Verify the theme-flash-prevention script is wired on Landing (AC: #5)
-  - [ ] Check Story 4.1's actual base-layout `<head>` for the inline blocking script from Story 1.5, Task 14 — add it now if missing
-- [ ] Task 3: Cross-page audits (AC: #2, #3, #4, #6)
-  - [ ] Voice/tone: re-read all Landing copy (Hero, Pillars, Preset, Footer) for marketing fluff or exclamation-point energy — fix any that slipped through
-  - [ ] Responsive: confirm single-column below `sm`, wider gutters `sm`–`lg`, 1240px cap at `≥lg`, consistently across all sections
-  - [ ] Accessibility: confirm exactly one `<h1>` (Hero) and `<h3>`s (Pillars) with no skipped levels, and no interactive control beyond the theme-toggle and plain anchor links anywhere on the page
-  - [ ] No-JS: disable JavaScript in devtools, reload — confirm all content is legible; only the theme-toggle (and GlitchText's animation, which degrades to static text without JS per Story 4.1) should visibly not work
-- [ ] Task 4: Verify (AC: #1–#6)
-  - [ ] Full page walkthrough at mobile/desktop widths, with and without JS, with and without a stored theme preference, checking each AC explicitly
+- [x] Task 1: Footer (AC: #1, #2)
+  - [x] Render the confirmed copy verbatim: **`"Coming soon."`** — nothing more added to it (per `EXPERIENCE.md`'s explicit "no more" annotation)
+  - [x] Confirm no form, email field, waitlist, purchase, or App Store link anywhere on the page (not just the footer)
+- [x] Task 2: Verify the theme-flash-prevention script is wired on Landing (AC: #5)
+  - [x] Check Story 4.1's actual base-layout `<head>` for the inline blocking script from Story 1.5, Task 14 — add it now if missing
+- [x] Task 3: Cross-page audits (AC: #2, #3, #4, #6)
+  - [x] Voice/tone: re-read all Landing copy (Hero, Pillars, Preset, Footer) for marketing fluff or exclamation-point energy — fix any that slipped through
+  - [x] Responsive: confirm single-column below `sm`, wider gutters `sm`–`lg`, 1240px cap at `≥lg`, consistently across all sections
+  - [x] Accessibility: confirm exactly one `<h1>` (Hero) and `<h3>`s (Pillars) with no skipped levels, and no interactive control beyond the theme-toggle and plain anchor links anywhere on the page
+  - [x] No-JS: disable JavaScript in devtools, reload — confirm all content is legible; only the theme-toggle (and GlitchText's animation, which degrades to static text without JS per Story 4.1) should visibly not work
+- [x] Task 4: Verify (AC: #1–#6)
+  - [x] Full page walkthrough at mobile/desktop widths, with and without JS, with and without a stored theme preference, checking each AC explicitly
 
 ## Project Structure Notes
 
@@ -62,8 +66,35 @@ Touches `apps/landing/src/` — adds a footer section/component and audits exist
 
 ### Agent Model Used
 
+Claude Sonnet 5
+
 ### Debug Log References
 
 ### Completion Notes List
 
+- New `Footer.astro` (Landing-local, no client directive — pure static SSG) renders the confirmed copy verbatim, `"Coming soon."`, nothing added; wired into `index.astro` after `PresetComparison`. Confirmed zero forms/inputs/links anywhere on the page (Playwright: `forms: 0, linkCount: 0`).
+- Task 2 audit: theme-flash-prevention inline `<script>` was already wired into `apps/landing/src/layouts/Layout.astro`'s `<head>` (added during Story 4.1) — verified present and correct, no gap to close, no code change needed.
+- Task 3 audit found and fixed one real defect: `PresetComparison.tsx` rendered its heading as `<h2>`, which — per `deferred-work.md`'s own note from the 4.3 review — compounded Story 4.2's already-deferred heading-hierarchy gap (three `<h3>` pillar titles under the `<h1>` with no `<h2>` between). AC #4's literal wording ("heading order H1 hero → H3 pillars") defines the correct target page-wide, and the stray `<h2>` was the one heading that broke it. Changed to `<h3>` — page heading sequence is now `H1, H3, H3, H3, H3` (verified live), matching the AC exactly; no other component introduced a stray level.
+- Voice/tone re-read across Hero/Pillars/Preset/Footer copy: all lines already match `EXPERIENCE.md`'s Do column (plain statements, no exclamation-point energy) — no changes needed.
+- Responsive audit: all sections already share the same `px-gutter`/`max-w-container-max` design tokens (Story 1.2); grids collapse to a single column below `md` (stricter than the `sm` floor required by AC #3, which is a valid superset). No inconsistency found — confirmed, not modified, per Dev Notes' guidance not to redesign a pre-existing systemic token.
+- Accessibility audit: after the `<h2>`→`<h3>` fix, exactly one `<button>` exists on the page (`aria-label="Switch to dark theme"` / `"Switch to light theme"`), zero other interactive controls, zero `<a>` tags.
+- No-JS audit: confirmed via a JS-disabled Playwright context — `<h1>`, all four `<h3>`s, and the footer's exact text all render; `GlitchText` degrades to its static `<span>` text (CSS animation is not JS-gated); only the theme-toggle is visibly non-functional (SSR default icon/state, no click handler attached), as expected.
+- Live-verified end-to-end via a headless Playwright script against the production build (`astro build` output served statically, not `astro dev`, to rule out dev-toolbar contamination — an early run against a stray pre-existing `astro dev` server on the same port produced false failures from its dev toolbar/HMR overlay, corrected by serving `dist/` on its own port): desktop 1280px light+dark, mobile 390px light, `prefers-color-scheme: dark` on first visit (no stored preference), persisted `localStorage` theme applied pre-hydration (no flash), theme-toggle click-and-persist, zero unexpected console errors, and JS-disabled legibility. A full-page screenshot with the default (non-reduced) motion setting showed a rendering artifact (missing pillar 3, ghosted header) caused by Chromium's full-page capture interacting with `animation-timeline: view()` scroll-driven CSS — a known class of limitation already flagged in `deferred-work.md` for Story 4.2's `.scroll-reveal`, not a functional regression; re-captured with `prefers-reduced-motion: reduce` (which `app.css` already collapses to the final visible state) to confirm the actual mobile layout is correct — all 3 pillar cards and both split-compare blocks render correctly, single-column, footer at the bottom.
+- `turbo lint build test` clean across all 8 tasks (`@bmad/ui`, `@bmad/theme`, `@bmad/gallery`, `@bmad/landing`); Gallery's 113/113 Vitest tests unaffected; Landing has no unit-test framework (established precedent since Story 4.1) — verification is via the live Playwright pass above.
+
 ### File List
+
+- apps/landing/src/components/Footer.astro (new)
+- apps/landing/src/pages/index.astro (modified — import + render Footer)
+- apps/landing/src/components/PresetComparison.tsx (modified — heading `<h2>` → `<h3>`, fixes AC #4 heading-order defect)
+
+### Review Findings
+
+3-layer adversarial review (Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 0 decisions, 1 patch applied, 0 deferred, 13 dismissed as noise (incl. two independent flags of the `<h1>`→`<h3>` heading jump, refuted: the Acceptance Auditor confirmed this is AC #4's own explicit target structure and the diff fixes a worse pre-existing non-monotonic H1→H3→H2 order; a duplicate-`<footer>`-landmark concern and an import-order concern were also refuted on inspection).
+
+- [x] [Review][Patch] Footer skips the shared `div.mx-auto.max-w-container-max` wrapper convention used by every other section (AC #3 consistency) [apps/landing/src/components/Footer.astro:11]
+
+## Change Log
+
+- 2026-07-09: Story 4.4 implemented — Footer ("Coming soon.", verbatim) + cross-cutting compliance audit of Stories 4.1–4.3. Found and fixed one real defect (PresetComparison's stray `<h2>` breaking the H1→H3 heading order required by AC #4); confirmed the theme-flash-prevention script, voice/tone, responsive tokens, and no-JS legibility all already held. `turbo lint/build/test` clean (8/8 tasks); live-verified via headless Playwright against the production build (desktop/mobile, light/dark, first-visit OS preference, persisted preference, no-JS).
+- 2026-07-09: Code review (3-layer adversarial: Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 1 patch applied (Footer's `<p>` now wrapped in the shared `div.mx-auto.max-w-container-max` convention, matching every other section), 13 dismissed as noise. `turbo lint/build` re-verified clean.

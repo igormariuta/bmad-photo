@@ -4,6 +4,7 @@ import Hero from "../components/Hero.astro";
 import Layout from "../layouts/Layout.astro";
 import Pillars from "../components/Pillars.astro";
 import { PresetComparison } from "../components/PresetComparison";
+import Footer from "../components/Footer.astro";
 import presetDefault from "../assets/preset-default.jpg";
 import presetChrome from "../assets/preset-chrome.jpg";
 import presetBw from "../assets/preset-bw.jpg";
@@ -27,4 +28,5 @@ const [defaultImg, chromeImg, bwImg] = await Promise.all([
     chromeSrc={chromeImg.src}
     bwSrc={bwImg.src}
   />
+  <Footer />
 </Layout>

@@ -133,7 +133,7 @@ export function PresetComparison({ beforeSrc, chromeSrc, bwSrc }: PresetComparis
     <section className="scroll-reveal border-t-2 border-dim px-gutter py-section-rhythm">
       <div className="mx-auto max-w-container-max">
         <p className="text-eyebrow text-accent uppercase">// Presets</p>
-        <h2 className="mt-6 font-display text-h3 text-fg">Shape it, don&rsquo;t just filter it.</h2>
+        <h3 className="mt-6 font-display text-h3 text-fg">Shape it, don&rsquo;t just filter it.</h3>
         <p className="mt-4 max-w-2xl text-body text-muted">
           Shadow-to-highlight tone curves reshape contrast without crushing detail. A
           Lightroom-style per-color mixer mutes or boosts individual hues and shifts them
