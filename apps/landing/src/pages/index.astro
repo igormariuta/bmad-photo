@@ -1,10 +1,30 @@
 ---
+import { getImage } from "astro:assets";
 import Hero from "../components/Hero.astro";
 import Layout from "../layouts/Layout.astro";
 import Pillars from "../components/Pillars.astro";
+import { PresetComparison } from "../components/PresetComparison";
+import presetDefault from "../assets/preset-default.jpg";
+import presetChrome from "../assets/preset-chrome.jpg";
+import presetBw from "../assets/preset-bw.jpg";
+
+// Real phone-camera photos (4032x3024, 2-7MB) — resized via Astro's built-in
+// Sharp-based pipeline to a size that comfortably covers this section's
+// largest real display width (one column, capped at the 1240px container).
+const [defaultImg, chromeImg, bwImg] = await Promise.all([
+  getImage({ src: presetDefault, width: 1200 }),
+  getImage({ src: presetChrome, width: 1200 }),
+  getImage({ src: presetBw, width: 1200 }),
+]);
 ---
 
 <Layout title="Lazy Cam">
   <Hero />
   <Pillars />
+  <PresetComparison
+    client:load
+    beforeSrc={defaultImg.src}
+    chromeSrc={chromeImg.src}
+    bwSrc={bwImg.src}
+  />
 </Layout>
